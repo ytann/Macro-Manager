@@ -1,0 +1,7 @@
+*.db
+__pycache__/
+.env
+.vscode/
+.idea/
+*.pyc
+.streamlit/

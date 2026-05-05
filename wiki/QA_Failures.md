@@ -1,0 +1,9 @@
+- No backticks in .py files
+- Always use local Ollama port 11434
+- AI NEVER guesses macros; Python fetches from DB
+- Parsers must be shape-agnostic (check 'items', 'data', 'response') and fail gracefully on missing data
+- DB Queries: Use `date('now')` for daily totals to avoid timezone/format mismatches
+- Data Types: Ensure CSV imports cast numeric values to float before DB insertion to avoid type errors
+- Frontend: Use `.get()` for dictionary values instead of iterating keys to prevent unpacking errors
+- Knowledge Gap: If food is missing from DB, fetch exact 100g macros from LLM and persist via `add_learned_food`
+- Complex Dishes: Must be expanded into a recipe (list of base ingredients) before calculation to avoid LLM macro-hallucinations
