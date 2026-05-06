@@ -14,7 +14,7 @@ For every item extracted from the user's log:
 
 ## 2. Learning New Base Ingredients
 When a base ingredient (single item) is not in the database:
-1. **Macro Extraction**: The LLM is prompted as an "expert nutrition database" to provide macros for 100g of the item.
+1. **Authoritative Search (Source of Truth)**: The system performs a web search (via DuckDuckGo) for the item's nutrition facts. A validator LLM then extracts the most authoritative 100g macros from the HTML, prioritizing government and scientific sources.
 2. **Pydantic Validation**: The output is validated against the `Macros` and `SubMacros` schemas.
 3. **Persistence**: The validated data is saved to the `foods` table for future use.
 

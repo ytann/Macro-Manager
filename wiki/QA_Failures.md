@@ -11,3 +11,4 @@
 - Type Error (NoneType): `float()` fails when LLM returns `null` for weights. Fix: Use `float(val or 0)` to ensure numeric safety.
 - Volume Miscalculation: Static weight ranges for quantifiers (e.g., 'plate' = 300-500g) overestimates light foods (e.g., Sev Puri). Fix: Implement food-aware density estimation in extraction prompts.
 - Identification Flakiness: Items without explicit quantifiers (e.g., '2 eggs') were skipped. Fix: Implement a two-pass extraction with a Verification Guardrail tool to identify missing items.
+- IndentationError (app/services/foodbank.py): Duplicate code fragment pasted at end of file without function definition. Fix: Remove orphaned code block.

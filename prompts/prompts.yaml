@@ -1,0 +1,72 @@
+extraction:
+  main: |
+    You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
+    
+    RULES:
+    1. ITEM IDENTIFICATION: Extract only the food name. Remove quantifiers like '1 plate of', 'a bowl of', '2 pieces of'.
+    2. WEIGHT ESTIMATION: If weight is not provided, estimate a realistic weight in grams based on the specific food item's typical density and serving size.
+       - DO NOT use static ranges for quantifiers. A 'plate' of Sev Puri is significantly lighter than a 'plate' of Rice.
+       - Consider the nature of the food: 1 plate of snacks (like Sev Puri) might be 150-250g, while 1 plate of a main meal (like Biryani) might be 400-600g.
+       - Typical benchmarks: Single egg ~50g, standard apple ~150g.
+    3. REGIONAL FOODS: Preserve names like 'Puran Poli', 'Poha', 'Misal Pav'.
+    4. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
+    
+    Text: {text}
+
+  verification: |
+    Original Text: "{text}"
+    Items already extracted: {found_details}
+    
+    Task: Identify ONLY actual food items, dishes, or ingredients mentioned in the text that are COMPLETELY missing from the extracted list.
+    
+    CRITICAL RESTRICTIONS:
+    1. NO QUANTIFIERS: Never suggest 'plate', 'bowl', 'glass', 'piece', 'portion', 'serving', or numeric quantities (e.g., '2 plates') as food items.
+    2. NO OVERLAPS: If an item is already present (e.g., 'Sev Puri' is found), do not suggest parts of it (e.g., 'Sev' or 'Puri').
+    3. NUMERIC WEIGHTS: Provide a single numeric weight in grams for any missing item.
+    
+    Return a JSON object with a key 'missing' containing a list of objects with 'name' (string) and 'grams' (number).
+    If nothing is missing, return {{ "missing": [] }}.
+    
+    Respond ONLY with JSON.
+
+foodbank:
+  web_search: |
+    The following is HTML content from a search for '{dish_name}'. 
+    Extract the SPECIFIC nutrition macros per 100g (calories, protein, carbs, fat, fiber) for this exact item.
+    
+    CRITICAL: Do not provide generic "average" values for a category of food. If this is a regional dish (like Misal Pav vs Pav Bhaji), ensure the macros reflect the specific ingredients of THAT dish. 
+    If it's a complex dish, try to find a recipe (list of ingredients and their weights).
+    
+    Return a JSON object with:
+    - 'type': 'ingredient' or 'dish'
+    - 'macros': {{ 'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0 }} (if ingredient)
+    - 'recipe': [{{ 'name': '...', 'grams': 0 }}] (if dish)
+    - 'total_weight': 0 (if dish)
+    - 'reasoning': 'Briefly explain why these values are specific to {dish_name}'
+    
+    If you cannot find reliable data in this specific HTML, return {{ 'error': 'not found' }}.
+    Respond ONLY with JSON.
+    
+    HTML:
+    {content}
+
+  recipe_discovery: |
+    Analyze if '{name}' is a complex dish. 
+    If yes, provide a recipe for a standard serving. 
+    Return a JSON object: {{"reasoning": "...", "recipe": [{{ "name": "ingredient", "grams": 100 }}], "total_weight": 500}}. 
+    If it's a single ingredient, return {{"recipe": null}}. 
+    Respond ONLY with JSON.
+
+  internal_estimate: |
+    You are a world-class nutrition expert. 
+    Provide the standard, specific nutrition macros for 100g of '{name}'.
+    
+    ANALYSIS GUIDELINES:
+    1. Deconstruct '{name}' into its likely core ingredients.
+    2. If it is a regional, specialty, or complex dish, calculate the macros based on those typical constituents.
+    3. If it is a single ingredient, use scientifically accurate standard values.
+    
+    Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'reasoning': '...'}}. 
+    If you are absolutely unsure, return {{'error': 'unknown'}}.
+    
+    DO NOT return 0 for all fields. Provide a realistic estimate based on food science and typical preparation.
