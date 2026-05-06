@@ -1,5 +1,5 @@
-from database import init_db, save_meal, get_todays_macros
-from parser import parse_food_log
+from app.database import init_db, save_meal, get_todays_macros
+from app.parser import parse_food_log
 
 def test_logic():
     print("Initializing DB...")
@@ -19,7 +19,7 @@ def test_logic():
         totals = get_todays_macros()
         print(f"Totals: {totals}")
         
-        if totals.get('calories', 0) > 0:
+        if totals.get('totals', {}).get('calories', 0) > 0:
             print("✅ Success: Daily totals updated!")
         else:
             print("❌ Failure: Daily totals are 0!")

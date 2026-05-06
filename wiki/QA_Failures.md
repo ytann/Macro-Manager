@@ -6,4 +6,8 @@
 - Data Types: Ensure CSV imports cast numeric values to float before DB insertion to avoid type errors
 - Frontend: Use `.get()` for dictionary values instead of iterating keys to prevent unpacking errors
 - Knowledge Gap: If food is missing from DB, fetch exact 100g macros from LLM and persist via `add_learned_food`
-- Complex Dishes: Must be expanded into a recipe (list of base ingredients) before calculation to avoid LLM macro-hallucinations
+- Complex Dishes: Must be expanded into a recipe (list of base ingredients) before calculation to avoid LLM macro-hallucinations.
+- Hallucination Case (Poha): LLM incorrectly added "flour" to poha recipe. Fix: Implement a "Reasoning & Verification Loop" (Reasoning -> Generation -> Verification) to catch and correct composition errors.
+- Type Error (NoneType): `float()` fails when LLM returns `null` for weights. Fix: Use `float(val or 0)` to ensure numeric safety.
+- Volume Miscalculation: Static weight ranges for quantifiers (e.g., 'plate' = 300-500g) overestimates light foods (e.g., Sev Puri). Fix: Implement food-aware density estimation in extraction prompts.
+- Identification Flakiness: Items without explicit quantifiers (e.g., '2 eggs') were skipped. Fix: Implement a two-pass extraction with a Verification Guardrail tool to identify missing items.

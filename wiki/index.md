@@ -1,4 +1,5 @@
 - Pydantic schema for food logs -> [[wiki/logic/FoodLogSchema.md]]
 - QA rules -> [[wiki/QA_Failures.md]]
 - Project architecture -> [[wiki/logic/Architecture.md]]
+- Food identification & learning logic -> [[wiki/logic/FoodLearning.md]]
 - Foodbank DB logic -> [[raw/cloud_logs/foodbank_lessons.md]]

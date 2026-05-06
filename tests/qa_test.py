@@ -1,6 +1,6 @@
 import requests
 import os
-from database import init_db
+from app.database import init_db
 
 API_URL = "http://127.0.0.1:8000"
 
@@ -28,7 +28,7 @@ def test_logging_and_summary():
         resp = requests.get(f"{API_URL}/summary")
         print(f"Status: {resp.status_code}, Response: {resp.text}")
         data = resp.json()
-        if data.get('calories', 0) == 0:
+        if data.get('consumed', {}).get('calories', 0) == 0:
             print("❌ Summary returned 0 calories - Daily totals not updating!")
         else:
             print("✅ Summary returned data")

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ytann/Desktop/AI-Projects/LLM-Wiki/MacroManager/app/api.py", line 3, in <module>
+    from app.parser import parse_food_log
+  File "/home/ytann/Desktop/AI-Projects/LLM-Wiki/MacroManager/app/parser.py", line 180
+    food_data = foodbank.search_food(name)
+IndentationError: unexpected indent

@@ -24,7 +24,8 @@ def init_db():
                 total_fiber REAL,
                 total_sugar REAL,
                 total_saturated_fat REAL,
-                total_unsaturated_fat REAL
+                total_unsaturated_fat REAL,
+                meal_type TEXT
             )
         """)
         
@@ -36,7 +37,8 @@ def init_db():
             "total_fiber": "REAL",
             "total_sugar": "REAL",
             "total_saturated_fat": "REAL",
-            "total_unsaturated_fat": "REAL"
+            "total_unsaturated_fat": "REAL",
+            "meal_type": "TEXT"
         }
         
         for col, col_type in required_columns.items():
@@ -45,7 +47,7 @@ def init_db():
         
         conn.commit()
 
-def save_meal(meal_data: Any):
+def save_meal(meal_data: Any, meal_type: str = "General"):
     """
     Saves a FoodLog object to the database.
     Calculates totals before saving.
@@ -60,7 +62,7 @@ def save_meal(meal_data: Any):
     
     # Helper to sum sub-macros safely
     def sum_sub(key):
-        return sum(item.get('sub_macros', {}).get(key, 0) or 0 for item in data['items'])
+        return sum((item.get('sub_macros') or {}).get(key, 0) or 0 for item in data['items'])
         
     total_fiber = sum_sub('fiber')
     total_sugar = sum_sub('sugar')
@@ -69,19 +71,20 @@ def save_meal(meal_data: Any):
     
     with get_db() as conn:
         conn.execute(
-            "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (data['meal_id'], json.dumps(data['items']), total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat)
+            "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (data['meal_id'], json.dumps(data['items']), total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type)
         )
         conn.commit()
+    print(f"DB: Saved meal {data['meal_id']} with {len(data['items'])} items.")
 
 
 def get_todays_macros():
     """
-    Retrieves totals for all meals logged today.
+    Retrieves totals for all meals logged today and groups them by meal type.
     """
     with get_db() as conn:
         cursor = conn.execute(
-            "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat FROM meals WHERE date(timestamp) = date('now')"
+            "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp) = date('now')"
         )
         rows = cursor.fetchall()
         
@@ -95,7 +98,18 @@ def get_todays_macros():
             "saturated_fat": sum(row['total_saturated_fat'] for row in rows),
             "unsaturated_fat": sum(row['total_unsaturated_fat'] for row in rows)
         }
-        return totals
+        
+        grouped_meals = {}
+        for row in rows:
+            m_type = row['meal_type'] or "General"
+            if m_type not in grouped_meals:
+                grouped_meals[m_type] = []
+            grouped_meals[m_type].append(json.loads(row['items_json']))
+            
+        return {
+            "totals": totals,
+            "grouped": grouped_meals
+        }
 
 def get_todays_meals():
     """
@@ -125,5 +139,18 @@ def clear_todays_meals():
         conn.execute("DELETE FROM meals WHERE date(timestamp) = date('now')")
         conn.commit()
         return True
+
+def get_daily_goals():
+    """
+    Returns static daily nutrition goals.
+    """
+    return {
+        "calories": 2000,
+        "protein": 150,
+        "carbs": 200,
+        "fat": 65
+    }
+
+if __name__ == "__main__":
     init_db()
     print("DB initialized.")

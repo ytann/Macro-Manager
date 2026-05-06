@@ -1,4 +1,4 @@
-from database import init_db, save_meal, get_todays_macros, DB_PATH
+from app.database import init_db, save_meal, get_todays_macros, DB_PATH
 import os
 
 def test_db_flow():
@@ -58,10 +58,11 @@ def test_db_flow():
     # Fat: 11 + 1 + 7 = 19
     # Cals: 155 + 130 + 330 = 615
     
-    assert totals["protein"] == 79, f"Protein mismatch: {totals['protein']}"
-    assert totals["carbs"] == 26, f"Carbs mismatch: {totals['carbs']}"
-    assert totals["fat"] == 19, f"Fat mismatch: {totals['fat']}"
-    assert totals["calories"] == 615, f"Calories mismatch: {totals['calories']}"
+    actual_totals = totals["totals"]
+    assert actual_totals["protein"] == 79, f"Protein mismatch: {actual_totals['protein']}"
+    assert actual_totals["carbs"] == 26, f"Carbs mismatch: {actual_totals['carbs']}"
+    assert actual_totals["fat"] == 19, f"Fat mismatch: {actual_totals['fat']}"
+    assert actual_totals["calories"] == 615, f"Calories mismatch: {actual_totals['calories']}"
     
     print("Test PASSED")
 

@@ -1,4 +1,9 @@
 import sqlite3
+import json
+import litellm
+import requests
+
+litellm.api_base = "http://localhost:11434"
 
 def get_connection():
     """Returns a connection to the foodbank SQLite database."""
@@ -76,6 +81,13 @@ def search_food(query_string):
         if search_query:
             cursor.execute("SELECT * FROM foods WHERE foods MATCH ? ORDER BY rank LIMIT 1", (search_query,))
             row = cursor.fetchone()
+            
+            # Fallback: Try searching for each word individually if no match found
+            if not row:
+                for word in sanitized.split():
+                    cursor.execute("SELECT * FROM foods WHERE foods MATCH ? ORDER BY rank LIMIT 1", (f"{word}*",))
+                    row = cursor.fetchone()
+                    if row: break
         
     conn.close()
     
@@ -106,6 +118,80 @@ def save_recipe(dish_name, recipe_json):
     )
     conn.commit()
     conn.close()
+
+def search_web_for_food(dish_name):
+    """
+    Searches DuckDuckGo for nutrition/recipe info and uses LLM to extract data.
+    """
+    print(f"Searching web for {dish_name}...")
+    
+    # Try multiple search queries for better coverage
+    queries = [
+        f"{dish_name} nutrition facts per 100g",
+        f"average calories protein carbs fat for {dish_name}",
+        f"{dish_name} recipe ingredients weights"
+    ]
+    
+    for query in queries:
+        search_url = f"https://html.duckduckgo.com/html/?q={query}"
+        try:
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+            response = requests.get(search_url, headers=headers, timeout=10)
+            if response.status_code != 200:
+                continue
+            
+            content = response.text
+            extract_prompt = f"""
+            The following is HTML content from a search for '{dish_name}'. 
+            Extract the SPECIFIC nutrition macros per 100g (calories, protein, carbs, fat, fiber) for this exact item.
+            
+            CRITICAL: Do not provide generic "average" values for a category of food. If this is a regional dish (like Misal Pav vs Pav Bhaji), ensure the macros reflect the specific ingredients of THAT dish. 
+            If it's a complex dish, try to find a recipe (list of ingredients and their weights).
+            
+            Return a JSON object with:
+            - 'type': 'ingredient' or 'dish'
+            - 'macros': {{ 'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0 }} (if ingredient)
+            - 'recipe': [{{ 'name': '...', 'grams': 0 }}] (if dish)
+            - 'total_weight': 0 (if dish)
+            - 'reasoning': 'Briefly explain why these values are specific to {dish_name}'
+            
+            If you cannot find reliable data in this specific HTML, return {{ 'error': 'not found' }}.
+            Respond ONLY with JSON.
+            
+            HTML:
+            {content[:10000]} 
+            """
+            
+            resp = litellm.completion(
+                model="ollama/llama3.1:latest",
+                messages=[{"role": "user", "content": extract_prompt}],
+                response_format={"type": "json_object"},
+                api_base=litellm.api_base
+            )
+            data = json.loads(resp.choices[0].message.content)
+            if 'error' not in data:
+                return data
+        except Exception as e:
+            print(f"Search attempt failed for {query}: {e}")
+            
+    return None
+
+
+def fetch_and_save_recipe(dish_name):
+    """
+    Uses web search to find if a food is a complex dish, fetches its recipe, and saves it.
+    Returns the recipe and total weight if found, otherwise None.
+    """
+    web_data = search_web_for_food(dish_name)
+    if not web_data or 'error' in web_data:
+        return None, None
+    
+    if web_data.get('type') == 'dish' and web_data.get('recipe'):
+        recipe = web_data['recipe']
+        save_recipe(dish_name, recipe)
+        return recipe, web_data.get('total_weight', 500)
+    
+    return None, None
 
 def add_learned_food(name, calories, protein, carbs, fat, fiber):
     """

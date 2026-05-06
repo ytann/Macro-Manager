@@ -1,8 +1,8 @@
 import os
 from unittest.mock import patch
-from database import init_db, save_meal, get_todays_macros
-from parser import parse_food_log
-import foodbank
+from app.database import init_db, save_meal, get_todays_macros
+from app.parser import parse_food_log
+from app import foodbank
 
 def test_logic_mocked():
     print("Resetting DB...")
@@ -39,7 +39,7 @@ def test_logic_mocked():
             totals = get_todays_macros()
             print(f"Totals: {totals}")
             
-            if totals.get('calories', 0) > 0:
+            if totals.get('totals', {}).get('calories', 0) > 0:
                 print("✅ Success: Daily totals updated!")
             else:
                 print("❌ Failure: Daily totals are 0!")

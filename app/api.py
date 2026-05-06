@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from app.parser import parse_food_log
-from app.database import save_meal, get_todays_macros, init_db, get_todays_meals, clear_todays_meals
+from app.database import save_meal, get_todays_macros, init_db, get_todays_meals, clear_todays_meals, get_daily_goals
 
 app = FastAPI(title="MacroManager API")
 
@@ -11,6 +11,7 @@ init_db()
 class LogRequest(BaseModel):
     """Request schema for logging a meal."""
     text: str
+    meal_type: str = "General"
 
 @app.post("/log")
 async def log_meal(request: LogRequest):
@@ -20,17 +21,22 @@ async def log_meal(request: LogRequest):
     """
     try:
         meal_data = parse_food_log(request.text)
-        save_meal(meal_data)
+        save_meal(meal_data, meal_type=request.meal_type)
         return {"status": "success", "message": f"Meal {meal_data.meal_id} logged successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/summary")
 async def get_summary():
-    """Retrieves aggregated nutrition totals for the current day."""
+    """Retrieves aggregated nutrition totals, grouped meals, and daily goals."""
     try:
-        totals = get_todays_macros()
-        return totals
+        summary_data = get_todays_macros()
+        goals = get_daily_goals()
+        return {
+            "consumed": summary_data["totals"],
+            "grouped": summary_data["grouped"],
+            "goals": goals
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

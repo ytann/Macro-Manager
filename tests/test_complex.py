@@ -1,5 +1,4 @@
 import requests
-import json
 import time
 import subprocess
 import os
@@ -19,7 +18,7 @@ def run_test():
 
     # Start API
     print("Starting API...")
-    process = subprocess.Popen(["python3", "api.py"])
+    process = subprocess.Popen(["python3", "-m", "app.api"])
     time.sleep(5) # Wait for server to start
 
     try:
@@ -35,10 +34,12 @@ def run_test():
         print(f"Summary Response: {sum_resp.status_code} - {sum_resp.text}")
         
         data = sum_resp.json()
-        if data.get('calories', 0) > 0:
+        consumed_cals = data.get('consumed', {}).get('calories', 0)
+        if consumed_cals > 0:
             print("\n✅ SUCCESS: Complex dish logged and totals updated!")
         else:
-            print("\n❌ FAILURE: Calories are 0. Deconstruction or DB lookup failed.")
+            print(f"\n❌ FAILURE: Calories are {consumed_cals}. Deconstruction or DB lookup failed.")
+
 
     except Exception as e:
         print(f"Error during test: {e}")

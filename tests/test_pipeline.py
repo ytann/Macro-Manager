@@ -1,5 +1,5 @@
-import foodbank
-import parser
+from app import foodbank
+from app import parser
 
 def test_pipeline():
     print("Seeding database...")

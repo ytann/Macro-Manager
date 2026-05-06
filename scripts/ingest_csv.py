@@ -64,26 +64,30 @@ def ingest():
     """)
     
     def safe_float(val):
-        if val is None: return 0.0
+        if val is None:
+            return 0.0
         try:
             return float(val) if pd.notnull(val) else 0.0
-        except:
+        except (ValueError, TypeError):
             return 0.0
 
     def safe_bool(val):
-        if val is None: return 0
+        if val is None:
+            return 0
         try:
-            if isinstance(val, (bool, int)): return int(val)
+            if isinstance(val, (bool, int)):
+                return int(val)
             s = str(val).lower()
             return 1 if s in ['yes', 'true', '1', 'y'] else 0
-        except:
+        except (ValueError, TypeError):
             return 0
 
     count = 0
     for _, row in df.iterrows():
         try:
             name_col = mapping['name']
-            if name_col is None: continue
+            if name_col is None:
+                continue
             
             name = str(row[name_col])
             aliases = name.lower()
