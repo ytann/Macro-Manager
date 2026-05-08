@@ -11,9 +11,10 @@ For every item extracted from the user's log:
 3. **Offline Path**: Return DB-cached data if available. Queue unverified items (`verified=0`) for future verification. If no cache, use `internal_estimate` (LLM guess), persist with `verified=0`.
 4. **Online Path**: 
    - DB verified data (`verified=1`) -> return immediately
-   - `find_source_of_truth()` -> authoritative web extraction (DuckDuckGo HTML -> LLM validation)
-   - `search_web_for_food()` -> general web search with fallback queries
-   - `internal_estimate()` -> LLM estimate as last resort
+    - `find_source_of_truth()` -> authoritative web extraction (DuckDuckGo HTML -> LLM validation)
+    - `search_web_for_food()` -> general web search with fallback queries
+    - `internal_estimate()` -> LLM estimate as last resort
+    All methods return a uniform flat dictionary containing macros.
 
 ## 2. Recipe Expansion
 

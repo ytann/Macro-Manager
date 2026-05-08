@@ -1,11 +1,25 @@
 import streamlit as st
-import requests
+import httpx
+import asyncio
 import base64
 import streamlit.components.v1 as components
 
 API_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
+
+# --- Helpers for Async Calls in Streamlit ---
+async def async_get(url):
+    async with httpx.AsyncClient() as client:
+        return await client.get(url)
+
+async def async_post(url, json_data):
+    async with httpx.AsyncClient() as client:
+        return await client.post(url, json=json_data)
+
+async def async_delete(url):
+    async with httpx.AsyncClient() as client:
+        return await client.delete(url)
 
 # --- Voice Input Handling ---
 query_params = st.query_params
@@ -16,7 +30,7 @@ st.title("🥗 MacroManager")
 # --- HERO SECTION: Daily Totals ---
 st.subheader("📅 Daily Progress")
 try:
-    response = requests.get(f"{API_URL}/summary")
+    response = asyncio.run(async_get(f"{API_URL}/summary"))
     if response.status_code == 200:
         data = response.json()
         consumed = data.get('consumed', {})
@@ -173,7 +187,7 @@ with tabs[0]:
                 try:
                     with st.spinner("Parsing and logging food..."):
                         payload = {"text": user_input, "meal_type": meal_type}
-                        response = requests.post(f"{API_URL}/log", json=payload)
+                        response = asyncio.run(async_post(f"{API_URL}/log", payload))
                         if response.status_code == 200:
                             st.toast("Meal logged successfully! 🥗", icon="✅")
                             st.rerun()
@@ -197,7 +211,7 @@ if voice_text:
         # To strictly follow "Automatically trigger the existing Log button", 
         # we simulate the POST request.
         payload = {"text": voice_text, "meal_type": "General"} # Defaulting to General for voice
-        response = requests.post(f"{API_URL}/log", json=payload)
+        response = asyncio.run(async_post(f"{API_URL}/log", payload))
         if response.status_code == 200:
             st.toast("Meal logged via voice! 🎤", icon="✅")
         else:
@@ -218,7 +232,7 @@ st.divider()
 st.subheader("📖 Daily Food Journal")
 try:
     # Use the same summary endpoint to get grouped meals
-    response = requests.get(f"{API_URL}/summary")
+    response = asyncio.run(async_get(f"{API_URL}/summary"))
     if response.status_code == 200:
         data = response.json()
         grouped = data.get('grouped', {})
@@ -254,9 +268,9 @@ try:
                                 fiber = sub_macros.get('fiber', 0) or 0
                                 
                                 st.markdown(
-                                     f"**{item['name']}** ({item['grams']}g) "
-                                     f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
-                                 )
+                                    f"**{item['name']}** ({item['grams']}g) "
+                                    f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
+                                )
     else:
         st.error("Could not fetch journal data.")
 except Exception as e:
@@ -266,7 +280,7 @@ except Exception as e:
 st.divider()
 if st.button("🗑️ Clear Daily Macros", use_container_width=True):
     try:
-        clear_resp = requests.delete(f"{API_URL}/clear")
+        clear_resp = asyncio.run(async_delete(f"{API_URL}/clear"))
         if clear_resp.status_code == 200:
             st.success("Daily totals cleared!")
             st.rerun()

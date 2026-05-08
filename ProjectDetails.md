@@ -9,7 +9,7 @@ MacroManager is an intelligent nutrition tracking system that bridges the gap be
 
 ### 2.1 Architecture Overview
 The system follows a decoupled **Client-Server Architecture**:
-- **Frontend (Streamlit)**: Provides a user-friendly interface for logging food and visualizing daily progress.
+- **Frontend (Streamlit)**: Provides a user-friendly interface for logging food and visualizing daily progress. Uses `httpx` and `asyncio.run()` for asynchronous communication with the backend.
 - **Backend (FastAPI)**: Orchestrates the data flow between the LLM, the nutrition database, and the user logs.
 - **Nutritional Intelligence (Llama 3.1 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent.
 - **Persistence Layer (SQLite)**: Two distinct databases—one for static/learned food data (`foodbank.db`) and one for user meal logs (`macros.db`).
@@ -40,7 +40,7 @@ The system follows a decoupled **Client-Server Architecture**:
     - Implements automated schema migration to ensure the database evolves without data loss.
 
 #### B. `FoodbankService`
-- **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence.
+- **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence. All paths are standardized to return a flat macro dictionary.
 - **Async Core**: Fully refactored to use `asyncio` and `httpx`, allowing non-blocking network requests and database operations via `to_thread`.
 - **Recipe Store**: Saves and retrieves JSON-based recipes for complex dishes to ensure consistency in expansion.
 - **Learning Mode**: Automatically persists newly discovered foods to the database to reduce future LLM calls.

@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from typing import Any, Optional, List, Dict
+from typing import Dict
 from app.core.config import Config
 
 DB_PATH = Config.FOODBANK_DB_PATH
@@ -49,24 +49,13 @@ def get_todays_macros():
         }
         return {"totals": totals}
 
-
-def get_todays_macros(*args, **kwargs):
-    """Backward compatibility helper for tests."""
-    pass
-
-
 class DatabaseManager:
     """
-    Singleton Manager for SQLite operations.
+    Manager for SQLite operations.
     Handles both the foodbank (static/learned nutrition) and macro logs (daily meals).
     """
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(DatabaseManager, cls).__new__(cls)
-            cls._instance._init_db()
-        return cls._instance
+    def __init__(self):
+        self._init_db()
 
     def _init_db(self):
         self.foodbank_path = Config.FOODBANK_DB_PATH
@@ -77,11 +66,12 @@ class DatabaseManager:
     def _init_foodbank(self):
         with sqlite3.connect(self.foodbank_path) as conn:
             cursor = conn.cursor()
+            cursor.execute("DROP TABLE IF EXISTS foods")
             cursor.execute("""
-                CREATE VIRTUAL TABLE IF NOT EXISTS foods USING fts5(
+                CREATE VIRTUAL TABLE foods USING fts5(
                     name, aliases, calories UNINDEXED, protein UNINDEXED, 
                     carbs UNINDEXED, fat UNINDEXED, fiber UNINDEXED, is_complete_protein UNINDEXED,
-                    verified UNINDEXED
+                    verified UNINDEXED, source UNINDEXED
                 )
             """)
             cursor.execute("CREATE TABLE IF NOT EXISTS recipes (dish_name TEXT PRIMARY KEY, recipe_json TEXT NOT NULL)")
@@ -102,20 +92,20 @@ class DatabaseManager:
             count = cursor.fetchone()[0]
             if count == 0:
                 foods = [
-                    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0),
-                    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0),
-                    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0),
-                    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0),
-                    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0),
-                    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0),
-                    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0),
-                    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0),
-                    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0),
-                    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0),
-                    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0),
-                    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0),
+                    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 'initial_seed'),
+                    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 'initial_seed'),
+                    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 'initial_seed'),
+                    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 'initial_seed'),
+                    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 'initial_seed'),
+                    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 'initial_seed'),
+                    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 'initial_seed'),
+                    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 'initial_seed'),
+                    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 'initial_seed'),
+                    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 'initial_seed'),
+                    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 'initial_seed'),
+                    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 'initial_seed'),
                 ]
-                cursor.executemany("INSERT INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", foods)
+                cursor.executemany("INSERT INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", foods)
                 conn.commit()
 
     def _init_macros(self):

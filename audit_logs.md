@@ -4,17 +4,17 @@
 
 | Issue Name | Brief Description | Criticality | Status |
 | :--- | :--- | :--- | :--- |
-| [Double DuckDuckGo requests](#double-duckduckgo-requests) | Redundant network calls for identical HTML | Medium | [PENDING] |
-| [No `source` column in foods table](#no-source-column-in-foods-table) | Cannot audit nutrition data origin | Medium | [PENDING] |
-| [Hardcoded prompt in `find_source_of_truth`](#hardcoded-prompt-in-find_source_of_truth) | Prompt not externalized in `prompts.yaml` | Medium | [PENDING] |
+| [Double DuckDuckGo requests](#double-duckduckgo-requests) | Redundant network calls for identical HTML | Medium | [FIXED] |
+| [No `source` column in foods table](#no-source-column-in-foods-table) | Cannot audit nutrition data origin | Medium | [FIXED] |
+| [Hardcoded prompt in `find_source_of_truth`](#hardcoded-prompt-in-find_source_of_truth) | Prompt not externalized in `prompts.yaml` | Medium | [FIXED] |
 | [Wiki documentation out of sync](#wiki-documentation-out-of-sync-with-code) | Docs reference dead code/old architecture | Medium | [PENDING] |
-| [Singleton pattern breaks testability](#singleton-pattern-breaks-testability) | `DatabaseManager` singleton hinders isolated tests | Medium | [PENDING] |
-| [Schema mismatch across old and new modules](#schema-mismatch-across-old-and-new-modules) | Old modules create incompatible FTS5 schema | Medium | [PENDING] |
-| [`upsert_food` FTS5 DELETE incompatibility](#upsert_food-fts5-delete-incompatibility) | Redundant `DELETE` call on content-less FTS5 table | Medium | [PENDING] |
-| [Debug scripts in tests/ folder](#debug-scripts-in-tests-folder) | Non-pytest scripts in `tests/` directory | Low | [PENDING] |
-| [Frontend uses synchronous `requests`](#frontend-uses-synchronous-requests) | Streamlit uses sync calls for async backend | Low | [PENDING] |
-| [Empty directories](#empty-directories) | Unused `templates/` and `wiki/entities/` | Low | [PENDING] |
-| [`fiber` key inconsistency](#fiber-key-inconsistency-between-data-sources) | Return formats differ between web search methods | Low | [PENDING] |
+| [Singleton pattern breaks testability](#singleton-pattern-breaks-testability) | `DatabaseManager` singleton hinders isolated tests | Medium | [FIXED] |
+| [Schema mismatch across old and new modules](#schema-mismatch-across-old-and-new-modules) | Old modules create incompatible FTS5 schema | Medium | [FIXED] |
+| [`upsert_food` FTS5 DELETE incompatibility](#upsert_food-fts5-delete-incompatibility) | Redundant `DELETE` call on content-less FTS5 table | Medium | [FIXED] |
+| [Debug scripts in tests/ folder](#debug-scripts-in-tests-folder) | Non-pytest scripts in `tests/` directory | Low | [FIXED] |
+| [Frontend uses synchronous `requests`](#frontend-uses-synchronous-requests) | Streamlit uses sync calls for async backend | Low | [FIXED] |
+| [Empty directories](#empty-directories) | Unused `templates/` and `wiki/entities/` | Low | [FIXED] |
+| [`fiber` key inconsistency](#fiber-key-inconsistency-between-data-sources) | Return formats differ between web search methods | Low | [FIXED] |
 | [Race condition in `asyncio.gather`](#race-condition-in-asyncio.gather-with-shared-mutable-state) | Concurrent mutation of shared state dict/list | Critical | [FIXED] |
 | [Database drops foods table](#database-drops-and-re-creates-foods-table-on-every-startup) | Learned data wiped on every restart | Critical | [FIXED] |
 | [Missing recipe expansion](#missing-recipe-expansion-in-new-extraction-pipeline) | Complex dishes not decomposed into ingredients | Critical | [FIXED] |
@@ -102,7 +102,7 @@
 ### `upsert_food` FTS5 DELETE incompatibility
 - **Files:** `app/services/foodbank.py`
 - **Issue Detail:** Using `DELETE FROM foods WHERE name = ?` is redundant and potentially problematic for content-less FTS5 tables where `INSERT OR REPLACE` handles updates.
-- **Fix Detail:** [PENDING] Plan to unify the return format and rely on FTS5 replace logic or correct `MATCH` syntax.
+- **Fix Detail:** Replaced `DELETE` + `INSERT` with a single `INSERT OR REPLACE` using a subquery to resolve the `rowid`, ensuring updates occur without redundant calls or record duplication.
 
 ### `sync_timestamp` in heartbeat is called after `process_verification_queue` completes
 - **Files:** `app/api.py`
@@ -142,17 +142,17 @@
 ### Double DuckDuckGo requests for same item
 - **Files:** `app/services/foodbank.py`
 - **Issue Detail:** `find_source_of_truth` and `search_web_for_food` both fetch the same HTML content separately.
-- **Fix Detail:** [PENDING] Plan to fetch HTML once and pass it to both extraction strategies.
+- **Fix Detail:** Refactored `get_nutrition_data` to fetch HTML once and pass it as an optional argument to both extraction methods.
 
 ### No `source` column in foods table
-- **Files:** `app/services/database.py`
+- **Files:** `app/services/database.py`, `app/services/foodbank.py`
 - **Issue Detail:** Nutrition data is persisted without the source URL, making auditing impossible.
-- **Fix Detail:** [PENDING] Add `source_json` (UNINDEXED) column to the FTS5 `foods` table.
+- **Fix Detail:** Added `source` UNINDEXED column to FTS5 `foods` table. Updated `upsert_food` and `find_source_of_truth` to persist the source URL.
 
 ### Hardcoded prompt in `find_source_of_truth`
 - **Files:** `app/services/foodbank.py`
 - **Issue Detail:** The validator prompt is hardcoded in Python instead of being in `prompts.yaml`.
-- **Fix Detail:** [PENDING] Move the prompt to `prompts.yaml` under `foodbank.source_of_truth`.
+- **Fix Detail:** Externalized the prompt to `prompts.yaml` under `foodbank.source_of_truth` and updated the service to load it dynamically.
 
 ### Wiki documentation out of sync with code
 - **Files:** `wiki/logic/`
@@ -162,29 +162,29 @@
 ### Singleton pattern breaks testability
 - **Files:** `app/services/database.py`
 - **Issue Detail:** `DatabaseManager` singleton prevents creating isolated DB instances for concurrent tests.
-- **Fix Detail:** [PENDING] Remove `__new__` override and allow normal instantiation.
+- **Fix Detail:** Removed `__new__` override to allow standard instantiation and isolated database managers.
 
 ### Schema mismatch across old and new modules
 - **Files:** `scripts/ingest_csv.py`
 - **Issue Detail:** CSV ingestion script uses an old schema missing the `verified` column.
-- **Fix Detail:** [PENDING] Update `ingest_csv.py` to include the `verified` column in the FTS5 table creation.
+- **Fix Detail:** Updated `ingest_csv.py` to include `verified` and `source` columns in FTS5 table creation and INSERT statements. Added CLI argument support for non-interactive testing.
 
 ### Debug scripts in tests/ folder
 - **Files:** `tests/`
 - **Issue Detail:** Live-network debug scripts are mixed with unit tests.
-- **Fix Detail:** [PENDING] Move non-pytest scripts to a dedicated `debug/` folder.
+- **Fix Detail:** Moved non-pytest scripts to a dedicated `debug/` folder.
 
 ### Frontend uses synchronous `requests`
 - **Files:** `app/frontend.py`
 - **Issue Detail:** Use of `requests` in Streamlit is inconsistent with the async backend.
-- **Fix Detail:** [PENDING] Switch to `httpx` async client.
+- **Fix Detail:** Replaced `requests` with `httpx` and wrapped async calls in `asyncio.run()` to maintain compatibility with Streamlit's synchronous execution model.
 
 ### Empty directories
 - **Files:** `templates/`, `wiki/entities/`
 - **Issue Detail:** Unused directories clutter the project root.
-- **Fix Detail:** [PENDING] Remove empty directories.
+- **Fix Detail:** Removed empty `templates/` and `wiki/entities/` directories.
 
 ### `fiber` key inconsistency between data sources
-- **Files:** `app/services/foodbank.py`
+- **Files:** `app/services/foodbank.py`, `prompts/prompts.yaml`
 - **Issue Detail:** Different web search methods return fiber in different JSON structures (flat vs nested).
-- **Fix Detail:** [PENDING] Standardize the return dictionary format for all nutrition resolution methods.
+- **Fix Detail:** Updated `web_search` prompt to return macros at the top level and removed normalization logic in `get_nutrition_data` to ensure all paths return a uniform flat dictionary.

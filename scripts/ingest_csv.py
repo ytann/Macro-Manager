@@ -5,14 +5,21 @@ import sys
 
 # Add app directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from app.database import DB_PATH
+from app.core.config import Config
 
-def ingest():
+DB_PATH = Config.FOODBANK_DB_PATH
+
+def ingest_csv():
     """
     Interactively maps CSV columns to Foodbank schema and ingests data into 
     the SQLite FTS5 database.
     """
-    csv_file = input("Enter the path to the foods CSV file (default: foods.csv): ").strip() or "foods.csv"
+    # Accept CSV path from command line if provided, otherwise prompt
+    if len(sys.argv) > 1:
+        csv_file = sys.argv[1]
+    else:
+        csv_file = input("Enter the path to the foods CSV file (default: foods.csv): ").strip() or "foods.csv"
+
     if not os.path.exists(csv_file):
         print(f"Error: File {csv_file} not found.")
         return
@@ -59,7 +66,8 @@ def ingest():
     cursor.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS foods USING fts5(
             name, aliases, calories UNINDEXED, protein UNINDEXED, 
-            carbs UNINDEXED, fat UNINDEXED, fiber UNINDEXED, is_complete_protein UNINDEXED
+            carbs UNINDEXED, fat UNINDEXED, fiber UNINDEXED, is_complete_protein UNINDEXED,
+            verified UNINDEXED, source UNINDEXED
         )
     """)
     
@@ -93,7 +101,7 @@ def ingest():
             aliases = name.lower()
             
             cursor.execute(
-                "INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, is_complete_protein) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, is_complete_protein, verified, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     name, 
                     aliases, 
@@ -102,7 +110,9 @@ def ingest():
                     safe_float(row.get(mapping['carbs'])), 
                     safe_float(row.get(mapping['fat'])), 
                     safe_float(row.get(mapping['fiber'])), 
-                    safe_bool(row.get(mapping['complete']))
+                    safe_bool(row.get(mapping['complete'])),
+                    0,
+                    'csv_import'
                 )
             )
             count += 1
@@ -114,4 +124,4 @@ def ingest():
     print(f"\nSuccessfully ingested {count} items into Foodbank.")
 
 if __name__ == "__main__":
-    ingest()
+    ingest_csv()

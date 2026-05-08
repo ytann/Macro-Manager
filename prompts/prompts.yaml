@@ -50,9 +50,9 @@ foodbank:
     
     Return a JSON object with:
     - 'type': 'ingredient' or 'dish'
-    - 'macros': {{ 'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0 }} (if ingredient)
-    - 'recipe': [{{ 'name': '...', 'grams': 0 }}] (if dish)
-    - 'total_weight': 0 (if dish)
+    - 'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0 (provide these if 'type' is 'ingredient')
+    - 'recipe': [{{ 'name': '...', 'grams': 0 }}] (if 'type' is 'dish')
+    - 'total_weight': 0 (if 'type' is 'dish')
     - 'reasoning': 'Briefly explain why these values are specific to {dish_name}'
     
     If you cannot find reliable data in this specific HTML, return {{ 'error': 'not found' }}.
@@ -85,4 +85,21 @@ foodbank:
     If you are absolutely unsure, return {{'error': 'unknown'}}.
     
     DO NOT return 0 for all fields unless 'is_real_food' is false. For real foods, provide a realistic estimate based on food science.
+
+  source_of_truth: |
+    You are a nutrition data validator. From the provided HTML, find the most authoritative 100g nutrition facts for '{dish_name}'.
+    
+    Prioritize data from: 1. Government health databases, 2. Established nutrition websites, 3. Scientific papers.
+    
+    Return a JSON object with:
+    - 'calories': numeric, 'protein': numeric, 'carbs': numeric, 'fat': numeric, 'fiber': numeric
+    - 'source': 'URL or Site Name'
+    - 'confidence': 'High', 'Medium', or 'Low'
+    
+    If the data is contradictory, take the average of the top 3 reputable sources.
+    If no reliable data is found, return {{'error': 'not found'}}.
+    Respond ONLY with JSON.
+    
+    HTML:
+    {content}
 

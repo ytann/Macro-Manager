@@ -4,7 +4,7 @@ import httpx
 import litellm
 import yaml
 import asyncio
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Optional, List, Dict
 from app.services.database import DatabaseManager
 from app.core.config import Config
 
@@ -29,7 +29,7 @@ class FoodbankService:
 
     async def _is_network_available(self) -> bool:
         try:
-            response = await self.http_client.head("https://1.1.1.1", timeout=1.5)
+            await self.http_client.head("https://1.1.1.1", timeout=1.5)
             return True
         except (httpx.RequestError, httpx.TimeoutException):
             return False
@@ -142,12 +142,13 @@ class FoodbankService:
                 print(f"Web search failed for {query}: {e}")
         return None
 
-    async def upsert_food(self, name: str, calories: float, protein: float, carbs: float, fat: float, fiber: float, verified: int = 0):
+    async def upsert_food(self, name: str, calories: float, protein: float, carbs: float, fat: float, fiber: float, verified: int = 0, source: Optional[str] = None):
         def _upsert():
             conn = self.db.get_foodbank_conn()
-            conn.execute("DELETE FROM foods WHERE name = ?", (name,))
-            conn.execute("INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, is_complete_protein, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                         (name, name.lower(), calories, protein, carbs, fat, fiber, 0, verified))
+            conn.execute(
+                "INSERT OR REPLACE INTO foods (rowid, name, aliases, calories, protein, carbs, fat, fiber, is_complete_protein, verified, source) VALUES ((SELECT rowid FROM foods WHERE name = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (name, name, name.lower(), calories, protein, carbs, fat, fiber, 0, verified, source)
+            )
             conn.commit()
             conn.close()
         await asyncio.to_thread(_upsert)
@@ -188,7 +189,7 @@ class FoodbankService:
                     ca = float(est_data.get('carbs') or 0)
                     f = float(est_data.get('fat') or 0)
                     fi = float(est_data.get('fiber') or 0)
-                    await self.upsert_food(name, c, p, ca, f, fi, verified=0)
+                    await self.upsert_food(name, c, p, ca, f, fi, verified=0, source="internal_estimate")
                     return {'calories': c, 'protein': p, 'carbs': ca, 'fat': f, 'fiber': fi}
             except Exception as e:
                 print(f"Internal estimate failed for {name} (offline): {e}")
@@ -199,23 +200,26 @@ class FoodbankService:
             return food_data
         
         # Food is missing or unverified -> Web Search
+        # Fetch HTML once to avoid redundant requests
+        query = f"nutrition facts {name} per 100g calories protein carbs fat fiber"
+        html = await self._fetch_web_page(query)
+
         # Try find_source_of_truth first (highest quality)
-        truth = await self.find_source_of_truth(name)
+        truth = await self.find_source_of_truth(name, html_content=html)
         if truth and 'error' not in truth:
             # find_source_of_truth already upserts to DB with verification status based on confidence
             return truth
         
-        # Fallback to search_web_for_food
-        web_data = await self.search_web_for_food(name)
+        # Fallback to search_web_for_food (will try the same HTML first, then its own queries)
+        web_data = await self.search_web_for_food(name, html_content=html)
         if web_data and 'error' not in web_data:
-            macros = web_data.get('macros', {}) if web_data.get('type') == 'ingredient' else web_data
-            c = float(macros.get('calories') or 0)
-            p = float(macros.get('protein') or 0)
-            ca = float(macros.get('carbs') or 0)
-            f = float(macros.get('fat') or 0)
-            fi = float(macros.get('fiber') or 0)
+            c = float(web_data.get('calories') or 0)
+            p = float(web_data.get('protein') or 0)
+            ca = float(web_data.get('carbs') or 0)
+            f = float(web_data.get('fat') or 0)
+            fi = float(web_data.get('fiber') or 0)
             # Strictly save with verified=1 as per blueprint
-            await self.upsert_food(name, c, p, ca, f, fi, verified=1)
+            await self.upsert_food(name, c, p, ca, f, fi, verified=1, source="web_search")
             return {'calories': c, 'protein': p, 'carbs': ca, 'fat': f, 'fiber': fi}
         
         # Web search completely failed -> Fallback to internal_estimate
@@ -240,7 +244,7 @@ class FoodbankService:
                 ca = float(est_data.get('carbs') or 0)
                 f = float(est_data.get('fat') or 0)
                 fi = float(est_data.get('fiber') or 0)
-                await self.upsert_food(name, c, p, ca, f, fi, verified=0)
+                await self.upsert_food(name, c, p, ca, f, fi, verified=0, source="internal_estimate")
                 return {'calories': c, 'protein': p, 'carbs': ca, 'fat': f, 'fiber': fi}
         except Exception as e:
             print(f"Internal estimate failed for {name} (online fallback): {e}")
@@ -257,23 +261,7 @@ class FoodbankService:
             return None
         
         try:
-            truth_prompt = f"""
-            You are a nutrition data validator. From the provided HTML, find the most authoritative 100g nutrition facts for '{dish_name}'.
-            
-            Prioritize data from: 1. Government health databases, 2. Established nutrition websites, 3. Scientific papers.
-            
-            Return a JSON object with:
-            - 'calories': numeric, 'protein': numeric, 'carbs': numeric, 'fat': numeric, 'fiber': numeric
-            - 'source': 'URL or Site Name'
-            - 'confidence': 'High', 'Medium', or 'Low'
-            
-            If the data is contradictory, take the average of the top 3 reputable sources.
-            If no reliable data is found, return {{'error': 'not found'}}.
-            Respond ONLY with JSON.
-            
-            HTML:
-            {html_content[:15000]}
-            """
+            truth_prompt = self.prompts['source_of_truth'].format(dish_name=dish_name, content=html_content[:15000])
             resp = await litellm.acompletion(
                 model=self.model,
                 messages=[{"role": "user", "content": truth_prompt}],
@@ -293,7 +281,8 @@ class FoodbankService:
                     carbs=float(data.get('carbs') or 0),
                     fat=float(data.get('fat') or 0),
                     fiber=float(data.get('fiber') or 0),
-                    verified=is_verified
+                    verified=is_verified,
+                    source=data.get('source')
                 )
             return data
         except Exception as e:
@@ -342,7 +331,8 @@ class FoodbankService:
                             carbs=float(truth.get('carbs') or 0),
                             fat=float(truth.get('fat') or 0),
                             fiber=float(truth.get('fiber') or 0),
-                            verified=1
+                            verified=1,
+                            source=truth.get('source')
                         )
                         def _remove():
                             conn = self.db.get_foodbank_conn()
@@ -399,19 +389,19 @@ class FoodbankService:
             cursor = conn.cursor()
             # We use the same seeding logic as DatabaseManager._init_foodbank
             foods = [
-                ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0),
-                ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0),
-                ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0),
-                ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0),
-                ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0),
-                ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0),
-                ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0),
-                ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0),
-                ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0),
-                ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0),
-                ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0),
-                ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0),
+                ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 'initial_seed'),
+                ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 'initial_seed'),
+                ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 'initial_seed'),
+                ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 'initial_seed'),
+                ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 'initial_seed'),
+                ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 'initial_seed'),
+                ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 'initial_seed'),
+                ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 'initial_seed'),
+                ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 'initial_seed'),
+                ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 'initial_seed'),
+                ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 'initial_seed'),
+                ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 'initial_seed'),
             ]
-            cursor.executemany("INSERT OR REPLACE INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", foods)
+            cursor.executemany("INSERT OR REPLACE INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", foods)
             conn.commit()
 

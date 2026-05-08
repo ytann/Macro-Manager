@@ -18,8 +18,9 @@ app/
     foodbank.py       FoodbankService: DB lookups, web search, offline estimates, verification queue.
     extraction.py     ExtractionService: Two-pass LLM extraction + async nutrition resolution.
 prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification, foodbank.web_search/internal_estimate)
-tests/                pytest + debug scripts
-scripts/ingest_csv.py CSV->foodbank importer
+  tests/                pytest suites
+  debug/                non-pytest diagnostic scripts
+  scripts/ingest_csv.py CSV->foodbank importer
 raw/                  Cloud-generated logic specs
 wiki/                 QA rules, logic docs, agent index
 ```
@@ -37,6 +38,7 @@ User Text -> ExtractionService.parse()
         - DB lookup (FTS5 exact + fuzzy)
         - [OFFLINE] cached data or LLM estimate (verified=0, queued)
         - [ONLINE] find_source_of_truth -> search_web_for_food -> internal_estimate
+        - Standardized flat macro return for all paths
         - Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
   5. Aggregate results, return FoodLog with total_macros + total_calories
   6. Persist to macros.db (meals table)

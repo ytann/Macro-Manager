@@ -39,7 +39,8 @@ MacroManager/
     prompts.yaml              # Externalized LLM prompts
   scripts/
     ingest_csv.py             # CSV -> foodbank importer
-  tests/                      # pytest suites + debug scripts
+  tests/                      # pytest suites
+  debug/                      # non-pytest diagnostic scripts
   wiki/                       # Agent routing index, architecture, QA rules
     index.md                  # Agent routing table
     QA_Failures.md            # Lint rules and failure patterns

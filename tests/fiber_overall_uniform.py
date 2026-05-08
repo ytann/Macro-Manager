@@ -19,7 +19,7 @@ async def test_fiber_uniformity():
         results.append(await fb.find_source_of_truth("Apple", html_content="<html></html>"))
         
         # 2. Mock for Web Search
-        mock_llm.return_value.choices = [AsyncMock(message=AsyncMock(content='{"type":"ingredient", "macros":{"calories":100, "fiber":6}}'))]
+        mock_llm.return_value.choices = [AsyncMock(message=AsyncMock(content='{"type":"ingredient", "calories":100, "fiber":6}'))]
         results.append(await fb.search_web_for_food("Apple"))
         
         # 3. Mock for Internal Estimate
