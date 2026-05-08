@@ -1,8 +1,8 @@
 import os
 from unittest.mock import patch
-from app.database import init_db, save_meal, get_todays_macros
-from app.parser import parse_food_log
-from app import foodbank
+from app.services.database import init_db, save_meal, get_todays_macros
+from app.services.extraction import parse_food_log
+from app.services import foodbank
 
 def test_logic_mocked():
     print("Resetting DB...")

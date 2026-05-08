@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.getcwd())
-from app.parser import parse_food_log
+from app.services.extraction import parse_food_log
 import json
 
 test_cases = [

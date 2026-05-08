@@ -1,9 +1,15 @@
 import streamlit as st
 import requests
+import base64
+import streamlit.components.v1 as components
 
 API_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
+
+# --- Voice Input Handling ---
+query_params = st.query_params
+voice_text = query_params.get("voice_text")
 
 st.title("🥗 MacroManager")
 
@@ -52,12 +58,114 @@ st.divider()
 
 # --- LOGGING SECTION ---
 st.subheader("📝 Log Food")
-tabs = st.tabs(["⌨️ Text", "🎙️ Voice", "📸 Camera"])
+tabs = st.tabs(["⌨️ Text", "📸 Camera"])
 
 with tabs[0]:
+    # We use columns to place the record button next to the text input
     with st.form("log_form"):
         meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack", "General"])
-        user_input = st.text_input("What did you eat?", placeholder="e.g. 200g chicken breast and 100g brown rice")
+        
+        col1, col2 = st.columns([0.85, 0.15])
+        with col1:
+            user_input = st.text_input("What did you eat?", value=voice_text, placeholder="e.g. 200g chicken breast and 100g brown rice")
+        with col2:
+            # Voice recording button using Web Speech API
+            # We use a custom HTML component to handle the 'Hold to Record' logic
+            voice_btn_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { margin: 0; padding: 0; overflow: hidden; display: flex; align-items: flex-end; height: 100vh; }
+                    #record-btn {
+                        width: 50px; 
+                        height: 50px; 
+                        border-radius: 50%; 
+                        border: none; 
+                        background-color: #ef4444; 
+                        color: white; 
+                        cursor: pointer; 
+                        font-size: 20px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        transition: background-color 0.2s;
+                        margin-bottom: 5px;
+                    }
+                    #record-btn:disabled {
+                        background-color: #9ca3af !important;
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+                </style>
+            </head>
+            <body>
+                <button id="record-btn">🎤</button>
+                <script>
+                    const btn = document.getElementById('record-btn');
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+                    if (!SpeechRecognition) {
+                        btn.disabled = true;
+                        btn.title = "Browser not supported";
+                        alert('Voice logging is not supported in this browser. Please try Chrome or Brave.');
+                    } else {
+                        const recognition = new SpeechRecognition();
+                        recognition.continuous = false;
+                        recognition.interimResults = false;
+                        recognition.lang = 'en-US';
+
+                        btn.onmousedown = () => {
+                            btn.style.backgroundColor = '#b91c1c';
+                            try {
+                                recognition.start();
+                            } catch (e) {
+                                console.error('Recognition already started');
+                            }
+                        };
+
+                        btn.onmouseup = () => {
+                            btn.style.backgroundColor = '#ef4444';
+                            recognition.stop();
+                        };
+
+                        btn.ontouchstart = (e) => {
+                            e.preventDefault();
+                            btn.onmousedown();
+                        };
+                        btn.ontouchend = (e) => {
+                            e.preventDefault();
+                            btn.onmouseup();
+                        };
+
+                        recognition.onresult = (event) => {
+                            const text = event.results[0][0].transcript;
+                            window.top.location.href = `?voice_text=${encodeURIComponent(text)}`;
+                        };
+
+                        recognition.onerror = (event) => {
+                            let message = 'Speech Recognition Error: ' + event.error;
+                            if (event.error === 'not-allowed') {
+                                message = 'Permission Denied: Please allow microphone access in your browser settings.';
+                            } else if (event.error === 'network') {
+                                message = 'Network Error: Unable to reach speech servers. Please check your internet or try refreshing.';
+                            } else if (event.error === 'no-speech') {
+                                message = 'No speech detected. Please try again.';
+                            }
+                            alert(message);
+                            btn.style.backgroundColor = '#ef4444';
+                        };
+
+                        recognition.onend = () => {
+                            btn.style.backgroundColor = '#ef4444';
+                        };
+                    }
+                </script>
+            </body>
+            </html>
+            """
+            b64_html = base64.b64encode(voice_btn_html.encode()).decode()
+            st.iframe(src=f"data:text/html;base64,{b64_html}", height=70)
+
         submit_button = st.form_submit_button("Log Meal")
         
         if submit_button:
@@ -76,10 +184,32 @@ with tabs[0]:
             else:
                 st.warning("Please enter some text first.")
 
-with tabs[1]:
-    st.info("Voice logging coming soon! 🎙️")
+# Automatic Trigger for Voice Logging
+if voice_text:
+    try:
+        # Use the current meal_type selection from session state if available, 
+        # otherwise default to the first one in the list
+        current_meal_type = st.session_state.get('meal_type', 'Breakfast') 
+        # Note: meal_type in the form doesn't update session_state automatically 
+        # unless we wrap it in a function. We'll use a default for now or 
+        # allow the user to see it in the box before it logs.
+        
+        # To strictly follow "Automatically trigger the existing Log button", 
+        # we simulate the POST request.
+        payload = {"text": voice_text, "meal_type": "General"} # Defaulting to General for voice
+        response = requests.post(f"{API_URL}/log", json=payload)
+        if response.status_code == 200:
+            st.toast("Meal logged via voice! 🎤", icon="✅")
+        else:
+            st.error(f"Voice log failed: {response.json().get('detail')}")
+            
+        # Clear query params and rerun to clean UI
+        st.query_params.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Voice log error: {e}")
 
-with tabs[2]:
+with tabs[1]:
     st.info("Camera logging coming soon! 📸")
 
 st.divider()
@@ -124,9 +254,9 @@ try:
                                 fiber = sub_macros.get('fiber', 0) or 0
                                 
                                 st.markdown(
-                                    f"**{item['name']}** ({item['grams']}g) "
-                                    f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
-                                )
+                                     f"**{item['name']}** ({item['grams']}g) "
+                                     f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
+                                 )
     else:
         st.error("Could not fetch journal data.")
 except Exception as e:

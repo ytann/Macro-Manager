@@ -1,5 +1,5 @@
-from app import foodbank
-from app import parser
+from app.services import foodbank
+from app.services import extraction as parser
 
 def test_custom_input():
     print("Seeding database...")

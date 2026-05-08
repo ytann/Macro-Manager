@@ -1,15 +1,26 @@
 extraction:
+  voice_correction: |
+    You are a food-log text normalizer. The input text is from a Speech-to-Text engine and may contain phonetic errors (e.g., "better garlic can't" instead of "butter garlic naan").
+    
+    Your task:
+    1. Correct phonetic misspellings to the most likely food-related terms.
+    2. Fix grammar and punctuation while preserving the intent.
+    3. Do NOT extract macros or items; just return the corrected, clean sentence.
+    4. If the text is already correct, return it as is.
+    
+    Input: {text}
+    Corrected Text:
   main: |
     You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
     
     RULES:
     1. ITEM IDENTIFICATION: Extract only the food name. Remove quantifiers like '1 plate of', 'a bowl of', '2 pieces of'.
     2. WEIGHT ESTIMATION: If weight is not provided, estimate a realistic weight in grams based on the specific food item's typical density and serving size.
-       - DO NOT use static ranges for quantifiers. A 'plate' of Sev Puri is significantly lighter than a 'plate' of Rice.
-       - Consider the nature of the food: 1 plate of snacks (like Sev Puri) might be 150-250g, while 1 plate of a main meal (like Biryani) might be 400-600g.
        - Typical benchmarks: Single egg ~50g, standard apple ~150g.
-    3. REGIONAL FOODS: Preserve names like 'Puran Poli', 'Poha', 'Misal Pav'.
-    4. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
+    3. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha).
+    4. NO HALLUCINATIONS: Extract ONLY items explicitly mentioned in the provided text. DO NOT invent items. DO NOT include any examples from these instructions in your output.
+    5. ABSOLUTE SILENCE: If the text contains no real food or is nonsensical, return {{"items": []}}.
+    6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
     
     Text: {text}
 
@@ -22,11 +33,11 @@ extraction:
     CRITICAL RESTRICTIONS:
     1. NO QUANTIFIERS: Never suggest 'plate', 'bowl', 'glass', 'piece', 'portion', 'serving', or numeric quantities (e.g., '2 plates') as food items.
     2. NO OVERLAPS: If an item is already present (e.g., 'Sev Puri' is found), do not suggest parts of it (e.g., 'Sev' or 'Puri').
-    3. NUMERIC WEIGHTS: Provide a single numeric weight in grams for any missing item.
+    3. NO HALLUCINATIONS: Only suggest items explicitly mentioned in the Original Text. DO NOT include any example items from these instructions.
+    4. ABSOLUTE SILENCE: If no additional real food is mentioned in the text, return {{ "missing": [] }}.
+    5. NUMERIC WEIGHTS: Provide a single numeric weight in grams for any missing item.
     
     Return a JSON object with a key 'missing' containing a list of objects with 'name' (string) and 'grams' (number).
-    If nothing is missing, return {{ "missing": [] }}.
-    
     Respond ONLY with JSON.
 
 foodbank:
@@ -58,15 +69,20 @@ foodbank:
     Respond ONLY with JSON.
 
   internal_estimate: |
-    You are a world-class nutrition expert. 
+    You are a strict nutrition validator and expert. 
     Provide the standard, specific nutrition macros for 100g of '{name}'.
     
-    ANALYSIS GUIDELINES:
-    1. Deconstruct '{name}' into its likely core ingredients.
-    2. If it is a regional, specialty, or complex dish, calculate the macros based on those typical constituents.
-    3. If it is a single ingredient, use scientifically accurate standard values.
+    CRITICAL VALIDATION (ZERO TOLERANCE):
+    You MUST set 'is_real_food': false and all numeric macros to 0 if '{name}' is:
+    1. FICTIONAL or IMAGINARY (e.g., Invisible Pizza, Cyber-Sushi, Quantum Broccoli, Space Dust)
+    2. NON-CONSUMABLE or HAZARDOUS (e.g., Uranium, Liquid Gold, Soap, Acid)
+    3. AN ABSTRACT CONCEPT or PHYSICAL FORCE (e.g., Void Matter, Deep Sea Pressure, Cloud Vapor)
+    4. MYTHICAL or SCI-FI (e.g., Dragon Scales, Warp Core)
     
-    Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'reasoning': '...'}}. 
+    If there is ANY doubt about whether this is a real, edible, biological food item, you MUST return 'is_real_food': false.
+    
+    Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'is_real_food': true, 'reasoning': '...'}}. 
     If you are absolutely unsure, return {{'error': 'unknown'}}.
     
-    DO NOT return 0 for all fields. Provide a realistic estimate based on food science and typical preparation.
+    DO NOT return 0 for all fields unless 'is_real_food' is false. For real foods, provide a realistic estimate based on food science.
+

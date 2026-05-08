@@ -24,6 +24,8 @@ class FoodItem(BaseModel):
 class FoodLog(BaseModel):
     meal_id: str
     items: List[FoodItem]
+    total_macros: Macros
+    total_calories: float
     confidence_score: float = Field(..., ge=0, le=1)
 
     @field_validator('confidence_score')
@@ -33,3 +35,5 @@ class FoodLog(BaseModel):
             raise ValueError('Score must be between 0 and 1')
         return v
 ```
+
+File: `app/schemas/food_schemas.py`

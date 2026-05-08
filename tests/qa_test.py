@@ -1,6 +1,6 @@
 import requests
 import os
-from app.database import init_db
+from app.services.database import init_db
 
 API_URL = "http://127.0.0.1:8000"
 

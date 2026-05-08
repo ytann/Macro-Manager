@@ -6,7 +6,7 @@ import sys
 
 # Add root directory to path to allow importing from 'app'
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from app import foodbank
+from app.services import foodbank
 
 API_URL = "http://127.0.0.1:8000"
 

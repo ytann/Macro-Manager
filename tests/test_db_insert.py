@@ -1,4 +1,4 @@
-from app.database import init_db, save_meal, get_todays_macros, DB_PATH
+from app.services.database import init_db, save_meal, get_todays_macros, DB_PATH
 import os
 
 def test_db_flow():
