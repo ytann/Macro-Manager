@@ -98,7 +98,8 @@ class ExtractionService:
         food_item = FoodItem(
             name=name, grams=grams, cals=cal,
             macros=Macros(protein=p, carbs=c, fat=f),
-            sub_macros=sub
+            sub_macros=sub,
+            verified=bool(food_data.get('verified'))
         )
         return (delta, food_item)
 

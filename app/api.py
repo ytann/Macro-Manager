@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from app.services.extraction import ExtractionService
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-from app.schemas.food_schemas import FoodLog
+from app.schemas.food_schemas import GoalRequest
 import json
 import asyncio
 from contextlib import asynccontextmanager
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 app = FastAPI(title="MacroManager API", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 db_manager = DatabaseManager()
 foodbank_service = FoodbankService(db_manager)
 extraction_service = ExtractionService(foodbank_service)
@@ -74,18 +76,25 @@ async def get_summary():
         cursor = conn.execute("SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp) = date('now')")
         rows = cursor.fetchall()
         
-        consumed = {k: sum(row[i] for row in rows) for i, k in enumerate(['protein', 'carbs', 'fat', 'calories', 'fiber', 'sugar', 'sat_fat', 'unsat_fat'])}
+        consumed = {k: sum(row[i] or 0 for row in rows) for i, k in enumerate(['protein', 'carbs', 'fat', 'calories', 'fiber', 'sugar', 'sat_fat', 'unsat_fat'])}
         grouped = {}
         for row in rows:
             m_type = row['meal_type'] or "General"
-            if m_type not in grouped: grouped[m_type] = []
+            if m_type not in grouped:
+                grouped[m_type] = []
             grouped[m_type].append(json.loads(row['items_json']))
             
-        return {
+        daily_data = {
             "consumed": consumed, 
             "goals": db_manager.get_daily_goals(), 
             "grouped": grouped
         }
+        
+    weekly_data = db_manager.get_weekly_summary()
+    return {
+        "daily": daily_data,
+        "weekly": weekly_data
+    }
 
 @app.get("/meals")
 async def get_meals():
@@ -107,7 +116,20 @@ async def get_sync_status():
 async def verify_queue(background_tasks: BackgroundTasks):
     background_tasks.add_task(foodbank_service.run_sync_cycle)
     return {"status": "Queue processing started in background"}
-
+ 
+@app.post("/goals")
+async def update_goals(request: GoalRequest):
+    try:
+        db_manager.set_daily_goals(
+            protein=request.protein,
+            carbs=request.carbs,
+            fat=request.fat,
+            calories=request.calories
+        )
+        return {"status": "success", "message": "Goals updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+ 
 @app.delete("/clear")
 async def clear_data():
 

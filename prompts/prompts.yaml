@@ -23,7 +23,7 @@ extraction:
     6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
     
     Text: {text}
-
+  
   verification: |
     Original Text: "{text}"
     Items already extracted: {found_details}
@@ -39,7 +39,10 @@ extraction:
     
     Return a JSON object with a key 'missing' containing a list of objects with 'name' (string) and 'grams' (number).
     Respond ONLY with JSON.
-
+    
+    HTML:
+    {content}
+  
 foodbank:
   web_search: |
     The following is HTML content from a search for '{dish_name}'. 
@@ -60,14 +63,14 @@ foodbank:
     
     HTML:
     {content}
-
+  
   recipe_discovery: |
     Analyze if '{name}' is a complex dish. 
     If yes, provide a recipe for a standard serving. 
     Return a JSON object: {{"reasoning": "...", "recipe": [{{ "name": "ingredient", "grams": 100 }}], "total_weight": 500}}. 
     If it's a single ingredient, return {{"recipe": null}}. 
     Respond ONLY with JSON.
-
+  
   internal_estimate: |
     You are a strict nutrition validator and expert. 
     Provide the standard, specific nutrition macros for 100g of '{name}'.
@@ -85,7 +88,7 @@ foodbank:
     If you are absolutely unsure, return {{'error': 'unknown'}}.
     
     DO NOT return 0 for all fields unless 'is_real_food' is false. For real foods, provide a realistic estimate based on food science.
-
+  
   source_of_truth: |
     You are a nutrition data validator. From the provided HTML, find the most authoritative 100g nutrition facts for '{dish_name}'.
     
@@ -103,3 +106,20 @@ foodbank:
     HTML:
     {content}
 
+planner:
+  empathetic_suggestion: |
+    You are MacroManager, a highly empathetic, non-judgmental nutrition assistant specializing in PCOS/PCOD dietary management. 
+    Your goal is consistency, not perfection. You look at the math and guide the user with kindness.
+
+    USER DATA:
+    Remaining Daily Macros: {daily_macros}
+    7-Day Weekly Buffer: {weekly_buffer}
+    User Request: {user_request}
+
+    CORE RULES (ZERO TOLERANCE):
+    1. NO SHAMING: Never use guilt. Validate their cravings. Understand that PCOD causes severe hormonal cravings.
+    2. THE PROTEIN OFFSET: Going over the daily limit for protein is a VICTORY. Never penalize it. Use excess protein calories to forgive Carb/Fat overages.
+    3. THE 130% CAP (THE NEGOTIATOR): A user should never exceed 130% of their daily Carb or Fat limit in a single day, as it triggers severe insulin spikes. If their request pushes them beyond 130%, do NOT scold them. Instead, negotiate. Suggest they eat their favorite part of the cheat meal today (keeping it under 130%), and explicitly promise they can have the second half in 3 or 4 days when the buffer resets. 
+    4. INSULIN MANAGEMENT: Always suggest pairing high-carb cheats with a lean protein (e.g., 'Let's add some chicken to that') to blunt the glycemic impact.
+
+    Respond naturally, warmly, and briefly. Do not sound like a robot reading a medical chart.

@@ -123,6 +123,15 @@ class DatabaseManager:
                     meal_type TEXT
                 )
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS goals (
+                    id INTEGER PRIMARY KEY,
+                    protein REAL,
+                    carbs REAL,
+                    fat REAL,
+                    calories REAL
+                )
+            """)
             cursor = conn.execute("PRAGMA table_info(meals)")
             columns = [row['name'] for row in cursor.fetchall()]
             required = {"total_fiber": "REAL", "total_sugar": "REAL", "total_saturated_fat": "REAL", "total_unsaturated_fat": "REAL", "meal_type": "TEXT"}
@@ -130,7 +139,7 @@ class DatabaseManager:
                 if col not in columns:
                     conn.execute(f"ALTER TABLE meals ADD COLUMN {col} {col_type}")
             conn.commit()
-
+ 
     def get_foodbank_conn(self):
         conn = sqlite3.connect(self.foodbank_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
@@ -140,7 +149,48 @@ class DatabaseManager:
         conn = sqlite3.connect(self.macros_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         return conn
-
+ 
+    def set_daily_goals(self, protein: float, carbs: float, fat: float, calories: float):
+        with self.get_macros_conn() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO goals (id, protein, carbs, fat, calories) VALUES (1, ?, ?, ?, ?)",
+                (protein, carbs, fat, calories)
+            )
+            conn.commit()
+ 
     def get_daily_goals(self) -> Dict[str, float]:
+        with self.get_macros_conn() as conn:
+            row = conn.execute("SELECT protein, carbs, fat, calories FROM goals WHERE id = 1").fetchone()
+            if row:
+                return {
+                    "protein": row["protein"],
+                    "carbs": row["carbs"],
+                    "fat": row["fat"],
+                    "calories": row["calories"]
+                }
         return {"calories": 2000, "protein": 150, "carbs": 200, "fat": 65}
+
+    def get_weekly_summary(self) -> dict:
+        with self.get_macros_conn() as conn:
+            cursor = conn.execute(
+                "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp)) as days_logged "
+                "FROM meals "
+                "WHERE date(timestamp) >= date('now', '-7 days')"
+            )
+            row = cursor.fetchone()
+            
+            if not row or row['cal'] is None:
+                # Handle the case where no meals are found or all are NULL
+                # We still want the actual days_logged count if it exists
+                days = row['days_logged'] if row else 0
+                return {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'days_logged': days or 0}
+            
+            return {
+                'calories': row['cal'] or 0,
+                'protein': row['pro'] or 0,
+                'carbs': row['car'] or 0,
+                'fat': row['fat'] or 0,
+                'days_logged': row['days_logged'] or 0
+            }
+
 

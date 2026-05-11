@@ -7,7 +7,7 @@
 | [Double DuckDuckGo requests](#double-duckduckgo-requests) | Redundant network calls for identical HTML | Medium | [FIXED] |
 | [No `source` column in foods table](#no-source-column-in-foods-table) | Cannot audit nutrition data origin | Medium | [FIXED] |
 | [Hardcoded prompt in `find_source_of_truth`](#hardcoded-prompt-in-find_source_of_truth) | Prompt not externalized in `prompts.yaml` | Medium | [FIXED] |
-| [Wiki documentation out of sync](#wiki-documentation-out-of-sync-with-code) | Docs reference dead code/old architecture | Medium | [PENDING] |
+| [Wiki documentation out of sync](#wiki-documentation-out-of-sync-with-code) | Docs reference dead code/old architecture | Medium | [FIXED] |
 | [Singleton pattern breaks testability](#singleton-pattern-breaks-testability) | `DatabaseManager` singleton hinders isolated tests | Medium | [FIXED] |
 | [Schema mismatch across old and new modules](#schema-mismatch-across-old-and-new-modules) | Old modules create incompatible FTS5 schema | Medium | [FIXED] |
 | [`upsert_food` FTS5 DELETE incompatibility](#upsert_food-fts5-delete-incompatibility) | Redundant `DELETE` call on content-less FTS5 table | Medium | [FIXED] |

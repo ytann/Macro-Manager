@@ -9,7 +9,7 @@ MacroManager is an intelligent nutrition tracking system that bridges the gap be
 
 ### 2.1 Architecture Overview
 The system follows a decoupled **Client-Server Architecture**:
-- **Frontend (Streamlit)**: Provides a user-friendly interface for logging food and visualizing daily progress. Uses `httpx` and `asyncio.run()` for asynchronous communication with the backend.
+- **Frontend (Streamlit)**: Provides a high-fidelity interface for logging food and visualizing progress. Features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities via the Web Speech API. Uses `httpx` and `asyncio.run()` for asynchronous communication with the backend.
 - **Backend (FastAPI)**: Orchestrates the data flow between the LLM, the nutrition database, and the user logs.
 - **Nutritional Intelligence (Llama 3.1 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent.
 - **Persistence Layer (SQLite)**: Two distinct databases—one for static/learned food data (`foodbank.db`) and one for user meal logs (`macros.db`).
@@ -38,9 +38,11 @@ The system follows a decoupled **Client-Server Architecture**:
 - **Key Logic**: 
     - Uses **FTS5 (Full-Text Search)** for the foodbank to allow fast, alias-based lookups (e.g., searching 'chawal' finds 'Rice').
     - Implements automated schema migration to ensure the database evolves without data loss.
+    - **Temporal Aggregation**: Provides weekly summaries via specialized SQL aggregation over the last 7 days.
 
 #### B. `FoodbankService`
 - **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence. All paths are standardized to return a flat macro dictionary.
+- **L1 In-Memory Cache**: Utilizes a fast dictionary-based cache to store recently resolved food items, eliminating redundant DB and network calls for frequent foods.
 - **Async Core**: Fully refactored to use `asyncio` and `httpx`, allowing non-blocking network requests and database operations via `to_thread`.
 - **Recipe Store**: Saves and retrieves JSON-based recipes for complex dishes to ensure consistency in expansion.
 - **Learning Mode**: Automatically persists newly discovered foods to the database to reduce future LLM calls.
@@ -66,10 +68,13 @@ The system follows a decoupled **Client-Server Architecture**:
 | **Caloric Guardrail** | Prevents macro-calorie mismatch | Atwater Formula: $P*4 + C*4 + F*9$ |
 | **Verified Database** | Marks data as `verified` once confirmed via web | `verified` flag in SQLite |
 | **Deterministic Output** | Same input always yields same output | Temperature = 0.0 |
+| **Interactive Macro HUD** | 3D flip-cards showing primary macros and sub-macros (Fiber, Sugar, Sat Fat) | Custom Glass CSS/HTML + Streamlit Components |
+| **Voice-to-Log** | Hands-free food logging via voice recording $\rightarrow$ text $\rightarrow$ API | Web Speech API $\rightarrow$ Query Params $\rightarrow$ `/log` |
 
 ### 4.2 API Endpoints
 - `POST /log`: Parses text, calculates macros, and saves the meal.
 - `GET /summary`: Returns aggregated totals for the day and daily goals.
+- `POST /goals`: Updates user-defined macro targets.
 - `GET /meals`: Lists all detailed food items logged today.
 - `DELETE /clear`: Resets daily progress.
 

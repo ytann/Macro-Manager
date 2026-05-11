@@ -1,8 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import httpx
 import asyncio
-import base64
-import streamlit.components.v1 as components
 
 API_URL = "http://127.0.0.1:8000"
 
@@ -10,16 +9,247 @@ st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered
 
 # --- Helpers for Async Calls in Streamlit ---
 async def async_get(url):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         return await client.get(url)
 
 async def async_post(url, json_data):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         return await client.post(url, json=json_data)
 
 async def async_delete(url):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         return await client.delete(url)
+
+def render_macro_hud(consumed, goals):
+    """Renders a minimalist equidistant glass Macro HUD with 3D flip animations."""
+    total_cals = consumed.get('calories', 0.0)
+    hud_config = [
+        {
+            "label": "Protein", 
+            "key": "protein", 
+            "unit": "g", 
+            "color": "rgba(79, 70, 229, 0.2)", 
+            "sub": f"Fiber: {consumed.get('fiber', 0):.1f}g",
+            "pos": "top: 20px; left: 145px;"
+        },
+        {
+            "label": "Carbs", 
+            "key": "carbs", 
+            "unit": "g", 
+            "color": "rgba(245, 158, 11, 0.2)", 
+            "sub": f"Sugar: {consumed.get('sugar', 0):.1f}g",
+            "pos": "top: 228px; left: 25px;"
+        },
+        {
+            "label": "Fat", 
+            "key": "fat", 
+            "unit": "g", 
+            "color": "rgba(16, 185, 129, 0.2)", 
+            "sub": f"Sat Fat: {consumed.get('saturated_fat', 0):.1f}g",
+            "pos": "top: 228px; left: 265px;"
+        },
+    ]
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+                :root {{
+                    --hud-text: white;
+                    --hud-glass-border: rgba(255, 255, 255, 0.3);
+                    --hud-glass-shadow: inset 0 0 20px rgba(255,255,255,0.1), 0 10px 30px rgba(0, 0, 0, 0.1);
+                    --hud-orb-border: rgba(255, 255, 255, 0.4);
+                    --hud-orb-shadow: inset 0 0 15px rgba(255,255,255,0.3), 0 10px 25px rgba(0, 0, 0, 0.2);
+                }}
+
+                @media (prefers-color-scheme: light) {{
+                    :root {{
+                        --hud-text: #111827;
+                        --hud-glass-border: rgba(0, 0, 0, 0.3);
+                        --hud-glass-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 10px 30px rgba(255, 255, 255, 0.1);
+                        --hud-orb-border: rgba(0, 0, 0, 0.4);
+                        --hud-orb-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 10px 25px rgba(255, 255, 255, 0.2);
+                    }}
+                }}
+
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    background-color: transparent;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    overflow: hidden;
+                }}
+                .venn-container {{
+                    position: relative;
+                    width: 550px;
+                    height: 500px;
+                    perspective: 1000px;
+                }}
+                .macro-card {{
+                    width: 260px;
+                    height: 260px;
+                    cursor: pointer;
+                    position: absolute;
+                    transform-style: preserve-3d;
+                    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1;
+                }}
+                .macro-card.flipped {{
+                    transform: rotateY(180deg);
+                    z-index: 10;
+                }}
+                .card-face {{
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    backface-visibility: hidden;
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    text-align: center;
+                    border: 1px solid var(--hud-glass-border);
+                    box-shadow: var(--hud-glass-shadow);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    color: var(--hud-text);
+                    padding: 30px;
+                    box-sizing: border-box;
+                }}
+                .card-front {{
+                    z-index: 2;
+                }}
+                .card-back {{
+                    transform: rotateY(180deg);
+                    background: rgba(255, 255, 255, 0.1);
+                }}
+                .macro-val {{
+                    font-size: 2.8rem;
+                    font-weight: 800;
+                    margin: 0;
+                    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                }}
+                .macro-label {{
+                    font-size: 1.2rem;
+                    opacity: 0.9;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 10px;
+                    font-weight: 600;
+                }}
+                .macro-goal {{
+                    font-size: 0.9rem;
+                    opacity: 0.7;
+                }}
+                .breakdown-title {{
+                    font-size: 1.4rem;
+                    font-weight: bold;
+                    margin-bottom: 12px;
+                }}
+                .breakdown-item {{
+                    font-size: 1rem;
+                    margin: 6px 0;
+                }}
+                .calorie-orb {{
+                    position: absolute;
+                    top: 228.6px;
+                    left: 215px;
+                    width: 120px;
+                    height: 120px;
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    text-align: center;
+                    border: 1px solid var(--hud-orb-border);
+                    box-shadow: var(--hud-orb-shadow);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    color: var(--hud-text);
+                    z-index: 20;
+                    pointer-events: none;
+                    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%), rgba(255, 255, 255, 0.3);
+                }}
+                .orb-val {{
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                }}
+                .orb-label {{
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                    opacity: 0.8;
+                    letter-spacing: 1px;
+                }}
+                .macro-alert {{
+                    position: absolute;
+                    top: -25px;
+                    font-size: 1.5rem;
+                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+                    z-index: 11;
+                }}
+            </style>
+    
+        </head>
+        <body>
+            <div class="venn-container">
+                <div class="calorie-orb">
+                    <div class="orb-label">Total</div>
+                    <div class="orb-val">🔥 {total_cals:.1f} kcal</div>
+                </div>
+        """
+    
+    for item in hud_config:
+        val = consumed.get(item['key'], 0.0)
+        goal = goals.get(item['key'], 1.0)
+        ratio = val / goal if goal > 0 else 0
+        clamped_ratio = min(ratio, 1.0)
+        
+        # Dynamic fill: from bottom (180deg)
+        # If val is 0, we use a transparent fallback
+        if val > 0:
+            fill_color = item['color'].replace('0.2', '0.5') # Slightly more opaque for fill
+            gloss_bg = f"conic-gradient(from 180deg, {fill_color} {clamped_ratio*100:.0f}%, transparent {clamped_ratio*100:.0f}%), radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%), {item['color']}"
+        else:
+            gloss_bg = f"radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%), {item['color']}"
+        
+        # Alert Logic
+        alert_html = ""
+        if ratio > 1.0:
+            if item['key'] == 'protein':
+                alert_html = '<div class="macro-alert">🟢!</div>'
+            else:
+                alert_html = '<div class="macro-alert">⚠️</div>'
+        
+        html_content += f"""
+        <div class="macro-card" style="{item['pos']}" onclick="this.classList.toggle('flipped')">
+            {alert_html}
+            <div class="card-face card-front" style="background: {gloss_bg};">
+                <div class="macro-label">{item['label']}</div>
+                <div class="macro-val">{val:.1f}{item['unit']}</div>
+                <div class="macro-goal">Goal: {goal:.1f}{item['unit']}</div>
+            </div>
+            <div class="card-face card-back" style="background: {item['color']};">
+                <div class="breakdown-title">{item['label']}</div>
+                <div class="breakdown-item">Total: {val:.1f}{item['unit']}</div>
+                <div class="breakdown-item">{item['sub']}</div>
+            </div>
+        </div>
+        """
+        
+    html_content += """
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 # --- Voice Input Handling ---
 query_params = st.query_params
@@ -32,37 +262,56 @@ st.subheader("📅 Daily Progress")
 try:
     response = asyncio.run(async_get(f"{API_URL}/summary"))
     if response.status_code == 200:
-        data = response.json()
-        consumed = data.get('consumed', {})
-        goals = data.get('goals', {})
-        grouped = data.get('grouped', {})
+        full_data = response.json()
+        daily_data = full_data.get('daily', {})
+        weekly_data = full_data.get('weekly', {})
         
-        metrics = [
-            ("Calories", "calories", "kcal"),
-            ("Protein", "protein", "g"),
-            ("Carbs", "carbs", "g"),
-            ("Fat", "fat", "g"),
-        ]
+        consumed = daily_data.get('consumed', {})
+        goals = daily_data.get('goals', {})
         
-        cols = st.columns(4)
-        for i, (label, key, unit) in enumerate(metrics):
-            with cols[i]:
-                goal = goals.get(key, 1.0)
-                val = consumed.get(key, 0.0)
-                progress = min(val / goal, 1.0) if goal > 0 else 0.0
-                
-                st.write(f"**{label}**")
-                st.progress(progress)
-                remaining = max(goal - val, 0.0)
-                st.caption(f"{val:.1f}/{goal:.1f} {unit}")
-                st.caption(f"📉 {remaining:.1f} {unit} left")
+        # Render Interactive Glass HUD
+        components.html(render_macro_hud(consumed, goals), height=500)
+
+        # --- 🗓️ 7-Day Rolling Buffer ---
+        st.subheader("🗓️ 7-Day Rolling Buffer")
         
-        with st.expander("🔍 View Micronutrients"):
-            sub_cols = st.columns(4)
-            sub_cols[0].metric("Fiber", f"{consumed.get('fiber', 0):.1f}g")
-            sub_cols[1].metric("Sugar", f"{consumed.get('sugar', 0):.1f}g")
-            sub_cols[2].metric("Sat Fat", f"{consumed.get('saturated_fat', 0):.1f}g")
-            sub_cols[3].metric("Unsat Fat", f"{consumed.get('unsaturated_fat', 0):.1f}g")
+        w_carb_goal = goals.get("carbs", 200.0) * 7
+        w_fat_goal = goals.get("fat", 65.0) * 7
+        
+        w_carb_consumed = weekly_data.get("carbs", 0.0)
+        w_fat_consumed = weekly_data.get("fat", 0.0)
+        
+        # Render Progress Bars
+        st.markdown("**Weekly Carbs**")
+        st.progress(min(w_carb_consumed / w_carb_goal, 1.0) if w_carb_goal > 0 else 0.0, text=f"{w_carb_consumed:.1f} / {w_carb_goal:.1f}g")
+        
+        st.markdown("**Weekly Fats**")
+        st.progress(min(w_fat_consumed / w_fat_goal, 1.0) if w_fat_goal > 0 else 0.0, text=f"{w_fat_consumed:.1f} / {w_fat_goal:.1f}g")
+        
+        # Empathetic Messaging
+        daily_carb_limit = goals.get("carbs", 200.0)
+        daily_prot_limit = goals.get("protein", 150.0)
+        
+        if consumed.get('carbs', 0) > daily_carb_limit and w_carb_consumed < w_carb_goal:
+            st.info("You are over your daily carbs, but don't stress! You are still perfectly within your weekly buffer. Enjoy your meal.")
+        
+        if consumed.get('protein', 0) > daily_prot_limit:
+            st.success("Great job hitting high protein! This helps stabilize your blood sugar.")
+        
+        with st.expander("⚙️ Goal Settings"):
+            g_col1, g_col2 = st.columns(2)
+            with g_col1:
+                g_prot = st.number_input("Protein (g)", value=float(goals.get("protein", 150.0)), min_value=0.0)
+                g_carb = st.number_input("Carbs (g)", value=float(goals.get("carbs", 200.0)), min_value=0.0)
+            with g_col2:
+                g_fat = st.number_input("Fat (g)", value=float(goals.get("fat", 65.0)), min_value=0.0)
+                g_cal = st.number_input("Calories (kcal)", value=float(goals.get("calories", 2000.0)), min_value=0.0)
+            
+            if st.button("Save Goals"):
+                payload = {"protein": g_prot, "carbs": g_carb, "fat": g_fat, "calories": g_cal}
+                asyncio.run(async_post(f"{API_URL}/goals", payload))
+                st.toast("Goals updated! 🎯")
+                st.rerun()
     else:
         st.error("Could not fetch summary data.")
 except Exception as e:
@@ -85,101 +334,8 @@ with tabs[0]:
         with col2:
             # Voice recording button using Web Speech API
             # We use a custom HTML component to handle the 'Hold to Record' logic
-            voice_btn_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { margin: 0; padding: 0; overflow: hidden; display: flex; align-items: flex-end; height: 100vh; }
-                    #record-btn {
-                        width: 50px; 
-                        height: 50px; 
-                        border-radius: 50%; 
-                        border: none; 
-                        background-color: #ef4444; 
-                        color: white; 
-                        cursor: pointer; 
-                        font-size: 20px;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                        transition: background-color 0.2s;
-                        margin-bottom: 5px;
-                    }
-                    #record-btn:disabled {
-                        background-color: #9ca3af !important;
-                        cursor: not-allowed;
-                        opacity: 0.6;
-                    }
-                </style>
-            </head>
-            <body>
-                <button id="record-btn">🎤</button>
-                <script>
-                    const btn = document.getElementById('record-btn');
-                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-                    if (!SpeechRecognition) {
-                        btn.disabled = true;
-                        btn.title = "Browser not supported";
-                        alert('Voice logging is not supported in this browser. Please try Chrome or Brave.');
-                    } else {
-                        const recognition = new SpeechRecognition();
-                        recognition.continuous = false;
-                        recognition.interimResults = false;
-                        recognition.lang = 'en-US';
-
-                        btn.onmousedown = () => {
-                            btn.style.backgroundColor = '#b91c1c';
-                            try {
-                                recognition.start();
-                            } catch (e) {
-                                console.error('Recognition already started');
-                            }
-                        };
-
-                        btn.onmouseup = () => {
-                            btn.style.backgroundColor = '#ef4444';
-                            recognition.stop();
-                        };
-
-                        btn.ontouchstart = (e) => {
-                            e.preventDefault();
-                            btn.onmousedown();
-                        };
-                        btn.ontouchend = (e) => {
-                            e.preventDefault();
-                            btn.onmouseup();
-                        };
-
-                        recognition.onresult = (event) => {
-                            const text = event.results[0][0].transcript;
-                            window.top.location.href = `?voice_text=${encodeURIComponent(text)}`;
-                        };
-
-                        recognition.onerror = (event) => {
-                            let message = 'Speech Recognition Error: ' + event.error;
-                            if (event.error === 'not-allowed') {
-                                message = 'Permission Denied: Please allow microphone access in your browser settings.';
-                            } else if (event.error === 'network') {
-                                message = 'Network Error: Unable to reach speech servers. Please check your internet or try refreshing.';
-                            } else if (event.error === 'no-speech') {
-                                message = 'No speech detected. Please try again.';
-                            }
-                            alert(message);
-                            btn.style.backgroundColor = '#ef4444';
-                        };
-
-                        recognition.onend = () => {
-                            btn.style.backgroundColor = '#ef4444';
-                        };
-                    }
-                </script>
-            </body>
-            </html>
-            """
-            b64_html = base64.b64encode(voice_btn_html.encode()).decode()
-            st.iframe(src=f"data:text/html;base64,{b64_html}", height=70)
-
+            st.iframe(src=f"{API_URL}/static/voice_btn.html", height=70)
+ 
         submit_button = st.form_submit_button("Log Meal")
         
         if submit_button:
@@ -231,46 +387,32 @@ st.divider()
 # --- FOOD JOURNAL VIEW ---
 st.subheader("📖 Daily Food Journal")
 try:
-    # Use the same summary endpoint to get grouped meals
-    response = asyncio.run(async_get(f"{API_URL}/summary"))
+    # Fetch detailed meals for chronological timeline
+    response = asyncio.run(async_get(f"{API_URL}/meals"))
     if response.status_code == 200:
-        data = response.json()
-        grouped = data.get('grouped', {})
+        meals = response.json()
         
-        if not grouped:
+        if not meals:
             st.info("No items logged today.")
         else:
-            # Map category to emoji
-            category_icons = {
-                "Breakfast": "🍳",
-                "Lunch": "🍱",
-                "Dinner": "🌙",
-                "Snack": "🍎",
-                "General": "🥗"
-            }
+            # Sort meals by timestamp (descending for newest first)
+            meals.sort(key=lambda x: x['timestamp'], reverse=True)
             
-            # Iterate through categories in a fixed order
-            for cat in ["Breakfast", "Lunch", "Dinner", "Snack", "General"]:
-                if cat in grouped:
-                    category_meals = grouped[cat]
-                    
-                    # Calculate category total calories
-                    cat_calories = 0
-                    for meal_items in category_meals:
-                        cat_calories += sum(item['cals'] for item in meal_items)
-                    
-                    st.markdown(f"### {category_icons.get(cat, '🍽️')} {cat} — `{cat_calories:.1f} kcal`")
-                    
-                    with st.container():
-                        for meal_items in category_meals:
-                            for item in meal_items:
-                                sub_macros = item.get('sub_macros') or {}
-                                fiber = sub_macros.get('fiber', 0) or 0
-                                
-                                st.markdown(
-                                    f"**{item['name']}** ({item['grams']}g) "
-                                    f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
-                                )
+            for meal in meals:
+                items = meal.get('items', [])
+                # We don't have meal_type in /meals endpoint, but we can just list them
+                with st.container():
+                    st.markdown(f"🕒 **{meal['timestamp'][:16]}**")
+                    for item in items:
+                        verified_mark = " ✅" if item.get('verified') else ""
+                        sub_macros = item.get('sub_macros') or {}
+                        fiber = sub_macros.get('fiber', 0) or 0
+                        
+                        st.markdown(
+                            f"- {verified_mark} **{item['name']}** ({item['grams']}g) "
+                            f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
+                        )
+                    st.divider()
     else:
         st.error("Could not fetch journal data.")
 except Exception as e:

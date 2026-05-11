@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; display: flex; align-items: flex-end; height: 100vh; }
+        #record-btn {
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            border: none; 
+            background-color: #ef4444; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.2s;
+            margin-bottom: 5px;
+        }
+        #record-btn:disabled {
+            background-color: #9ca3af !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <button id="record-btn">🎤</button>
+    <script>
+        const btn = document.getElementById('record-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            btn.disabled = true;
+            btn.title = "Browser not supported";
+            alert('Voice logging is not supported in this browser. Please try Chrome or Brave.');
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            btn.onmousedown = () => {
+                btn.style.backgroundColor = '#b91c1c';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Recognition already started');
+                }
+            };
+
+            btn.onmouseup = () => {
+                btn.style.backgroundColor = '#ef4444';
+                recognition.stop();
+            };
+
+            btn.ontouchstart = (e) => {
+                e.preventDefault();
+                btn.onmousedown();
+            };
+            btn.ontouchend = (e) => {
+                e.preventDefault();
+                btn.onmouseup();
+            };
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                window.top.location.href = `?voice_text=${encodeURIComponent(text)}`;
+            };
+
+            recognition.onerror = (event) => {
+                let message = 'Speech Recognition Error: ' + event.error;
+                if (event.error === 'not-allowed') {
+                    message = 'Permission Denied: Please allow microphone access in your browser settings.';
+                } else if (event.error === 'network') {
+                    message = 'Network Error: Unable to reach speech servers. Please check your internet or try refreshing.';
+                } else if (event.error === 'no-speech') {
+                    message = 'No speech detected. Please try again.';
+                }
+                alert(message);
+                btn.style.backgroundColor = '#ef4444';
+            };
+
+            recognition.onend = () => {
+                btn.style.backgroundColor = '#ef4444';
+            };
+        }
+    </script>
+</body>
+</html>

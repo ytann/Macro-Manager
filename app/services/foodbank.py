@@ -22,6 +22,7 @@ class FoodbankService:
         self.http_client = httpx.AsyncClient(timeout=10, headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         })
+        self._l1_cache = {}
 
     def _load_prompts(self) -> Dict:
         with open(Config.PROMPTS_PATH, 'r') as f:
@@ -154,6 +155,17 @@ class FoodbankService:
         await asyncio.to_thread(_upsert)
 
     async def get_nutrition_data(self, name: str) -> Optional[Dict]:
+        cache_key = name.lower().strip()
+        if cache_key in self._l1_cache:
+            print(f'⚡ [CACHE HIT] L1 In-Memory: {name}')
+            return self._l1_cache[cache_key]
+        
+        result = await self._get_nutrition_data_core(name)
+        if result is not None:
+            self._l1_cache[cache_key] = result
+        return result
+
+    async def _get_nutrition_data_core(self, name: str) -> Optional[Dict]:
         # Step A: Query local DB
         food_data = await self.search_food(name)
         

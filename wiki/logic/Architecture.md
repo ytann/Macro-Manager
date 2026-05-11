@@ -8,16 +8,17 @@ FastAPI + Streamlit + SQLite (FTS5) + LiteLLM (ollama/llama3.1:latest) + httpx +
 
 ```
 app/
-  api.py              FastAPI: POST /log, GET /summary, /meals, /pending-count, /sync-status, POST /verify-queue, DELETE /clear
-  frontend.py         Streamlit: daily progress, food journal, meal logging
+  api.py              FastAPI: POST /log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear
+  frontend.py         Streamlit: daily progress, 7-day rolling buffer, food journal, meal logging, goal settings
   core/config.py      Config: LITELLM_API_BASE, LLM_MODEL, DB paths, prompts path
   schemas/food_schemas.py  Pydantic: Macros, SubMacros, FoodItem, FoodLog
   services/
     database.py       DatabaseManager (Singleton): 2 SQLite DBs (foodbank.db + macros.db).
                       FTS5 foods table, recipes, pending_verification, sync_status, meals.
-    foodbank.py       FoodbankService: DB lookups, web search, offline estimates, verification queue.
+                      Implements weekly summary aggregation (last 7 days).
+    foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue.
     extraction.py     ExtractionService: Two-pass LLM extraction + async nutrition resolution.
-prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification, foodbank.web_search/internal_estimate)
+prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification, foodbank.web_search/internal_estimate, planner.empathetic_suggestion)
   tests/                pytest suites
   debug/                non-pytest diagnostic scripts
   scripts/ingest_csv.py CSV->foodbank importer
@@ -35,6 +36,7 @@ User Text -> ExtractionService.parse()
   4. For each item:
      a. Recipe check -> if known recipe, expand into base ingredients (parallel asyncio.gather)
      b. Base ingredient -> get_nutrition_data():
+        - L1 Cache lookup (In-memory dictionary)
         - DB lookup (FTS5 exact + fuzzy)
         - [OFFLINE] cached data or LLM estimate (verified=0, queued)
         - [ONLINE] find_source_of_truth -> search_web_for_food -> internal_estimate
@@ -57,6 +59,7 @@ Heartbeat (asyncio task, lifespan-managed):
 
 ### macros.db
 - `meals`: id, meal_id, timestamp, items_json, total_protein/carbs/fat/cals/fiber/sugar/saturated_fat/unsaturated_fat, meal_type
+- `goals`: id (PK), protein, carbs, fat, calories
 
 ## Key Design Decisions
 
@@ -65,4 +68,4 @@ Heartbeat (asyncio task, lifespan-managed):
 - **Recipe expansion**: Known dishes decomposed into base ingredients before macro calculation (anti-hallucination)
 - **Offline-first**: DB cached data returned immediately when offline; unverified items queued for later sync
 - **Atwater guardrail**: LLM calorie estimates validated against macro-derived calories
-- **Per-request caching**: `self.foodbank_cache` avoids duplicate lookups for same ingredient within one parse call
+- **L1 Cache**: In-memory lookup for frequent food items to eliminate redundant DB/network roundtrips

@@ -1,18 +1,18 @@
 # Offline Sync Queue
 
 ## Flow
-
+ 
 ```
 User Input -> ExtractionService.parse()
   -> FoodbankService.get_nutrition_data(name)
-    -> [OFFLINE] -> DB-cached data (if exists) / internal_estimate -> queue_for_verification
-    -> [ONLINE]  -> find_source_of_truth / search_web_for_food
-
-Heartbeat (loop, first check immediate, then every 60s)
+     -> [OFFLINE] -> DB-cached data (if exists) / internal_estimate -> queue_for_verification
+     -> [ONLINE]  -> find_source_of_truth / search_web_for_food
+ 
+Heartbeat (60s Pulse)
   -> _is_network_available()
   -> get_pending_count() > 0
-  -> run_sync_cycle() -> process_verification_queue() -> update_sync_timestamp()
-
+  -> run_sync_cycle() -> process_verification_queue() (Auto-drains pending_verification table) -> update_sync_timestamp()
+ 
 Manual Trigger
   -> POST /verify-queue -> background_tasks(run_sync_cycle)
 ```

@@ -3,18 +3,26 @@
 Resolved by `app/services/foodbank.py` and `app/services/extraction.py`.
 
 ## 1. Identification Flow
-
+ 
 For every item extracted from the user's log:
-
-1. **DB Lookup**: Search `foodbank.db` via FTS5 — exact name match, alias match (`aliases LIKE`), then FTS5 MATCH query with `*` suffix on individual words.
-2. **Network Check**: `_is_network_available()` (HEAD to `https://1.1.1.1`) determines online/offline path.
-3. **Offline Path**: Return DB-cached data if available. Queue unverified items (`verified=0`) for future verification. If no cache, use `internal_estimate` (LLM guess), persist with `verified=0`.
-4. **Online Path**: 
-   - DB verified data (`verified=1`) -> return immediately
-    - `find_source_of_truth()` -> authoritative web extraction (DuckDuckGo HTML -> LLM validation)
+ 
+1. **L1 Cache Lookup**: Immediate check of in-memory cache for normalized name.
+2. **DB Lookup**: Search `foodbank.db` via FTS5 — exact name match, alias match (`aliases LIKE`), then FTS5 MATCH query with `*` suffix on individual words.
+3. **Network Check**: `_is_network_available()` (HEAD to `https://1.1.1.1`) determines online/offline path.
+4. **Offline Path**: Return DB-cached data if available. Queue unverified items (`verified=0`) for future verification. If no cache, use `internal_estimate` (LLM guess), persist with `verified=0`.
+5. **Online Path (Source of Truth Flow)**: 
+    - DB verified data (`verified=1`) -> return immediately
+    - **Authoritative Search**: `find_source_of_truth()` uses DuckDuckGo HTML content -> LLM validates against high-confidence sources -> marks `verified=1` if confidence is High/Medium.
     - `search_web_for_food()` -> general web search with fallback queries
     - `internal_estimate()` -> LLM estimate as last resort
     All methods return a uniform flat dictionary containing macros.
+ 
+## 2. Verified Column Logic
+ 
+The `verified` column in the `foods` table distinguishes between estimated and confirmed data:
+- `verified=1`: Data confirmed via authoritative web search (Source of Truth flow).
+- `verified=0`: Data derived from local LLM estimates or cached items awaiting verification.
+- **Promotion**: Items are promoted from `0` -> `1` only after successful heartbeat sync or manual verification.
 
 ## 2. Recipe Expansion
 

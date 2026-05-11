@@ -68,11 +68,13 @@ MacroManager/
 | **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
 | **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
 | **FTS5 food search** | Full-text search for alias-based food lookups |
+| **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
 
 ## API Endpoints
 
 - `POST /log` — Parse text, calculate macros, save meal
 - `GET /summary` — Daily aggregated totals + goals
+- `POST /goals` — Update user macro targets
 - `GET /meals` — All items logged today
 - `DELETE /clear` — Reset daily progress
 - `GET /pending-count` — Verification queue size
