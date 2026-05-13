@@ -6,7 +6,7 @@ class Config:
     """
     # API Config
     LITELLM_API_BASE = "http://localhost:11434"
-    LLM_MODEL = "ollama/llama3.1:latest"
+    LLM_MODEL = 'ollama/gemma4:e2b'
     
     # Database Config
     FOODBANK_DB_PATH = "foodbank.db"

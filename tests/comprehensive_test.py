@@ -32,7 +32,7 @@ test_cases = [
 ]
 
 def run_tests():
-    print("🚀 Starting Comprehensive Tests with llama3.1:latest\n")
+    print("🚀 Starting Comprehensive Tests with gemma4:e2b\n")
     for case in test_cases:
         print(f"--- Test: {case['name']} ---")
         print(f"Input: {case['text']}")

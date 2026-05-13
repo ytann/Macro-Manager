@@ -41,10 +41,12 @@ Schema: `pending_verification (name TEXT PRIMARY KEY, retry_count INTEGER DEFAUL
 Wraps `process_verification_queue()` — only calls `update_sync_timestamp()` if items were actually verified.
 
 ## API Endpoints
-
+ 
 - `GET /pending-count` — number of queued items
 - `GET /sync-status` — last sync timestamp
 - `POST /verify-queue` — triggers `run_sync_cycle` as background task
+- **Lifespan Shutdown** — calls `foodbank_service.close()` to release HTTP connection pools
+
 
 ## Configuration
 

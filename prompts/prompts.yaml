@@ -23,7 +23,25 @@ extraction:
     6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
     
     Text: {text}
-  
+
+  vision_estimate: |
+    You are a precise food vision extraction engine. Analyze the provided image and extract ALL visible food items with their estimated weights in grams.
+
+    ENVIRONMENT: {environment}
+    ENVIRONMENT RULES:
+    - Home: Assume home-cooked portions. Plate/bowl typical capacity ~250g-500g. Roti ~50g, sabzi serving ~150g, dal bowl ~200g, rice portion ~200g.
+    - Wild: Assume restaurant/fast-food portions. Plate/bowl typical capacity ~300g-600g. Burgers ~250g, pizza slice ~150g, fries serving ~150g, restaurant curry bowl ~350g, naan ~100g.
+
+    RULES:
+    1. ITEM IDENTIFICATION: Extract only the food name from the image. Remove plate/bowl/container references.
+    2. WEIGHT ESTIMATION: Estimate realistic weight in grams based on visible portion size and the environment rules above.
+    3. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha, Dosa, Idli).
+    4. NO HALLUCINATIONS: Extract ONLY items visible in the image. DO NOT invent items not present.
+    5. ABSOLUTE SILENCE: If no food is visible, return {{"items": []}}.
+    6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
+
+    Respond ONLY with JSON.
+
   verification: |
     Original Text: "{text}"
     Items already extracted: {found_details}

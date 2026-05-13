@@ -32,15 +32,18 @@ The `verified` column in the `foods` table distinguishes between estimated and c
 2. Scale ingredient weights by `grams / total_recipe_weight`
 3. Resolve all recipe ingredients in parallel via `asyncio.gather`
 4. Create dish summary `FoodItem(name="Dish (Total)", ...)` + ingredient breakdown
+5. `results` is initialized to `[]` before the gather block — safe when ALL items are recipes (zero base ingredients)
 
 ## 3. Verification Queue
-
+ 
 Foods learned offline or from low-confidence estimates are queued in `pending_verification`:
-
+ 
 - Heartbeat (60s) processes queue when network available
 - `POST /verify-queue` for manual trigger
 - Max 5 retries per item; stale items auto-removed
 - Successfully verified items upserted with `verified=1`
+- **Seeding**: `seed_db()` ensures initial data is persisted using `upsert_food` to avoid FTS5 record duplication
+
 
 ## 4. Anti-Hallucination Measures
 

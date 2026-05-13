@@ -7,6 +7,7 @@ from app.services.foodbank import FoodbankService
 from app.schemas.food_schemas import FoodItem, FoodLog, Macros, SubMacros
 from app.services.database import DatabaseManager
 from app.core.config import Config
+from app.core.logger import logger
 
 async def parse_food_log(text: str, meal_id: str = "unknown"):
     """Backward compatibility helper for tests."""
@@ -32,6 +33,37 @@ class ExtractionService:
         with open(Config.PROMPTS_PATH, 'r') as f:
             return yaml.safe_load(f)
 
+    async def extract_from_image(self, base64_image: str, environment: str = "Home") -> List[Dict[str, Any]]:
+        prompt = self.prompts['extraction']['vision_estimate'].format(environment=environment)
+
+        resp = await litellm.acompletion(
+            model=self.model,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                ]
+            }],
+            api_base=Config.LITELLM_API_BASE,
+            temperature=0.0,
+            response_format={"type": "json_object"}
+        )
+
+        data = json.loads(resp.choices[0].message.content)
+
+        if isinstance(data, dict):
+            for k in ['items', 'ingredients', 'data', 'response']:
+                if k in data and isinstance(data[k], list):
+                    return data[k]
+            for v in data.values():
+                if isinstance(v, list):
+                    return v
+        elif isinstance(data, list):
+            return data
+
+        return []
+
     async def _verify_extracted_items(self, text: str, items: List[dict]) -> List[dict]:
         found_details = [f"{i.get('name')} ({i.get('grams')}g)" for i in items]
         prompt = self.prompts['extraction']['verification'].format(text=text, found_details=found_details)
@@ -46,7 +78,7 @@ class ExtractionService:
             data = json.loads(resp.choices[0].message.content)
             return data.get('missing', [])
         except Exception as e:
-            print(f"Verification guardrail failed: {e}")
+            logger.error(f"Verification guardrail failed: {e}")
             return []
 
     def _deduplicate_items(self, items: List[dict]) -> List[dict]:
@@ -91,7 +123,10 @@ class ExtractionService:
         cal = (raw_cal / 100) * grams
 
         sub = SubMacros(
-            fiber=(float(food_data.get('fiber') or 0) / 100) * grams if food_data.get('fiber') is not None else None
+            fiber=(float(food_data.get('fiber') or 0) / 100) * grams if food_data.get('fiber') is not None else None,
+            sugar=(float(food_data.get('sugar') or 0) / 100) * grams if food_data.get('sugar') is not None else None,
+            saturated_fat=(float(food_data.get('saturated_fat') or 0) / 100) * grams if food_data.get('saturated_fat') is not None else None,
+            unsaturated_fat=(float(food_data.get('unsaturated_fat') or 0) / 100) * grams if food_data.get('unsaturated_fat') is not None else None
         )
 
         delta = {'p': p, 'c': c, 'f': f, 'cal': cal}
@@ -138,7 +173,7 @@ class ExtractionService:
             )
             text = corr_resp.choices[0].message.content.strip()
         except Exception as e:
-            print(f"Voice correction failed, proceeding with raw text: {e}")
+            logger.error(f"Voice correction failed, proceeding with raw text: {e}")
 
         prompt = self.prompts['extraction']['main'].format(text=text)
         resp = await litellm.acompletion(
@@ -202,6 +237,7 @@ class ExtractionService:
                 base_metadata.append((len(base_tasks), name, grams))
                 base_tasks.append(self._get_nutrition_for_ingredient(name, grams))
 
+        results = []
         if base_tasks:
             results = await asyncio.gather(*base_tasks)
 

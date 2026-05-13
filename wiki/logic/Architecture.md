@@ -2,23 +2,24 @@
 
 ## Stack
 
-FastAPI + Streamlit + SQLite (FTS5) + LiteLLM (ollama/llama3.1:latest) + httpx + Pydantic
+FastAPI + Streamlit + SQLite (FTS5) + LiteLLM (ollama/gemma4:e2b) + httpx + Pydantic
 
 ## Component Map
 
 ```
 app/
-  api.py              FastAPI: POST /log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear
-  frontend.py         Streamlit: daily progress, 7-day rolling buffer, food journal, meal logging, goal settings
+  api.py              FastAPI: POST /log, POST /vision-log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear. Lifespan manages heartbeat and closes FoodbankService.
+  frontend.py         Streamlit: daily progress, 7-day rolling buffer, food journal, meal logging, goal settings. Uses shared httpx.AsyncClient for pooling.
   core/config.py      Config: LITELLM_API_BASE, LLM_MODEL, DB paths, prompts path
   schemas/food_schemas.py  Pydantic: Macros, SubMacros, FoodItem, FoodLog
   services/
-    database.py       DatabaseManager (Singleton): 2 SQLite DBs (foodbank.db + macros.db).
+     database.py       DatabaseManager: 2 SQLite DBs (foodbank.db + macros.db).
                       FTS5 foods table, recipes, pending_verification, sync_status, meals.
+                      Defines DEFAULT_FOODS for consistent seeding.
                       Implements weekly summary aggregation (last 7 days).
-    foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue.
-    extraction.py     ExtractionService: Two-pass LLM extraction + async nutrition resolution.
-prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification, foodbank.web_search/internal_estimate, planner.empathetic_suggestion)
+    foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
+    extraction.py     ExtractionService: Two-pass LLM extraction + async nutrition resolution + vision pipeline (extract_from_image using multimodal payload for Home/Wild estimation).
+prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification/vision_estimate, foodbank.web_search/internal_estimate, planner.empathetic_suggestion)
   tests/                pytest suites
   debug/                non-pytest diagnostic scripts
   scripts/ingest_csv.py CSV->foodbank importer
@@ -44,6 +45,14 @@ User Text -> ExtractionService.parse()
         - Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
   5. Aggregate results, return FoodLog with total_macros + total_calories
   6. Persist to macros.db (meals table)
+
+Vision Pipeline (POST /vision-log):
+  User Image (base64 + environment) -> ExtractionService.extract_from_image()
+    1. Multimodal payload: text (vision_estimate prompt) + image (base64) -> gemma4:e2b
+    2. Environment rules: Home (~250-500g plates) vs. Wild (~300-600g plates)
+    3. Returns [{name, grams}] items
+    4. Async resolve nutrition per item via _get_nutrition_for_ingredient()
+    5. Build FoodLog, persist to macros.db (meal_type="Vision")
 
 Heartbeat (asyncio task, lifespan-managed):
   Every 60s: check network -> process verification queue -> update sync timestamp

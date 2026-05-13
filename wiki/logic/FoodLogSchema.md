@@ -20,6 +20,7 @@ class FoodItem(BaseModel):
     cals: float = Field(..., ge=0)
     macros: Macros
     sub_macros: Optional[SubMacros] = None
+    verified: bool = False
 
 class FoodLog(BaseModel):
     meal_id: str
@@ -34,6 +35,12 @@ class FoodLog(BaseModel):
         if not 0 <= v <= 1:
             raise ValueError('Score must be between 0 and 1')
         return v
+
+class GoalRequest(BaseModel):
+    protein: float = Field(..., ge=0)
+    carbs: float = Field(..., ge=0)
+    fat: float = Field(..., ge=0)
+    calories: float = Field(..., ge=0)
 ```
 
 File: `app/schemas/food_schemas.py`

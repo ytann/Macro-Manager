@@ -4,6 +4,16 @@
 
 | Issue Name | Brief Description | Criticality | Status |
 | :--- | :--- | :--- | :--- |
+| [Database still drops foods table on startup](#database-still-drops-foods-table-on-startup) | `DROP TABLE IF EXISTS` regression — data wiped every restart | Critical | [FIXED] |
+| [Verification prompt `KeyError`](#verification-prompt-keyerror-on-content-placeholder) | `{content}` placeholder in prompt but not passed to `.format()` | Critical | [FIXED] |
+| [`NameError` when all items are recipes](#nameerror-in-extraction-when-all-items-are-recipes) | `results` undefined when no base ingredients | Critical | [FIXED] |
+| [`httpx.AsyncClient` never closed](#httpxasynclient-never-closed-in-foodbankservice) | Resource leak — no `close()` or `__del__` on shared client | High | [FIXED] |
+| [`seed_db` bare `INSERT OR REPLACE` into FTS5](#seed_db-bare-insert-or-replace-into-fts5) | Missing rowid subquery — duplicate records in FTS5 table | High | [FIXED] |
+| [Frontend creates new `AsyncClient` per call](#frontend-creates-new-asynclient-per-request) | No connection pooling in Streamlit frontend | Medium | [FIXED] |
+| [`upsert_food` hardcodes `is_complete_protein=0`](#upsert_food-hardcodes-is_complete_protein0) | Cannot persist complete protein data from web search | Medium | [FIXED] |
+| [Duplicate seed data in two locations](#duplicate-seed-data-in-two-locations) | Identical food lists in `_init_foodbank` and `seed_db` | Low | [FIXED] |
+| [`FoodLogSchema.md` wiki page out of sync](#foodlogschema-wiki-page-out-of-sync) | Missing `verified` field and `GoalRequest` in wiki | Low | [FIXED] |
+| [No client cleanup on app shutdown](#no-asynclient-cleanup-on-app-shutdown) | `httpx.AsyncClient` not closed in lifespan handler | Low | [FIXED] |
 | [Double DuckDuckGo requests](#double-duckduckgo-requests) | Redundant network calls for identical HTML | Medium | [FIXED] |
 | [No `source` column in foods table](#no-source-column-in-foods-table) | Cannot audit nutrition data origin | Medium | [FIXED] |
 | [Hardcoded prompt in `find_source_of_truth`](#hardcoded-prompt-in-find_source_of_truth) | Prompt not externalized in `prompts.yaml` | Medium | [FIXED] |
@@ -34,6 +44,12 @@
 | [`httpx.AsyncClient` connection pooling](#httpx.asyncclient-created-fresh-on-every-is_network_available) | Per-call client creation in sync methods | Low | [FIXED] |
 | [Heartbeat startup sleep](#heartbeat-sleeps-60s-on-startup-before-first-check) | Cold start delay for first sync | Low | [FIXED] |
 | [No logging/metrics on `process_verification_queue`](#no-loggingmetrics-on-process_verification_queue-return-value) | No visibility into verification success rate | Low | [FIXED] |
+| [Duplicated Code in Meal Logging](#duplicated-code-in-meal-logging) | `log_meal` and `log_vision_meal` have near-identical db insertion logic | Medium | [FIXED] |
+| [Complex DB Calls in FoodbankService](#complex-and-inefficient-database-calls-in-foodbankservice) | `FoodbankService` uses verbose, repetitive `asyncio.to_thread` for db calls | High | [PENDING] |
+| [Redundant Web Searches](#redundant-web-searches-in-foodbankservice) | `search_web_for_food` and `find_source_of_truth` both fetch web pages | Medium | [FIXED] |
+| [Inefficient DB Seeding](#inefficient-database-seeding) | `seed_db` calls `upsert_food` in a loop instead of `executemany` | Low | [FIXED] |
+| [Hardcoded Queries](#hardcoded-sql-and-search-queries) | SQL and web search queries are hardcoded in services | Low | [FIXED] |
+| [Inconsistent Logging](#inconsistent-logging-and-error-handling) | `print()` used for debugging; inconsistent error handling | Low | [FIXED] |
 
 ---
 
@@ -188,3 +204,87 @@
 - **Files:** `app/services/foodbank.py`, `prompts/prompts.yaml`
 - **Issue Detail:** Different web search methods return fiber in different JSON structures (flat vs nested).
 - **Fix Detail:** Updated `web_search` prompt to return macros at the top level and removed normalization logic in `get_nutrition_data` to ensure all paths return a uniform flat dictionary.
+
+### Database still drops foods table on startup
+- **Files:** `app/services/database.py:69`
+- **Issue Detail:** `_init_foodbank` executed `DROP TABLE IF EXISTS foods` on every startup. This was marked `[FIXED]` in a prior audit (issue #19) but the code regressed — the `DROP TABLE` returned. All learned nutrition data was destroyed on every application restart.
+- **Fix Detail:** Removed `cursor.execute("DROP TABLE IF EXISTS foods")`. Changed `CREATE VIRTUAL TABLE foods USING fts5(...)` to `CREATE VIRTUAL TABLE IF NOT EXISTS foods USING fts5(...)`. The seed-data guard (`COUNT(*) == 0`) already prevents re-seeding on restart. Verified with `tests/ISSUE_DBDROP_unit_persist.py`.
+
+### Verification prompt `KeyError` on `{content}` placeholder
+- **Files:** `prompts/prompts.yaml:43-44`, `app/services/extraction.py:37`
+- **Issue Detail:** The `extraction.verification` prompt template had a stray `HTML:\n    {content}` at the end — a copy-paste from the `web_search` prompt. The Python code called `.format(text=text, found_details=found_details)` with no `content` kwarg, causing `KeyError: 'content'`. The exception was silently caught by an `except` block, making the verification guardrail effectively dead.
+- **Fix Detail:** Removed the stray `HTML:` and `{content}` lines from the `verification` prompt in `prompts.yaml`. Verified with `tests/ISSUE_KEYERROR_unit_verify.py`.
+
+### `NameError` in extraction when all items are recipes
+- **Files:** `app/services/extraction.py:205-214`
+- **Issue Detail:** `results` was only assigned inside `if base_tasks:` on line 206. If every item in a meal is a known recipe (zero base ingredients), `results` was never defined, and line 208 `for result in results:` raised `NameError`. This crashed anytime a user logged only complex dishes that all have recipes in the DB.
+- **Fix Detail:** Added `results = []` before the `if base_tasks:` block. When `base_tasks` is empty, the for-loop safely iterates zero times. Verified with `tests/ISSUE_NAMEERROR_unit_recipe.py`.
+
+### `httpx.AsyncClient` never closed in FoodbankService
+- **Files:** `app/services/foodbank.py:22-24`
+- **Issue Detail:** `self.http_client = httpx.AsyncClient(...)` is created in `__init__` but never closed. No `close()` method, no `__del__`, no async context manager. The client persists for the lifetime of the process, leaking connections and potentially hitting OS file-descriptor limits under sustained load.
+- **Fix Plan:** Add `async def close(self)` that calls `await self.http_client.aclose()`. Call it in `api.py` lifespan shutdown handler (`yield` → `await foodbank_service.http_client.aclose()`).
+
+### `seed_db` bare `INSERT OR REPLACE` into FTS5
+- **Files:** `app/services/foodbank.py:400-418`
+- **Issue Detail:** `seed_db` uses `INSERT OR REPLACE INTO foods VALUES (...)` without a rowid subquery. In FTS5, this creates duplicate records instead of replacing. The proper pattern (used in `upsert_food` at lines 149-152) is `INSERT OR REPLACE INTO foods (rowid, ...) VALUES ((SELECT rowid FROM foods WHERE name = ?), ...)`. The `seed_db` method bypasses this, risking duplicate rows in tests.
+- **Fix Plan:** Refactor `seed_db` to call `upsert_food` in a loop, or add the rowid subquery to its INSERT statement.
+
+### Frontend creates new `AsyncClient` per request
+- **Files:** `app/frontend.py:12-22`
+- **Issue Detail:** Each `async_get`, `async_post`, and `async_delete` creates a new `httpx.AsyncClient(timeout=30.0)` inside an `async with` block. This means every API call from the frontend (summary, meals, log, clear, goals) creates a fresh TCP connection pool. The backend had this same issue and was fixed — the frontend was missed.
+- **Fix Plan:** Create a single module-level `_client = httpx.AsyncClient(timeout=30.0)` and reuse it across all three helper functions.
+
+### `upsert_food` hardcodes `is_complete_protein=0`
+- **Files:** `app/services/foodbank.py:146-155`
+- **Issue Detail:** `upsert_food` method signature doesn't accept `is_complete_protein` and hardcodes it to `0`. This means the DB can never store complete protein data (e.g., chicken breast, fish, paneer are complete proteins). The `foods` FTS5 table has the column and `_init_foodbank` seeds it correctly (e.g., `Paneer` has `1`), but any runtime upsert silently overwrites it to `0`.
+- **Fix Plan:** Add `is_complete_protein: int = 0` parameter to `upsert_food` and pass it through from callers (`find_source_of_truth`, `_get_nutrition_data_core`, etc.).
+
+### Duplicate seed data in two locations
+- **Files:** `app/services/database.py:93-107`, `app/services/foodbank.py:402-416`
+- **Issue Detail:** The identical 12-food seed list is defined in both `DatabaseManager._init_foodbank()` and `FoodbankService.seed_db()`. Any change to the seed data (new foods, corrected macros) must be applied in two places. Already diverged slightly — `_init_foodbank` uses `INSERT INTO` while `seed_db` uses `INSERT OR REPLACE INTO`.
+- **Fix Plan:** Extract the seed data into a module-level constant (e.g., `DEFAULT_FOODS` in `database.py`) and import it in both locations.
+
+### `FoodLogSchema.md` wiki page out of sync
+- **Files:** `wiki/logic/FoodLogSchema.md`
+- **Issue Detail:** The wiki schema is missing two things present in the actual code (`app/schemas/food_schemas.py:16-22`):
+  1. `FoodItem.verified: bool = False` field
+  2. `GoalRequest(BaseModel)` class
+  The wiki shows the schema as it was before the verified column was added.
+- **Fix Plan:** Update `wiki/logic/FoodLogSchema.md` to include the `verified` field and the `GoalRequest` model.
+
+### No `AsyncClient` cleanup on app shutdown
+- **Files:** `app/api.py:24-28`
+- **Issue Detail:** The FastAPI `lifespan` handler cancels the heartbeat task on shutdown but never closes `foodbank_service.http_client`. Combined with issue #4, the client's connections are left dangling when the server stops.
+- **Fix Plan:** After `task.cancel()`, add `await foodbank_service.http_client.aclose()`. This requires `foodbank_service` to expose a close method (see fix plan for issue #4).
+
+### Duplicated Code in Meal Logging
+- **Files:** `app/api.py`
+- **Issue Detail:** The `log_meal` and `log_vision_meal` endpoints in `app/api.py` contain nearly identical code for calculating total sub-macros and inserting meal data into the database. This violates the DRY (Don't Repeat Yourself) principle, making the code harder to maintain and increasing the risk of introducing inconsistencies.
+- **Fix Plan:** Refactor the duplicated logic into a private helper function. This function will take the meal data (items, totals, meal_type, etc.) as arguments and handle the database insertion, promoting code reuse and simplifying the endpoint logic.
+
+### Complex and Inefficient Database Calls in FoodbankService
+- **Files:** `app/services/foodbank.py`
+- **Issue Detail:** Many functions in `FoodbankService` wrap synchronous database calls in `asyncio.to_thread`. While this correctly prevents blocking the event loop, the implementation is verbose and inefficient as each database operation opens and closes a new connection.
+- **Fix Plan:** Refactor the database interaction logic to use a more efficient connection management strategy. Instead of creating new connections for each operation, implement a connection pool or use a context manager provided by the `DatabaseManager` to manage connections. This will reduce overhead and improve performance.
+
+### Redundant Web Searches in FoodbankService
+- **Files:** `app/services/foodbank.py`
+- **Issue Detail:** The `search_web_for_food` and `find_source_of_truth` methods both fetch web pages, sometimes for the same query. The `_get_nutrition_data_core` function attempts to mitigate this by fetching HTML once, but the overall logic remains complex and prone to redundant network requests.
+- **Fix Plan:** Create a single, streamlined function responsible for fetching web page content. This function will cache results for a short period to avoid re-fetching the same URL within the same request. Other functions will then use this helper to get HTML content, ensuring that each page is fetched only once.
+
+### Inefficient Database Seeding
+- **Files:** `app/services/foodbank.py`
+- **Issue Detail:** The `seed_db` function, used for seeding the database in tests, iterates through `DEFAULT_FOODS` and calls `upsert_food` for each item. This results in multiple individual database transactions, which is inefficient for bulk data insertion.
+- **Fix Plan:** Modify the `DatabaseManager` to include a bulk seeding method that uses `executemany` to insert all default food items in a single transaction. This will significantly speed up the database seeding process.
+
+### Hardcoded SQL and Search Queries
+- **Files:** `app/api.py`, `app/services/foodbank.py`
+- **Issue Detail:** SQL queries and web search queries are hardcoded directly within the application's business logic. This makes the code harder to read, maintain, and adapt to different database systems or search providers in the future.
+- **Fix Plan:** Externalize all SQL queries and search query templates into a dedicated constants file or a configuration file (e.g., `app/core/queries.py`). This will centralize the queries, making them easier to manage and modify.
+
+### Inconsistent Logging and Error Handling
+- **Files:** `app/api.py`, `app/services/extraction.py`, `app/services/foodbank.py`
+- **Issue Detail:** The codebase uses `print()` statements for debugging and logging, which is not a scalable or manageable approach. Additionally, error handling is inconsistent across different modules, with varying HTTP status codes and error message formats.
+- **Fix Plan:** Implement a standardized logging framework using Python's `logging` module. Configure formatters and handlers to stream logs to the console or a file. Standardize error handling by creating a set of custom exception classes and a middleware or decorator to catch them and return consistent JSON error responses.
+

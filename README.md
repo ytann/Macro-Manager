@@ -1,26 +1,28 @@
 # MacroManager
-
-AI-powered nutrition tracking. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue.
-
+ 
+AI-powered nutrition tracking. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)**.
+ 
 ## Flow
-
+ 
 `User Input` -> `Two-Pass LLM Extraction` -> `Async Parallel Nutrition Resolution` -> `Atwater Guardrail` -> `Persistence` -> `Dashboard`
-
+ 
 ## Quick Start
-
+ 
 ```bash
-# Prerequisites: Ollama running, llama3.1:latest pulled
+# Prerequisites: Ollama running, gemma4:e2b pulled
 pip install -r requirements.txt
-
+ 
 # Terminal 1: Backend API
-python app/api.py
-
+export PYTHONPATH=$PYTHONPATH:.
+python -m app.api
+ 
 # Terminal 2: Frontend Dashboard
+export PYTHONPATH=$PYTHONPATH:.
 streamlit run app/frontend.py
 ```
-
+ 
 ## Project Structure
-
+ 
 ```
 MacroManager/
   app/
@@ -29,6 +31,7 @@ MacroManager/
     frontend.py               # Streamlit dashboard
     core/
       config.py               # Centralized configuration
+      logger.py               # Standardized logging utility
     schemas/
       food_schemas.py         # Pydantic: Macros, SubMacros, FoodItem, FoodLog
     services/
@@ -51,14 +54,13 @@ MacroManager/
       OfflineSync.md          # Sync queue, heartbeat, retry limits
       audit_logic.md          # Implementation steps for audit fixes
   raw/                        # Cloud-generated logic specs
-  audit_report.md             # Full codebase audit
-  audit_offline_sync.md       # Offline sync specific audit
+  audit_logs.md             # Consolidated codebase audit and fix logs
   ProjectDetails.md           # Detailed HLD/LLD documentation
   requirements.txt
 ```
-
+ 
 ## Key Architecture
-
+ 
 | Component | Description |
 |---|---|
 | **Async parallel** | `asyncio.gather` resolves all food items concurrently |
@@ -67,21 +69,25 @@ MacroManager/
 | **Source of Truth** | Authoritative web search (DuckDuckGo) with LLM validation, confidence tiers |
 | **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
 | **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
-| **FTS5 food search** | Full-text search for alias-based food lookups |
+| **FTS5 food search** | Full-text search for alias-based food lookups (case-insensitive) |
 | **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
-
+| **Advanced Macros** | Tracks Sugar, Saturated Fat, and Unsaturated Fat alongside primary macros |
+| **Telemetry** | Standardized logging across all services for traceability |
+ 
 ## API Endpoints
-
+  
 - `POST /log` — Parse text, calculate macros, save meal
-- `GET /summary` — Daily aggregated totals + goals
+- `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting
+- `GET /summary` — Daily aggregated totals + goals AND weekly rolling summary
 - `POST /goals` — Update user macro targets
 - `GET /meals` — All items logged today
 - `DELETE /clear` — Reset daily progress
 - `GET /pending-count` — Verification queue size
 - `GET /sync-status` — Last sync timestamp
 - `POST /verify-queue` — Manual sync trigger
-
+ 
+ 
 ## See Also
-
+ 
 - [ProjectDetails.md](./ProjectDetails.md) for full HLD/LLD
 - [wiki/index.md](./wiki/index.md) for agent routing table

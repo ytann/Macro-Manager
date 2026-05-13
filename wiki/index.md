@@ -8,11 +8,10 @@
 - Database operations, init logic, connection management, weekly aggregation -> [[app/services/database.py]]
 - Foodbank service (Consolidated nutrition resolution, L1 caching, DB lookups, web search, estimates, upsert, verification) -> [[app/services/foodbank.py]]
 - Extraction service (two-pass LLM parsing, recipe expansion, async nutrition resolution) -> [[app/services/extraction.py]]
-- API endpoints, heartbeat lifecycle, daily/weekly summaries -> [[app/api.py]]
-- Frontend dashboard, 7-day rolling buffer, logging UI -> [[app/frontend.py]]
-- Centralized config (LLM model, DB paths, ports) -> [[app/core/config.py]]
-- LLM prompts (extraction, foodbank, PCOS planner) -> [[prompts/prompts.yaml]]
+- Vision-based food extraction (image-to-items pipeline, Home vs. Wild environment rules, multimodal payload formatting) -> [[app/services/extraction.py]] (extract_from_image method)
+- Streamlit vision client utility (base64 encoding, API communication for vision logs) -> [[app/utils/vision_client.py]]
+- API endpoints, heartbeat lifecycle, daily/weekly summaries, vision-log handler -> [[app/api.py]]
+- Vision extraction prompt (environment-aware portion estimation for Home/Wild) -> [[prompts/prompts.yaml]] (extraction.vision_estimate)
 - CSV ingestion script for seeding foodbank -> [[scripts/ingest_csv.py]]
-- Audit: codebase issues and fix plans -> [[audit_report.md]]
-- Audit: offline sync queue specific issues -> [[audit_offline_sync.md]]
+- Audit: codebase issues, fix plans, and offline sync details -> [[audit_logs.md]]
 - Implementation steps for audit fixes -> [[wiki/logic/audit_logic.md]]

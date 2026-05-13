@@ -63,6 +63,8 @@ sqlite3 foodbank.db "SELECT COUNT(*) FROM foods"
 # Restart and check count is preserved
 ```
 
+**[FIXED]** — Removed `DROP TABLE`, changed to `CREATE VIRTUAL TABLE IF NOT EXISTS`. Verified with `tests/ISSUE_DBDROP_unit_persist.py`.
+
 ---
 
 ### Fix #3: Missing recipe expansion
@@ -87,11 +89,16 @@ for item in items_list:
         base_items.append(item)
 
 # Phase 2: Base ingredients (parallel)
-tasks = [self._process_base_ingredient(item['name'], item['grams']) for item in base_items]
-results = await asyncio.gather(*tasks)
+results = []  # GUARD: prevents NameError when all items are recipes
+if base_tasks:
+    results = await asyncio.gather(*base_tasks)
+for result in results:
+    ...
 ```
 
 **Step 5:** Verify with "1 plate pani puri" - should show `Pani Puri (Total)` and ingredient breakdown.
+
+**[FIXED]** — `results = []` guard added before `if base_tasks:` block. Verified with `tests/ISSUE_NAMEERROR_unit_recipe.py`.
 
 ---
 

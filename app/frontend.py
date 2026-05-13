@@ -1,24 +1,25 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import httpx
 import asyncio
+import base64
+from app.utils.vision_client import send_vision_log
+
 
 API_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
 
-# --- Helpers for Async Calls in Streamlit ---
-async def async_get(url):
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        return await client.get(url)
+# --- Helpers for Sync Calls in Streamlit ---
+_client = httpx.Client(timeout=30.0)
 
-async def async_post(url, json_data):
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        return await client.post(url, json=json_data)
+def sync_get(url):
+    return _client.get(url)
 
-async def async_delete(url):
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        return await client.delete(url)
+def sync_post(url, json_data):
+    return _client.post(url, json=json_data)
+
+def sync_delete(url):
+    return _client.delete(url)
 
 def render_macro_hud(consumed, goals):
     """Renders a minimalist equidistant glass Macro HUD with 3D flip animations."""
@@ -54,6 +55,7 @@ def render_macro_hud(consumed, goals):
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="UTF-8">
     <style>
                 :root {{
                     --hud-text: white;
@@ -255,22 +257,37 @@ def render_macro_hud(consumed, goals):
 query_params = st.query_params
 voice_text = query_params.get("voice_text")
 
+# Initialize session state for reruns
+if "log_success" not in st.session_state:
+    st.session_state.log_success = False
+
+if st.session_state.log_success:
+    st.session_state.log_success = False
+    st.rerun()
+
 st.title("🥗 MacroManager")
 
 # --- HERO SECTION: Daily Totals ---
 st.subheader("📅 Daily Progress")
 try:
-    response = asyncio.run(async_get(f"{API_URL}/summary"))
+    response = sync_get(f"{API_URL}/summary")
     if response.status_code == 200:
         full_data = response.json()
-        daily_data = full_data.get('daily', {})
-        weekly_data = full_data.get('weekly', {})
         
+        # Backward compatibility: handle both new (wrapped in 'daily') and old structures
+        if 'daily' in full_data:
+            daily_data = full_data.get('daily', {})
+            weekly_data = full_data.get('weekly', {})
+        else:
+            daily_data = full_data
+            weekly_data = {}
+            
         consumed = daily_data.get('consumed', {})
         goals = daily_data.get('goals', {})
         
         # Render Interactive Glass HUD
-        components.html(render_macro_hud(consumed, goals), height=500)
+        hud_html = render_macro_hud(consumed, goals)
+        st.iframe(src=f"data:text/html;base64,{base64.b64encode(hud_html.encode()).decode()}", height=500)
 
         # --- 🗓️ 7-Day Rolling Buffer ---
         st.subheader("🗓️ 7-Day Rolling Buffer")
@@ -299,6 +316,9 @@ try:
             st.success("Great job hitting high protein! This helps stabilize your blood sugar.")
         
         with st.expander("⚙️ Goal Settings"):
+
+
+
             g_col1, g_col2 = st.columns(2)
             with g_col1:
                 g_prot = st.number_input("Protein (g)", value=float(goals.get("protein", 150.0)), min_value=0.0)
@@ -309,7 +329,7 @@ try:
             
             if st.button("Save Goals"):
                 payload = {"protein": g_prot, "carbs": g_carb, "fat": g_fat, "calories": g_cal}
-                asyncio.run(async_post(f"{API_URL}/goals", payload))
+                sync_post(f"{API_URL}/goals", payload)
                 st.toast("Goals updated! 🎯")
                 st.rerun()
     else:
@@ -338,49 +358,66 @@ with tabs[0]:
  
         submit_button = st.form_submit_button("Log Meal")
         
+        success = False
         if submit_button:
             if user_input:
                 try:
-                    with st.spinner("Parsing and logging food..."):
-                        payload = {"text": user_input, "meal_type": meal_type}
-                        response = asyncio.run(async_post(f"{API_URL}/log", payload))
-                        if response.status_code == 200:
-                            st.toast("Meal logged successfully! 🥗", icon="✅")
-                            st.rerun()
-                        else:
-                            st.error(f"Error: {response.json().get('detail', 'Failed to log meal')}")
+                             with st.spinner("Parsing and logging food..."):
+                                 payload = {"text": user_input, "meal_type": meal_type}
+                                 response = sync_post(f"{API_URL}/log", payload)
+                                 if response.status_code == 200:
+                                     st.toast("Meal logged successfully! 🥗", icon="✅")
+                                     st.session_state.log_success = True
+                                 else:
+                                     st.error(f"Error: {response.json().get('detail', 'Failed to log meal')}")
+
                 except Exception as e:
                     st.error(f"Connection Error: {e}")
             else:
                 st.warning("Please enter some text first.")
+        
+        if st.session_state.log_success:
+            st.rerun()
+
 
 # Automatic Trigger for Voice Logging
 if voice_text:
-    try:
-        # Use the current meal_type selection from session state if available, 
-        # otherwise default to the first one in the list
-        current_meal_type = st.session_state.get('meal_type', 'Breakfast') 
-        # Note: meal_type in the form doesn't update session_state automatically 
-        # unless we wrap it in a function. We'll use a default for now or 
-        # allow the user to see it in the box before it logs.
+        try:
+            payload = {"text": voice_text, "meal_type": "General"} # Defaulting to General for voice
+            response = sync_post(f"{API_URL}/log", payload)
+            if response.status_code == 200:
+                st.toast("Meal logged via voice! 🎤", icon="✅")
+                st.session_state.log_success = True
+            else:
+                st.error(f"Voice log failed: {response.json().get('detail')}")
+                
+            # Clear query params
+            st.query_params.clear()
+        except Exception as e:
+            st.error(f"Voice log error: {e}")
         
-        # To strictly follow "Automatically trigger the existing Log button", 
-        # we simulate the POST request.
-        payload = {"text": voice_text, "meal_type": "General"} # Defaulting to General for voice
-        response = asyncio.run(async_post(f"{API_URL}/log", payload))
-        if response.status_code == 200:
-            st.toast("Meal logged via voice! 🎤", icon="✅")
-        else:
-            st.error(f"Voice log failed: {response.json().get('detail')}")
-            
-        # Clear query params and rerun to clean UI
-        st.query_params.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Voice log error: {e}")
+        if st.session_state.log_success:
+            st.rerun()
+
 
 with tabs[1]:
-    st.info("Camera logging coming soon! 📸")
+    environment = st.radio("Environment", ["Home", "Wild"], horizontal=True)
+    camera_photo = st.camera_input("Take a picture of your food")
+    
+    if camera_photo:
+        try:
+            with st.spinner('Gemma 4 is estimating macros...'):
+                result = send_vision_log(camera_photo.getvalue(), environment)
+                if result.get("status") == "success":
+                    items = result.get("items", [])
+                    item_list = ", ".join([f"{i['name']} ({i['calories']} kcal)" for i in items])
+                    st.success(f"Extracted: {item_list}")
+                    st.session_state.log_success = True
+                    st.rerun()
+                else:
+                    st.error(f"Vision API Error: {result.get('detail', 'Unknown error')}")
+        except Exception as e:
+            st.error(f"Connection Error: {e}")
 
 st.divider()
 
@@ -388,29 +425,26 @@ st.divider()
 st.subheader("📖 Daily Food Journal")
 try:
     # Fetch detailed meals for chronological timeline
-    response = asyncio.run(async_get(f"{API_URL}/meals"))
+    response = sync_get(f"{API_URL}/meals")
     if response.status_code == 200:
         meals = response.json()
-        
         if not meals:
             st.info("No items logged today.")
         else:
-            # Sort meals by timestamp (descending for newest first)
             meals.sort(key=lambda x: x['timestamp'], reverse=True)
-            
             for meal in meals:
                 items = meal.get('items', [])
-                # We don't have meal_type in /meals endpoint, but we can just list them
                 with st.container():
                     st.markdown(f"🕒 **{meal['timestamp'][:16]}**")
                     for item in items:
                         verified_mark = " ✅" if item.get('verified') else ""
                         sub_macros = item.get('sub_macros') or {}
                         fiber = sub_macros.get('fiber', 0) or 0
-                        
+                        sugar = sub_macros.get('sugar', 0) or 0
+                        sat_fat = sub_macros.get('saturated_fat', 0) or 0
                         st.markdown(
                             f"- {verified_mark} **{item['name']}** ({item['grams']}g) "
-                            f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g`"
+                            f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g` | Sugar: `{sugar:.1f}g` | SatFat: `{sat_fat:.1f}g`"
                         )
                     st.divider()
     else:
@@ -418,11 +452,12 @@ try:
 except Exception as e:
     st.error(f"Connection Error: {e}")
 
+
 # --- CLEAR OPTIONS ---
 st.divider()
 if st.button("🗑️ Clear Daily Macros", use_container_width=True):
     try:
-        clear_resp = asyncio.run(async_delete(f"{API_URL}/clear"))
+        clear_resp = sync_delete(f"{API_URL}/clear")
         if clear_resp.status_code == 200:
             st.success("Daily totals cleared!")
             st.rerun()

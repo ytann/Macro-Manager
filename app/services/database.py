@@ -1,9 +1,26 @@
 import sqlite3
 import json
+import threading
 from typing import Dict
 from app.core.config import Config
+from app.core import queries
 
 DB_PATH = Config.FOODBANK_DB_PATH
+
+DEFAULT_FOODS = [
+    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 'initial_seed'),
+    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 'initial_seed'),
+    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 'initial_seed'),
+    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 'initial_seed'),
+    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 'initial_seed'),
+    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 'initial_seed'),
+    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 'initial_seed'),
+    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 'initial_seed'),
+    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 'initial_seed'),
+    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 'initial_seed'),
+    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 'initial_seed'),
+    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 'initial_seed'),
+]
 
 def init_db():
     """Backward compatibility helper for tests."""
@@ -27,7 +44,7 @@ def save_meal(meal_data):
             return sum((i.get('sub_macros') or {}).get(key, 0) or 0 for i in items)
             
         conn.execute(
-            "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            queries.MEALS_INSERT,
             (meal_data['meal_id'], json.dumps(items), total_p, total_c, total_f, total_cal, sum_sub('fiber'), sum_sub('sugar'), sum_sub('saturated_fat'), sum_sub('unsaturated_fat'), 'General')
         )
         conn.commit()
@@ -36,7 +53,7 @@ def get_todays_macros():
     """Backward compatibility helper for tests."""
     db = DatabaseManager()
     with db.get_macros_conn() as conn:
-        cursor = conn.execute("SELECT total_protein, total_carbs, total_fat, total_cals FROM meals WHERE date(timestamp) = date('now')")
+        cursor = conn.execute(queries.MEALS_GET_TODAY_BASIC)
         rows = cursor.fetchall()
         if not rows:
             return None
@@ -55,6 +72,7 @@ class DatabaseManager:
     Handles both the foodbank (static/learned nutrition) and macro logs (daily meals).
     """
     def __init__(self):
+        self._local = threading.local()
         self._init_db()
 
     def _init_db(self):
@@ -66,101 +84,66 @@ class DatabaseManager:
     def _init_foodbank(self):
         with sqlite3.connect(self.foodbank_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("DROP TABLE IF EXISTS foods")
-            cursor.execute("""
-                CREATE VIRTUAL TABLE foods USING fts5(
-                    name, aliases, calories UNINDEXED, protein UNINDEXED, 
-                    carbs UNINDEXED, fat UNINDEXED, fiber UNINDEXED, is_complete_protein UNINDEXED,
-                    verified UNINDEXED, source UNINDEXED
-                )
-            """)
-            cursor.execute("CREATE TABLE IF NOT EXISTS recipes (dish_name TEXT PRIMARY KEY, recipe_json TEXT NOT NULL)")
-            cursor.execute("CREATE TABLE IF NOT EXISTS pending_verification (name TEXT PRIMARY KEY, retry_count INTEGER DEFAULT 0)")
+            cursor.execute(queries.SCHEMA_FOODS_FTS)
+            cursor.execute(queries.SCHEMA_RECIPES)
+            cursor.execute(queries.SCHEMA_PENDING_VERIFICATION)
             # Migration: Add retry_count if missing
-            cursor.execute("PRAGMA table_info(pending_verification)")
+            cursor.execute(queries.SCHEMA_PENDING_VERIFICATION_INFO)
             cols = [row[1] for row in cursor.fetchall()]
             if 'retry_count' not in cols:
-                cursor.execute("ALTER TABLE pending_verification ADD COLUMN retry_count INTEGER DEFAULT 0")
-            cursor.execute("CREATE TABLE IF NOT EXISTS sync_status (id INTEGER PRIMARY KEY, last_sync DATETIME)")
+                cursor.execute(queries.SCHEMA_PENDING_VERIFICATION_ADD_RETRY)
+            cursor.execute(queries.SCHEMA_SYNC_STATUS)
             
             # Initialize sync status if empty
-            cursor.execute("SELECT COUNT(*) FROM sync_status")
+            cursor.execute(queries.SCHEMA_SYNC_STATUS_COUNT)
             if cursor.fetchone()[0] == 0:
-                cursor.execute("INSERT INTO sync_status (id, last_sync) VALUES (1, '1970-01-01 00:00:00')")
+                cursor.execute(queries.SCHEMA_SYNC_STATUS_INIT)
             
-            cursor.execute("SELECT COUNT(*) FROM foods")
+            cursor.execute(queries.SCHEMA_FOODS_COUNT)
             count = cursor.fetchone()[0]
             if count == 0:
-                foods = [
-                    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 'initial_seed'),
-                    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 'initial_seed'),
-                    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 'initial_seed'),
-                    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 'initial_seed'),
-                    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 'initial_seed'),
-                    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 'initial_seed'),
-                    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 'initial_seed'),
-                    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 'initial_seed'),
-                    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 'initial_seed'),
-                    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 'initial_seed'),
-                    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 'initial_seed'),
-                    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 'initial_seed'),
-                ]
-                cursor.executemany("INSERT INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", foods)
+                cursor.executemany(queries.FOODS_SEED_INSERT, DEFAULT_FOODS)
                 conn.commit()
 
     def _init_macros(self):
         with sqlite3.connect(self.macros_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS meals (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    meal_id TEXT NOT NULL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    items_json TEXT NOT NULL,
-                    total_protein REAL, total_carbs REAL, total_fat REAL, total_cals REAL,
-                    total_fiber REAL, total_sugar REAL, total_saturated_fat REAL, total_unsaturated_fat REAL,
-                    meal_type TEXT
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS goals (
-                    id INTEGER PRIMARY KEY,
-                    protein REAL,
-                    carbs REAL,
-                    fat REAL,
-                    calories REAL
-                )
-            """)
-            cursor = conn.execute("PRAGMA table_info(meals)")
+            cursor.execute(queries.SCHEMA_MEALS)
+            cursor.execute(queries.SCHEMA_GOALS)
+            cursor = conn.execute(queries.SCHEMA_MEALS_INFO)
             columns = [row['name'] for row in cursor.fetchall()]
             required = {"total_fiber": "REAL", "total_sugar": "REAL", "total_saturated_fat": "REAL", "total_unsaturated_fat": "REAL", "meal_type": "TEXT"}
             for col, col_type in required.items():
                 if col not in columns:
-                    conn.execute(f"ALTER TABLE meals ADD COLUMN {col} {col_type}")
+                    conn.execute(queries.SCHEMA_MEALS_ADD_COL.format(col=col, col_type=col_type))
             conn.commit()
  
     def get_foodbank_conn(self):
-        conn = sqlite3.connect(self.foodbank_path, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        return conn
+        if not hasattr(self._local, 'foodbank_conn'):
+            conn = sqlite3.connect(self.foodbank_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            self._local.foodbank_conn = conn
+        return self._local.foodbank_conn
 
     def get_macros_conn(self):
-        conn = sqlite3.connect(self.macros_path, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        return conn
+        if not hasattr(self._local, 'macros_conn'):
+            conn = sqlite3.connect(self.macros_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            self._local.macros_conn = conn
+        return self._local.macros_conn
  
     def set_daily_goals(self, protein: float, carbs: float, fat: float, calories: float):
         with self.get_macros_conn() as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO goals (id, protein, carbs, fat, calories) VALUES (1, ?, ?, ?, ?)",
+                queries.GOALS_UPSERT,
                 (protein, carbs, fat, calories)
             )
             conn.commit()
  
     def get_daily_goals(self) -> Dict[str, float]:
         with self.get_macros_conn() as conn:
-            row = conn.execute("SELECT protein, carbs, fat, calories FROM goals WHERE id = 1").fetchone()
+            row = conn.execute(queries.GOALS_GET).fetchone()
             if row:
                 return {
                     "protein": row["protein"],
@@ -173,9 +156,7 @@ class DatabaseManager:
     def get_weekly_summary(self) -> dict:
         with self.get_macros_conn() as conn:
             cursor = conn.execute(
-                "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp)) as days_logged "
-                "FROM meals "
-                "WHERE date(timestamp) >= date('now', '-7 days')"
+                queries.MEALS_WEEKLY_SUMMARY
             )
             row = cursor.fetchone()
             
