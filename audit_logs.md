@@ -50,6 +50,11 @@
 | [Inefficient DB Seeding](#inefficient-database-seeding) | `seed_db` calls `upsert_food` in a loop instead of `executemany` | Low | [FIXED] |
 | [Hardcoded Queries](#hardcoded-sql-and-search-queries) | SQL and web search queries are hardcoded in services | Low | [FIXED] |
 | [Inconsistent Logging](#inconsistent-logging-and-error-handling) | `print()` used for debugging; inconsistent error handling | Low | [FIXED] |
+| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure instead of validation | Medium | [PENDING] |
+| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [PENDING] |
+| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [PENDING] |
+| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED in logs | Low | [PENDING] |
+
 
 ---
 
@@ -287,4 +292,25 @@
 - **Files:** `app/api.py`, `app/services/extraction.py`, `app/services/foodbank.py`
 - **Issue Detail:** The codebase uses `print()` statements for debugging and logging, which is not a scalable or manageable approach. Additionally, error handling is inconsistent across different modules, with varying HTTP status codes and error message formats.
 - **Fix Plan:** Implement a standardized logging framework using Python's `logging` module. Configure formatters and handlers to stream logs to the console or a file. Standardize error handling by creating a set of custom exception classes and a middleware or decorator to catch them and return consistent JSON error responses.
+
+### No Pydantic validation for Onboarding LLM output
+- **Files:** `app/services/onboarding.py`
+- **Issue Detail:** The `calculate_pcos_baseline` method parses LLM JSON and uses `.get()` with default values. If the LLM returns an empty object or incorrect keys, the system silently proceeds with default biometrics (160cm, 65kg) without informing the user or raising a validation error.
+- **Fix Plan:** Define an `OnboardingAttributes` Pydantic model and validate the LLM response against it. Raise `ValueError` if validation fails.
+
+### Wiki Architecture out of sync (Phase 5)
+- **Files:** `wiki/logic/Architecture.md`
+- **Issue Detail:** The architecture documentation has not been updated to include the `OnboardingService` or the new `/onboard` endpoint. Additionally, the `foods` table description is missing the recently added `sugar`, `saturated_fat`, `unsaturated_fat`, and `source` columns.
+- **Fix Plan:** Update `Architecture.md` to reflect Phase 5 changes and align the database schema description with `queries.py`.
+
+### Vision Client connection overhead
+- **Files:** `app/utils/vision_client.py`
+- **Issue Detail:** `send_vision_log` uses `httpx.post()` directly. This creates a new connection pool for every single image upload, increasing latency and resource usage.
+- **Fix Plan:** Implement a shared `httpx.Client` in `vision_client.py` to reuse TCP connections.
+
+### Audit Logic historical duplication
+- **Files:** `wiki/logic/audit_logic.md`
+- **Issue Detail:** `audit_logic.md` contains a detailed "to-do" list for fixes (Phase 1-4) that have already been implemented and marked as [FIXED] in the main `audit_logs.md`. This creates redundancy and confusion about the current state of the codebase.
+- **Fix Plan:** Archive or remove the "to-do" steps from `audit_logic.md` once they are verified in the main audit logs.
+
 

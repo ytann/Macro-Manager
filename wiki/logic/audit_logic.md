@@ -266,3 +266,25 @@ rmdir templates/ wiki/entities/
 
 ### Fix #18: Unify fiber return format
 Standardize the return dict format across `find_source_of_truth`, `search_web_for_food`, and `internal_estimate` to all use flat keys: `{'calories', 'protein', 'carbs', 'fat', 'fiber'}`.
+
+## Phase 5: Recent System Stabilization
+
+### Fix #20: Graceful UI Error Handling
+**File:** `app/frontend.py`
+**Detail:** Wrapped `send_vision_log` call in `try/except` block to catch `httpx.HTTPStatusError`. If status is 400, show warning "No edible food detected" instead of crashing.
+
+### Fix #21: Pro-rata Weekly Buffer
+**File:** `app/services/database.py` and `app/frontend.py`
+**Detail:** Calculated `days_active` (distinct dates logged in last 7 days, min 1) to scale weekly goals. `weekly_goal = daily_goal * days_active`. Prevents "Day 1" users from exploiting a full 7-day buffer.
+
+### Fix #22: Schema and Syntax Alignment
+**Files:** `app/core/queries.py`, `app/services/database.py`, `app/frontend.py`
+**Detail:** Fixed `SyntaxError` in frontend and `OperationalError` in database seeding. Updated `DEFAULT_FOODS` and `FOODS_SEED_INSERT` to align with the 13-column nutrition schema.
+
+### Fix #23: `/clear` Endpoint Concurrency
+**File:** `app/api.py`
+**Detail:** Changed `clear_data` from `async def` to `def` to ensure it runs in a thread pool, resolving `threading.local()` conflicts with the async event loop.
+
+### Fix #24: Vision Guardrail & Reasoning Pipeline
+**File:** `prompts/prompts.yaml`
+**Detail:** Refactored `vision_estimate` into a two-step process: (1) Analysis of food presence + description in `reasoning` field $\rightarrow$ (2) Specific item extraction. Explicitly forbid placeholders like "unidentified food".

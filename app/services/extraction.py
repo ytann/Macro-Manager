@@ -2,7 +2,9 @@ import litellm
 import json
 import yaml
 import asyncio
-from typing import List, Optional, Dict, Any, Tuple
+import uuid
+import os
+from typing import List, Optional, Dict, Tuple
 from app.services.foodbank import FoodbankService
 from app.schemas.food_schemas import FoodItem, FoodLog, Macros, SubMacros
 from app.services.database import DatabaseManager
@@ -33,8 +35,19 @@ class ExtractionService:
         with open(Config.PROMPTS_PATH, 'r') as f:
             return yaml.safe_load(f)
 
-    async def extract_from_image(self, base64_image: str, environment: str = "Home") -> List[Dict[str, Any]]:
-        prompt = self.prompts['extraction']['vision_estimate'].format(environment=environment)
+    def _get_user_memory(self) -> str:
+        path = "app/data/personal_glossary.md"
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                return f.read()
+        return ""
+
+    async def extract_from_image(self, base64_image: str, environment: str = "Home", hint: str = "") -> FoodLog:
+        prompt = self.prompts['extraction']['vision_estimate'].format(
+            environment=environment, 
+            hint=hint, 
+            user_memory=self._get_user_memory()
+        )
 
         resp = await litellm.acompletion(
             model=self.model,
@@ -52,17 +65,23 @@ class ExtractionService:
 
         data = json.loads(resp.choices[0].message.content)
 
+        items_list = []
         if isinstance(data, dict):
             for k in ['items', 'ingredients', 'data', 'response']:
                 if k in data and isinstance(data[k], list):
-                    return data[k]
-            for v in data.values():
-                if isinstance(v, list):
-                    return v
+                    items_list = data[k]
+                    break
+            if not items_list:
+                for v in data.values():
+                    if isinstance(v, list):
+                        items_list = v
+                        break
         elif isinstance(data, list):
-            return data
+            items_list = data
 
-        return []
+        unique_items = self._deduplicate_items(items_list)
+        meal_id = f"vision_{uuid.uuid4().hex[:8]}"
+        return await self._resolve_and_build_log(unique_items, meal_id)
 
     async def _verify_extracted_items(self, text: str, items: List[dict]) -> List[dict]:
         found_details = [f"{i.get('name')} ({i.get('grams')}g)" for i in items]
@@ -159,50 +178,7 @@ class ExtractionService:
             ingredients.append(item)
         return ingredients, delta
 
-    async def parse(self, text: str, meal_id: str = "unknown") -> FoodLog:
-        self.foodbank_cache.clear()
-
-        # Voice Correction Pass: Normalize phonetic errors before extraction
-        correction_prompt = self.prompts['extraction']['voice_correction'].format(text=text)
-        try:
-            corr_resp = await litellm.acompletion(
-                model=self.model,
-                messages=[{"role": "user", "content": correction_prompt}],
-                api_base=Config.LITELLM_API_BASE,
-                temperature=0.0
-            )
-            text = corr_resp.choices[0].message.content.strip()
-        except Exception as e:
-            logger.error(f"Voice correction failed, proceeding with raw text: {e}")
-
-        prompt = self.prompts['extraction']['main'].format(text=text)
-        resp = await litellm.acompletion(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
-            api_base=Config.LITELLM_API_BASE,
-            temperature=0.0
-        )
-        data = json.loads(resp.choices[0].message.content)
-
-        items_list = []
-        if isinstance(data, dict):
-            for k in ['items', 'ingredients', 'data', 'response']:
-                if k in data and isinstance(data[k], list):
-                    items_list = data[k]
-                    break
-            if not items_list:
-                for v in data.values():
-                    if isinstance(v, list):
-                        items_list = v
-                        break
-        elif isinstance(data, list):
-            items_list = data
-
-        missing = await self._verify_extracted_items(text, items_list)
-        items_list.extend(missing)
-        items_list = self._deduplicate_items(items_list)
-
+    async def _resolve_and_build_log(self, items_list: List[dict], meal_id: str) -> FoodLog:
         parsed_items = []
         state = {'p': 0.0, 'c': 0.0, 'f': 0.0, 'cal': 0.0}
 
@@ -257,3 +233,52 @@ class ExtractionService:
             total_macros=Macros(protein=state['p'], carbs=state['c'], fat=state['f']),
             total_calories=state['cal'], confidence_score=1.0
         )
+
+    async def parse(self, text: str, meal_id: str = "unknown") -> FoodLog:
+        self.foodbank_cache.clear()
+
+        # Voice Correction Pass: Normalize phonetic errors before extraction
+        correction_prompt = self.prompts['extraction']['voice_correction'].format(text=text)
+        try:
+            corr_resp = await litellm.acompletion(
+                model=self.model,
+                messages=[{"role": "user", "content": correction_prompt}],
+                api_base=Config.LITELLM_API_BASE,
+                temperature=0.0
+            )
+            text = corr_resp.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Voice correction failed, proceeding with raw text: {e}")
+
+        prompt = self.prompts['extraction']['main'].format(
+            text=text, 
+            user_memory=self._get_user_memory()
+        )
+        resp = await litellm.acompletion(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            api_base=Config.LITELLM_API_BASE,
+            temperature=0.0
+        )
+        data = json.loads(resp.choices[0].message.content)
+
+        items_list = []
+        if isinstance(data, dict):
+            for k in ['items', 'ingredients', 'data', 'response']:
+                if k in data and isinstance(data[k], list):
+                    items_list = data[k]
+                    break
+            if not items_list:
+                for v in data.values():
+                    if isinstance(v, list):
+                        items_list = v
+                        break
+        elif isinstance(data, list):
+            items_list = data
+
+        missing = await self._verify_extracted_items(text, items_list)
+        items_list.extend(missing)
+        items_list = self._deduplicate_items(items_list)
+
+        return await self._resolve_and_build_log(items_list, meal_id)

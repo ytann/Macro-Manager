@@ -1,7 +1,7 @@
 # 📖 Project Details: MacroManager
 
 ## 1. Introduction
-MacroManager is an intelligent nutrition tracking system that bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech (e.g., "a plate of poha") and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately.
+MacroManager is an intelligent nutrition tracking system designed specifically for PCOS/PCOD dietary management. It bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech (e.g., "a plate of poha") and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately. A one-shot onboarding flow extracts user biometrics from free-text bios and calculates PCOS-calibrated macro targets.
 
 ---
 
@@ -14,12 +14,14 @@ The system follows a decoupled **Client-Server Architecture**:
 - **Nutritional Intelligence (Gemma 4 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent.
 - **Persistence Layer (SQLite)**: Two distinct databases-one for static/learned food data (`foodbank.db`) and one for user meal logs (`macros.db`).
 - **Vision Pipeline (Gemma 4 multimodal)**: An encapsulated, decoupled module that extracts food items from images with environment-aware portion size estimation (Home vs. Wild).
+- **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation (Mifflin-St Jeor BMR $\rightarrow$ TDEE $\rightarrow$ PCOS Penalty $\rightarrow$ Macro Split).
 
 ### 2.2 Data Flow
 1. **User Input** $\rightarrow$ Natural language text (e.g., "2 eggs and a bowl of dal") OR image (base64 + environment flag).
 2. **Extraction Pipeline** $\rightarrow$ 
     - Text Path (Two-Pass): Pass 1 $\rightarrow$ Initial Item/Weight Extraction. Pass 2 $\rightarrow$ Verification Guardrail.
-    - Vision Path (Encapsulated): Pass 1 $\rightarrow$ Multimodal image analysis with environment-aware portion estimation.
+    - Vision Path (Encapsulated): Pass 1 $\rightarrow$ Multimodal image analysis (Analysis $\rightarrow$ Extraction) with environment-aware portion estimation and optional user hints.
+    - Convergence: Both paths produce a list of extracted items which are then processed by the Unified Resolver.
     - Cleanup: Deduplication and quantifier removal.
 3. **Nutritional Resolution (Async Parallelized)** $\rightarrow$ 
     - **Parallel Lookup**: All extracted items are processed concurrently using `asyncio.gather`.
@@ -39,8 +41,8 @@ The system follows a decoupled **Client-Server Architecture**:
 - **Key Logic**: 
     - Uses **FTS5 (Full-Text Search)** for the foodbank to allow fast, alias-based lookups (e.g., searching 'chawal' finds 'Rice').
     - Implements automated schema migration to ensure the database evolves without data loss.
-    - **Temporal Aggregation**: Provides weekly summaries via specialized SQL aggregation over the last 7 days.
-    - **Standardized Seeding**: Maintains `DEFAULT_FOODS` as a central source of truth for initial nutrition data.
+    - **Temporal Aggregation**: Provides weekly summaries for the current calendar week (Monday-Sunday).
+    - **Standardized Seeding**: Maintains `DEFAULT_FOODS` matching the 13-column schema to ensure consistent initial nutrition data.
 
 #### B. `FoodbankService`
 - **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence. All paths are standardized to return a flat macro dictionary.
@@ -51,14 +53,26 @@ The system follows a decoupled **Client-Server Architecture**:
 - **Consistent Seeding**: Uses a shared `DEFAULT_FOODS` constant to seed the database via `upsert_food`, preventing duplicate entries in the FTS5 table.
 
 #### C. `ExtractionService`
+- **Unified Resolver (`_resolve_and_build_log`)**: A centralized engine that takes a list of extracted items and a meal ID to build a complete `FoodLog`. It handles recipe expansion and nutrition resolution identically for both text and vision inputs, eliminating logic duplication.
 - **Two-Pass Pipeline (Text)**: Uses a "Check and Balance" system. The first pass extracts; the second pass (Verification Guardrail) explicitly asks the LLM: *"Did you miss anything?"*
-- **Vision Extraction (Image)**: Standalone `extract_from_image(base64_image, environment)` method formats a multimodal payload (text + image) for `gemma4:e2b`, returning `[{name, grams}]` items. Supports `Home` (smaller portions) and `Wild` (restaurant-scale) environment rules.
+    - **Vision Extraction (Image)**: Implements a two-step reasoning process (Analysis $\rightarrow$ Extraction). The model first analyzes the image to confirm food presence and describes it in a 'reasoning' field before extracting specific items and weights. This prevents placeholders and improves identification accuracy. Supports `Home` (smaller portions) and `Wild` (restaurant-scale) environment rules, and utilizes optional `hint` strings to disambiguate items in the image.
 - **Parallel Execution**: Processes all base ingredients concurrently using `asyncio.gather`, minimizing API latency for meals with multiple items.
 - **Density-Aware Estimation**: Instead of static weights, the prompt instructs the LLM to consider the nature of the food (e.g., Sev Puri vs. Rice) when estimating grams for "plates" or "bowls".
 - **Deduplication**: a custom logic filter that removes non-food terms (like "plate") and overlapping names.
 
 #### D. `Pydantic Schemas`
 - Enforces strict data types and constraints (e.g., `ge=0` for macros) to prevent negative values or `NoneType` errors.
+
+#### E. `OnboardingService`
+- **Purpose**: One-shot user onboarding — extracts physical attributes from a free-text bio dump and calculates optimized PCOS macro targets.
+- **Key Logic**:
+    - **LLM Extraction**: Sends user bio text to Gemma 4 with `onboarding_parse` prompt; parses JSON for `height_cm`, `weight_kg`, `activity_level`, `goal`.
+    - **BMR (Mifflin-St Jeor, Female)**: $(10 \times \text{weight\_kg}) + (6.25 \times \text{height\_cm}) - (5 \times 25) - 161$ (assumes age 25).
+    - **TDEE**: $\text{BMR} \times \text{activity\_level}$ where activity_level = 1.2 (sedentary), 1.375 (light), 1.55 (moderate), 1.725 (active).
+    - **Goal Modifier**: $\text{lose} = -500$, $\text{maintain} = 0$, $\text{gain} = +500$ applied to TDEE.
+    - **PCOS Penalty**: $\text{target\_calories} = \text{adjusted\_tdee} \times 0.85$ (15% metabolic reduction for PCOS context).
+    - **Macro Split (40/35/25)**: Protein = $(\text{target\_cals} \times 0.4) / 4$, Fat = $(\text{target\_cals} \times 0.35) / 9$, Carbs = $(\text{target\_cals} \times 0.25) / 4$.
+    - **Persistence**: Returns `{protein, carbs, fat, calories}` dict; endpoint writes to `goals` table via `DatabaseManager.set_daily_goals()`.
 
 ---
 
@@ -82,11 +96,12 @@ The system follows a decoupled **Client-Server Architecture**:
 
 ### 4.2 API Endpoints
 - `POST /log`: Parses text, calculates macros, and saves the meal.
-- `POST /vision-log`: Extracts food from a base64-encoded image with environment context (`Home`/`Wild`), resolves nutrition, and saves the meal.
-- `GET /summary`: Returns aggregated totals for the day, daily goals, and a 7-day rolling weekly summary.
+- `POST /vision-log`: Extracts food from a base64-encoded image with environment context (`Home`/`Wild`) and optional user hints, resolves nutrition via the Unified Resolver, and saves the meal.
+- `POST /onboard`: Accepts `{bio_text: str}`, calls `OnboardingService.calculate_pcos_baseline()` to extract attributes and compute PCOS-calibrated macros, persists to `goals` table, returns computed macros.
+- `GET /summary`: Returns aggregated totals for the day, daily goals, and a static calendar week summary.
 - `POST /goals`: Updates user-defined macro targets.
 - `GET /meals`: Lists all detailed food items logged today.
-- `DELETE /clear`: Resets daily progress.
+- `DELETE /clear`: Resets daily progress (Async).
 
 ---
 

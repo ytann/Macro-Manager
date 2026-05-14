@@ -19,10 +19,11 @@ Manual Trigger
 
 ## get_nutrition_data Resolution Order
 
-1. **DB lookup** via FTS5 (exact name + alias + fuzzy word match)
-2. **Network check** (`_is_network_available` — HEAD request to `https://1.1.1.1`)
-3. **[OFFLINE]** Return cached data if available (queue unverified items). Else call `internal_estimate` (LLM guess), persist with `verified=0`, queue for later verification.
-4. **[ONLINE]** If DB has verified data, return immediately. Else try `find_source_of_truth` (authoritative web) -> `search_web_for_food` (general web) -> `internal_estimate` (LLM fallback).
+1. **L1 Cache Lookup**: In-memory dictionary check.
+2. **DB lookup** via FTS5 (exact name + alias + fuzzy word match). If `verified=1`, return immediately.
+3. **Network check** (`_is_network_available` — HEAD request to `https://1.1.1.1`)
+4. **[OFFLINE]** Return cached data if available (queue unverified items). Else call `internal_estimate` (LLM guess), persist with `verified=0`, queue for later verification.
+5. **[ONLINE]** If DB had unverified data or was missing, try `find_source_of_truth` (authoritative web) -> `search_web_for_food` (general web) -> `internal_estimate` (LLM fallback).
 
 ## Verification Queue
 

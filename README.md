@@ -1,10 +1,11 @@
 # MacroManager
  
-AI-powered nutrition tracking. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)**.
+AI-powered nutrition tracking for PCOS/PCOD management. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)** + **one-shot onboarding with PCOS-calibrated macro targets**.
  
 ## Flow
- 
+
 `User Input` -> `Two-Pass LLM Extraction` -> `Async Parallel Nutrition Resolution` -> `Atwater Guardrail` -> `Persistence` -> `Dashboard`
+`Onboarding Bio Text` -> `LLM Attribute Extraction` -> `PCOS Baseline Math (BMR/TDEE/Penalty/Macros)` -> `Goal Persistence`
  
 ## Quick Start
  
@@ -38,6 +39,7 @@ MacroManager/
       database.py             # DatabaseManager: SQLite FTS5 + meals
       foodbank.py             # FoodbankService: lookups, web search, offline sync
       extraction.py           # ExtractionService: two-pass LLM parsing
+      onboarding.py           # OnboardingService: PCOS baseline macros from bio text
   prompts/
     prompts.yaml              # Externalized LLM prompts
   scripts/
@@ -67,21 +69,24 @@ MacroManager/
 | **Two-pass extraction** | 1st pass extracts, 2nd pass (verification guardrail) catches missed items |
 | **Offline sync queue** | Cached data returned immediately when offline; unverified items queued for heartbeat sync |
 | **Source of Truth** | Authoritative web search (DuckDuckGo) with LLM validation, confidence tiers |
+| **Unified Resolver** | Shared resolution engine for text and vision paths ensuring consistent macro calculation and recipe expansion |
 | **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
 | **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
 | **FTS5 food search** | Full-text search for alias-based food lookups (case-insensitive) |
 | **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
 | **Advanced Macros** | Tracks Sugar, Saturated Fat, and Unsaturated Fat alongside primary macros |
+| **PCOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PCOS penalty -> 40/35/25 macro split |
 | **Telemetry** | Standardized logging across all services for traceability |
  
 ## API Endpoints
   
 - `POST /log` — Parse text, calculate macros, save meal
-- `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting
-- `GET /summary` — Daily aggregated totals + goals AND weekly rolling summary
+- `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting and optional `hint` for better item identification.
+- `POST /onboard` — One-shot PCOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PCOS penalty (0.85x), sets daily macro goals
+- `GET /summary` — Daily aggregated totals + goals AND static calendar week summary
 - `POST /goals` — Update user macro targets
 - `GET /meals` — All items logged today
-- `DELETE /clear` — Reset daily progress
+- `DELETE /clear` — Reset daily progress (Async)
 - `GET /pending-count` — Verification queue size
 - `GET /sync-status` — Last sync timestamp
 - `POST /verify-queue` — Manual sync trigger

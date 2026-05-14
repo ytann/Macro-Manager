@@ -7,7 +7,7 @@ Resolved by `app/services/foodbank.py` and `app/services/extraction.py`.
 For every item extracted from the user's log:
  
 1. **L1 Cache Lookup**: Immediate check of in-memory cache for normalized name.
-2. **DB Lookup**: Search `foodbank.db` via FTS5 — exact name match, alias match (`aliases LIKE`), then FTS5 MATCH query with `*` suffix on individual words.
+2. **DB Lookup**: Search `foodbank.db` via FTS5. If item is found and `verified=1`, return immediately.
 3. **Network Check**: `_is_network_available()` (HEAD to `https://1.1.1.1`) determines online/offline path.
 4. **Offline Path**: Return DB-cached data if available. Queue unverified items (`verified=0`) for future verification. If no cache, use `internal_estimate` (LLM guess), persist with `verified=0`.
 5. **Online Path (Source of Truth Flow)**: 
@@ -24,15 +24,15 @@ The `verified` column in the `foods` table distinguishes between estimated and c
 - `verified=0`: Data derived from local LLM estimates or cached items awaiting verification.
 - **Promotion**: Items are promoted from `0` -> `1` only after successful heartbeat sync or manual verification.
 
-## 2. Recipe Expansion
+## 2. Unified Resolution & Recipe Expansion
 
-`ExtractionService.parse()` checks `self.foodbank.get_recipe(name)` before treating an item as a base ingredient:
+Both Text and Vision paths converge into `ExtractionService._resolve_and_build_log()` to ensure consistent processing:
 
-1. Fetch recipe JSON from `recipes` table
+1. Fetch recipe JSON from `recipes` table for any item recognized as a complex dish
 2. Scale ingredient weights by `grams / total_recipe_weight`
-3. Resolve all recipe ingredients in parallel via `asyncio.gather`
+3. Resolve all recipe ingredients and base ingredients in parallel via `asyncio.gather`
 4. Create dish summary `FoodItem(name="Dish (Total)", ...)` + ingredient breakdown
-5. `results` is initialized to `[]` before the gather block — safe when ALL items are recipes (zero base ingredients)
+5. Aggregate all results into a standardized `FoodLog` object
 
 ## 3. Verification Queue
  

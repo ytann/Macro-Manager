@@ -12,7 +12,7 @@ PENDING_VERIFICATION_INC_RETRY = "UPDATE pending_verification SET retry_count = 
 PENDING_VERIFICATION_COUNT = "SELECT COUNT(*) FROM pending_verification"
 SYNC_STATUS_UPDATE = "UPDATE sync_status SET last_sync = datetime('now') WHERE id = 1"
 SYNC_STATUS_GET = "SELECT last_sync FROM sync_status WHERE id = 1"
-FOODS_SEED_INSERT = "INSERT INTO foods VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+FOODS_SEED_INSERT = "INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 # Macros
 MEALS_INSERT = "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -20,7 +20,7 @@ MEALS_GET_TODAY_FULL = "SELECT total_protein, total_carbs, total_fat, total_cals
 MEALS_GET_TODAY_BASIC = "SELECT total_protein, total_carbs, total_fat, total_cals FROM meals WHERE date(timestamp) = date('now')"
 MEALS_GET_TODAY_IDS = "SELECT id, meal_id, timestamp, items_json FROM meals WHERE date(timestamp) = date('now')"
 MEALS_DELETE_TODAY = "DELETE FROM meals WHERE date(timestamp) = date('now')"
-MEALS_WEEKLY_SUMMARY = "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp)) as days_logged FROM meals WHERE date(timestamp) >= date('now', '-7 days')"
+MEALS_WEEKLY_SUMMARY = "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp)) as days_logged FROM meals WHERE date(timestamp) >= date('now', 'localtime', 'weekday 0', '-6 days')"
 GOALS_UPSERT = "INSERT OR REPLACE INTO goals (id, protein, carbs, fat, calories) VALUES (1, ?, ?, ?, ?)"
 GOALS_GET = "SELECT protein, carbs, fat, calories FROM goals WHERE id = 1"
 

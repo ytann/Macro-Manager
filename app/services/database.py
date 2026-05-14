@@ -8,18 +8,18 @@ from app.core import queries
 DB_PATH = Config.FOODBANK_DB_PATH
 
 DEFAULT_FOODS = [
-    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 'initial_seed'),
-    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 'initial_seed'),
-    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 'initial_seed'),
-    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 'initial_seed'),
-    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 'initial_seed'),
-    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 'initial_seed'),
-    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 'initial_seed'),
-    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 'initial_seed'),
-    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 'initial_seed'),
-    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 'initial_seed'),
-    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 'initial_seed'),
-    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 'initial_seed'),
+    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 0, 0, 0, 'initial_seed'),
+    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 0, 0, 0, 'initial_seed'),
+    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 0, 0, 0, 'initial_seed'),
+    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 0, 0, 0, 'initial_seed'),
+    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 0, 0, 0, 'initial_seed'),
+    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 0, 0, 0, 'initial_seed'),
 ]
 
 def init_db():
@@ -160,18 +160,30 @@ class DatabaseManager:
             )
             row = cursor.fetchone()
             
+            days_logged = row['days_logged'] if row else 0
+            days_active = max(1, days_logged)
+            
+            goals = self.get_daily_goals()
+            weekly_goals = {
+                'calories': goals['calories'] * days_active,
+                'protein': goals['protein'] * days_active,
+                'carbs': goals['carbs'] * days_active,
+                'fat': goals['fat'] * days_active,
+            }
+
             if not row or row['cal'] is None:
-                # Handle the case where no meals are found or all are NULL
-                # We still want the actual days_logged count if it exists
-                days = row['days_logged'] if row else 0
-                return {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'days_logged': days or 0}
+                return {
+                    'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 
+                    'days_logged': days_logged, 'weekly_goals': weekly_goals
+                }
             
             return {
                 'calories': row['cal'] or 0,
                 'protein': row['pro'] or 0,
                 'carbs': row['car'] or 0,
                 'fat': row['fat'] or 0,
-                'days_logged': row['days_logged'] or 0
+                'days_logged': days_logged,
+                'weekly_goals': weekly_goals
             }
 
 

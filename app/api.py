@@ -5,12 +5,13 @@ from typing import List, Dict
 from app.services.extraction import ExtractionService
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
+from app.services.onboarding import OnboardingService
+from app.services.memory import MemoryService
 from app.core import queries
 from app.core.logger import logger
-from app.schemas.food_schemas import GoalRequest, FoodItem, Macros, SubMacros
+from app.schemas.food_schemas import GoalRequest, FoodItem
 import json
 import asyncio
-import uuid
 from contextlib import asynccontextmanager
 
 async def heartbeat():
@@ -37,6 +38,8 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 db_manager = DatabaseManager()
 foodbank_service = FoodbankService(db_manager)
 extraction_service = ExtractionService(foodbank_service)
+onboarding_service = OnboardingService()
+memory_service = MemoryService()
 
 class LogRequest(BaseModel):
     text: str
@@ -45,6 +48,13 @@ class LogRequest(BaseModel):
 class VisionLogRequest(BaseModel):
     base64_image: str
     environment: str = "Home"
+    hint: str = ""
+
+class OnboardRequest(BaseModel):
+    bio_text: str
+
+class MemoryRequest(BaseModel):
+    text: str
 
 async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str, float], meal_type: str):
     def sum_sub(key):
@@ -142,59 +152,77 @@ async def update_goals(request: GoalRequest):
         return {"status": "success", "message": "Goals updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/onboard")
+async def onboard(request: OnboardRequest):
+    try:
+        macros = await onboarding_service.calculate_pcos_baseline(request.bio_text)
+        db_manager.set_daily_goals(
+            protein=macros["protein"],
+            carbs=macros["carbs"],
+            fat=macros["fat"],
+            calories=macros["calories"]
+        )
+        return {"status": "success", "macros": macros}
+    except Exception as e:
+        logger.error(f"Onboarding API Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
  
 @app.delete("/clear")
 async def clear_data():
-
-    with db_manager.get_macros_conn() as conn:
-        conn.execute(queries.MEALS_DELETE_TODAY)
-        conn.commit()
+    try:
+        def _do_clear():
+            with db_manager.get_macros_conn() as conn:
+                conn.execute(queries.MEALS_DELETE_TODAY)
+                conn.commit()
+        
+        await asyncio.to_thread(_do_clear)
         return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Clear data error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/vision-log")
 async def log_vision_meal(request: VisionLogRequest):
     try:
-        items = await extraction_service.extract_from_image(request.base64_image, request.environment)
+        meal_data = await extraction_service.extract_from_image(
+            request.base64_image, request.environment, request.hint
+        )
 
-        parsed_items = []
-        state = {'p': 0.0, 'c': 0.0, 'f': 0.0, 'cal': 0.0}
+        totals = {
+            'p': meal_data.total_macros.protein,
+            'c': meal_data.total_macros.carbs,
+            'f': meal_data.total_macros.fat,
+            'cal': meal_data.total_calories
+        }
 
-        tasks = [
-            extraction_service._get_nutrition_for_ingredient(
-                item.get('name'), float(item.get('grams') or 0)
-            )
-            for item in items
-        ]
-        results = await asyncio.gather(*tasks)
+        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, "Vision")
 
-        for result in results:
-            if result is None:
-                continue
-            d, food_item = result
-            for k in state:
-                state[k] += d[k]
-            parsed_items.append(food_item)
-
-        if not parsed_items:
-            raise ValueError("No valid food items extracted from image.")
-
-        meal_id = f"vision_{uuid.uuid4().hex[:8]}"
-
-        total_p = state['p']
-        total_c = state['c']
-        total_f = state['f']
-        total_cal = state['cal']
-        
-        totals = {'p': total_p, 'c': total_c, 'f': total_f, 'cal': total_cal}
-        await _save_meal_to_db(meal_id, parsed_items, totals, "Vision")
-
-        return {"status": "success", "message": f"Vision meal {meal_id} logged successfully"}
+        return {"status": "success", "message": f"Vision meal {meal_data.meal_id} logged successfully"}
     except Exception as e:
-
         logger.error(f"Vision API Error: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/memory")
+async def update_memory(request: MemoryRequest):
+    try:
+        updated_content = await memory_service.update_memory(request.text)
+        return {"status": "success", "content": updated_content}
+    except Exception as e:
+        logger.error(f"Memory API Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/memory")
+async def get_memory():
+    try:
+        with open(memory_service.memory_file, 'r') as f:
+            content = f.read()
+        return {"content": content}
+    except Exception as e:
+        logger.error(f"Memory Read Error: {e}")
+        return {"content": ""}
 
 if __name__ == "__main__":
     import uvicorn

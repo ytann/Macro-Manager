@@ -39,3 +39,4 @@
 24. Missing food -> fetch 100g macros from LLM/web, persist via `upsert_food`
 25. Volume estimation must be food-aware (density-based, not static ranges)
 26. Low-confidence data marked `verified=0` and queued for SoT verification
+27. Onboarding extraction must return strict JSON; fallback defaults must be logged to avoid silent miscalibration

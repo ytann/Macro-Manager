@@ -23,6 +23,10 @@ class FoodItem(BaseModel):
     verified: bool = False
 
 class FoodLog(BaseModel):
+    """
+    Standardized return object for all extraction pipelines (Text and Vision).
+    Ensures consistent data structure before persistence.
+    """
     meal_id: str
     items: List[FoodItem]
     total_macros: Macros

@@ -1,4 +1,10 @@
 extraction:
+  onboarding_parse: |
+    Extract physical attributes and goals from the text. Return a JSON object with: age (int, default to 25 if not mentioned), height_cm (int), weight_kg (float), activity_level (float: 1.2 for sedentary, 1.375 for light, 1.55 for moderate, 1.725 for active), and goal (string: 'lose', 'maintain', 'gain').
+    
+    Text: {text}
+    Respond ONLY with JSON.
+
   voice_correction: |
     You are a food-log text normalizer. The input text is from a Speech-to-Text engine and may contain phonetic errors (e.g., "better garlic can't" instead of "butter garlic naan").
     
@@ -11,6 +17,9 @@ extraction:
     Input: {text}
     Corrected Text:
   main: |
+    USER'S PERSONAL MEMORY (CRITICAL CONTEXT):
+    {user_memory}
+
     You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
     
     RULES:
@@ -25,22 +34,32 @@ extraction:
     Text: {text}
 
   vision_estimate: |
-    You are a precise food vision extraction engine. Analyze the provided image and extract ALL visible food items with their estimated weights in grams.
+    USER'S PERSONAL MEMORY (CRITICAL CONTEXT):
+    {user_memory}
 
+    You are a precise food vision extraction engine. 
+    
+    STEP 1: ANALYSIS
+    Analyze the image. Does it contain edible food? 
+    - If NO: Return {{"items": [], "reasoning": "No edible food detected"}}.
+    - If YES: Describe the food items, their colors, textures, and arrangement in the 'reasoning' field.
+    
+    STEP 2: EXTRACTION
+    Based on the analysis, extract the food items.
     ENVIRONMENT: {environment}
-    ENVIRONMENT RULES:
-    - Home: Assume home-cooked portions. Plate/bowl typical capacity ~250g-500g. Roti ~50g, sabzi serving ~150g, dal bowl ~200g, rice portion ~200g.
-    - Wild: Assume restaurant/fast-food portions. Plate/bowl typical capacity ~300g-600g. Burgers ~250g, pizza slice ~150g, fries serving ~150g, restaurant curry bowl ~350g, naan ~100g.
-
+    USER HINT: {hint}
+    
+    ENVIRONMENT RULES (WEIGHT ANCHORS):
+    - Home: Standard home-cooked portions. Lighter total volume (~250g-450g).
+    - Wild: Restaurant/fast-food portions. Heavier total volume (~400g-800g).
+    
     RULES:
-    1. ITEM IDENTIFICATION: Extract only the food name from the image. Remove plate/bowl/container references.
-    2. WEIGHT ESTIMATION: Estimate realistic weight in grams based on visible portion size and the environment rules above.
-    3. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha, Dosa, Idli).
-    4. NO HALLUCINATIONS: Extract ONLY items visible in the image. DO NOT invent items not present.
-    5. ABSOLUTE SILENCE: If no food is visible, return {{"items": []}}.
-    6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
-
-    Respond ONLY with JSON.
+    1. IDENTIFICATION: Be specific. Use the USER HINT. If unsure, provide a best estimate based on visual cues.
+    2. WEIGHT: Provide realistic grams based on size and Environment Rules.
+    3. NO PLACEHOLDERS: No "unidentified food" or "unknown item". Identify it or return [].
+    4. FORMAT: Return ONLY a JSON object with 'reasoning' (your analysis) and 'items' (list of {{"name": "...", "grams": 0}}).
+    
+    Respond ONLY with JSON. Do not include markdown formatting. 
 
   verification: |
     Original Text: "{text}"
@@ -57,9 +76,6 @@ extraction:
     
     Return a JSON object with a key 'missing' containing a list of objects with 'name' (string) and 'grams' (number).
     Respond ONLY with JSON.
-    
-    HTML:
-    {content}
   
 foodbank:
   web_search: |
@@ -136,8 +152,23 @@ planner:
 
     CORE RULES (ZERO TOLERANCE):
     1. NO SHAMING: Never use guilt. Validate their cravings. Understand that PCOD causes severe hormonal cravings.
-    2. THE PROTEIN OFFSET: Going over the daily limit for protein is a VICTORY. Never penalize it. Use excess protein calories to forgive Carb/Fat overages.
-    3. THE 130% CAP (THE NEGOTIATOR): A user should never exceed 130% of their daily Carb or Fat limit in a single day, as it triggers severe insulin spikes. If their request pushes them beyond 130%, do NOT scold them. Instead, negotiate. Suggest they eat their favorite part of the cheat meal today (keeping it under 130%), and explicitly promise they can have the second half in 3 or 4 days when the buffer resets. 
-    4. INSULIN MANAGEMENT: Always suggest pairing high-carb cheats with a lean protein (e.g., 'Let's add some chicken to that') to blunt the glycemic impact.
+    2. THE CHEAT BANK: The user has a 'Cheat Bank' that caps at 30% of their daily goal. If they have saved up carbs, enthusiastically validate their consistency and tell them they have earned a treat! 
+    3. THE LEAKY BUCKET: Biology is not a bank account. A user CANNOT save 100% of their carbs for the weekend. The maximum rollover is strictly 30%. If they request a meal that exceeds their base daily goal + their banked carbs, gently negotiate. Explain that their body can only handle a 30% spike safely, and suggest splitting the cheat meal.
+    4. THE 130% CAP (THE NEGOTIATOR): A user should never exceed 130% of their daily Carb or Fat limit in a single day, as it triggers severe insulin spikes. If their request pushes them beyond 130%, do NOT scold them. Instead, negotiate. Suggest they eat their favorite part of the cheat meal today (keeping it under 130%), and explicitly promise they can have the second half in 3 or 4 days when the buffer resets. 
+    5. THE 130% INSULIN CEILING: Biology is not a bank account. A user cannot 'save up' carbs all week and eat them all on Sunday. No matter how large the 'Weekly Buffer' is, you MUST NOT authorize or suggest any meal that pushes today's total Carb or Fat intake beyond 130% of the daily limit. If they want a massive cheat meal that exceeds 130%, validate the craving but firmly split the meal across multiple days.
+    6. INSULIN MANAGEMENT: Always suggest pairing high-carb cheats with a lean protein (e.g., 'Let's add some chicken to that') to blunt the glycemic impact.
 
     Respond naturally, warmly, and briefly. Do not sound like a robot reading a medical chart.
+
+memory:
+  update_glossary: |
+    You are maintaining a user's personal dietary and physical memory file.
+    Current Memory:
+    {current_memory}
+    
+    New User Input: {new_input}
+    
+    Task: Update the memory to include the new facts (e.g., utensil sizes, food aversions, allergies, routines). 
+    Format as a clean, concise Markdown bulleted list under relevant headers (e.g., ## Utensils, ## Preferences). 
+    Do not drop existing facts unless the new input explicitly contradicts them.
+    Output ONLY the raw markdown text. No conversational filler.

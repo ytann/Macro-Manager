@@ -10,7 +10,7 @@ API_URL = "http://127.0.0.1:8000"
 st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
 
 # --- Helpers for Sync Calls in Streamlit ---
-_client = httpx.Client(timeout=30.0)
+_client = httpx.Client(timeout=120.0)
 
 def sync_get(url):
     return _client.get(url)
@@ -20,6 +20,10 @@ def sync_post(url, json_data):
 
 def sync_delete(url):
     return _client.delete(url)
+
+async def async_onboard(bio_text: str):
+    """Async wrapper for onboarding using the shared sync client."""
+    return await asyncio.to_thread(sync_post, f"{API_URL}/onboard", {"bio_text": bio_text})
 
 def render_macro_hud(consumed, goals):
     """Renders a minimalist equidistant glass Macro HUD with 3D flip animations."""
@@ -285,36 +289,98 @@ try:
         consumed = daily_data.get('consumed', {})
         goals = daily_data.get('goals', {})
         
-        # Render Interactive Glass HUD
-        hud_html = render_macro_hud(consumed, goals)
+        # Render Interactive Glass HUD with dynamic ceilings
+        dynamic_goals = goals.copy()
+        
+        # Capped Rollover (Cheat Bank) Calculations
+        days_active = weekly_data.get("days_logged", 1)
+        daily_carb_goal = goals.get("carbs", 200.0)
+        daily_fat_goal = goals.get("fat", 65.0)
+        
+        carb_savings = max(0, (daily_carb_goal * days_active) - weekly_data.get("carbs", 0.0))
+        carb_cheat_bank = min(carb_savings, daily_carb_goal * 0.3) if carb_savings > 0 else 0.0
+        dynamic_goals['carbs'] = daily_carb_goal + carb_cheat_bank
+        
+        fat_savings = max(0, (daily_fat_goal * days_active) - weekly_data.get("fat", 0.0))
+        fat_cheat_bank = min(fat_savings, daily_fat_goal * 0.3) if fat_savings > 0 else 0.0
+        dynamic_goals['fat'] = daily_fat_goal + fat_cheat_bank
+        
+        if carb_cheat_bank > (daily_carb_goal * 0.25) or fat_cheat_bank > (daily_fat_goal * 0.25):
+            st.success("🎉 You've been consistent! You have a cheat meal banked (up to +30% macros today).")
+
+        hud_html = render_macro_hud(consumed, dynamic_goals)
         st.iframe(src=f"data:text/html;base64,{base64.b64encode(hud_html.encode()).decode()}", height=500)
 
         # --- 🗓️ 7-Day Rolling Buffer ---
         st.subheader("🗓️ 7-Day Rolling Buffer")
         
-        w_carb_goal = goals.get("carbs", 200.0) * 7
-        w_fat_goal = goals.get("fat", 65.0) * 7
+        # Fix: Always use 7-day capacity as visual maximum
+        w_carb_max = goals.get("carbs", 200.0) * 7
+        w_fat_max = goals.get("fat", 65.0) * 7
         
         w_carb_consumed = weekly_data.get("carbs", 0.0)
         w_fat_consumed = weekly_data.get("fat", 0.0)
         
-        # Render Progress Bars
+        # Render Progress Bars (capped at 1.0)
         st.markdown("**Weekly Carbs**")
-        st.progress(min(w_carb_consumed / w_carb_goal, 1.0) if w_carb_goal > 0 else 0.0, text=f"{w_carb_consumed:.1f} / {w_carb_goal:.1f}g")
+        st.progress(min(w_carb_consumed / w_carb_max, 1.0) if w_carb_max > 0 else 0.0, text=f"{w_carb_consumed:.1f} / {w_carb_max:.1f}g")
         
         st.markdown("**Weekly Fats**")
-        st.progress(min(w_fat_consumed / w_fat_goal, 1.0) if w_fat_goal > 0 else 0.0, text=f"{w_fat_consumed:.1f} / {w_fat_goal:.1f}g")
+        st.progress(min(w_fat_consumed / w_fat_max, 1.0) if w_fat_max > 0 else 0.0, text=f"{w_fat_consumed:.1f} / {w_fat_max:.1f}g")
         
+        # Insulin Ceiling Calculations
+        daily_carb_goal = goals.get("carbs", 200.0)
+        daily_fat_goal = goals.get("fat", 65.0)
+        today_carb = consumed.get('carbs', 0.0)
+        today_fat = consumed.get('fat', 0.0)
+        
+        # Carb Ceiling
+        standard_carb_buffer_left = w_carb_max - w_carb_consumed
+        todays_carb_ceiling_left = (daily_carb_goal * 1.3) - today_carb
+        allowable_carb_today = min(standard_carb_buffer_left, todays_carb_ceiling_left)
+        
+        # Fat Ceiling
+        standard_fat_buffer_left = w_fat_max - w_fat_consumed
+        todays_fat_ceiling_left = (daily_fat_goal * 1.3) - today_fat
+        allowable_fat_today = min(standard_fat_buffer_left, todays_fat_ceiling_left)
+        
+        if todays_carb_ceiling_left <= 0 or todays_fat_ceiling_left <= 0:
+            st.error("🚨 130% Daily Limit Reached. Weekly buffer locked to prevent insulin spike.")
+        else:
+            st.info(f"**Allowable today (Insulin Guardrail):** Carbs: {max(0, allowable_carb_today):.1f}g | Fats: {max(0, allowable_fat_today):.1f}g")
+
         # Empathetic Messaging
         daily_carb_limit = goals.get("carbs", 200.0)
         daily_prot_limit = goals.get("protein", 150.0)
         
-        if consumed.get('carbs', 0) > daily_carb_limit and w_carb_consumed < w_carb_goal:
+        if consumed.get('carbs', 0) > daily_carb_limit and w_carb_consumed < w_carb_max:
             st.info("You are over your daily carbs, but don't stress! You are still perfectly within your weekly buffer. Enjoy your meal.")
         
         if consumed.get('protein', 0) > daily_prot_limit:
             st.success("Great job hitting high protein! This helps stabilize your blood sugar.")
         
+        with st.expander("🧬 Profile & Onboarding"):
+            st.markdown("### 🧬 PCOS Baseline Calibrator")
+            bio_text = st.text_area("Tell MacroManager about yourself", 
+                                   placeholder="e.g., 'I am 28 years old, 160cm, 65kg, want to maintain my weight, and work a desk job'")
+            
+            if st.button("Calibrate Macros"):
+                if bio_text:
+                    with st.spinner("Applying PCOS metabolic adjustments..."):
+                        try:
+                            # Use asyncio.run to call the async helper from sync Streamlit
+                            response = asyncio.run(async_onboard(bio_text))
+                            if response.status_code == 200:
+                                macros = response.json().get("macros", {})
+                                st.success(f"Calibration complete! 🎯\n\n**Target Calories:** {macros.get('calories')} kcal\n\n**Macros:** P: {macros.get('protein')}g | C: {macros.get('carbs')}g | F: {macros.get('fat')}g")
+                                st.rerun()
+                            else:
+                                st.error(f"Calibration failed: {response.json().get('detail', 'Unknown error')}")
+                        except Exception as e:
+                            st.error(f"Connection Error: {e}")
+                else:
+                    st.warning("Please provide your bio details first.")
+
         with st.expander("⚙️ Goal Settings"):
 
 
@@ -332,6 +398,42 @@ try:
                 sync_post(f"{API_URL}/goals", payload)
                 st.toast("Goals updated! 🎯")
                 st.rerun()
+
+        with st.expander("🧠 Sovereign Memory"):
+            st.markdown("### 🧠 Sovereign Memory")
+            st.markdown("Teach MacroManager about your specific utensils, allergies, and routines.")
+            
+            memory_input = st.text_area("New memory fact", placeholder="e.g., 'My dinner plate is 25cm and usually holds 400g of food' or 'I have a severe allergy to peanuts'")
+            
+            if st.button("Save to Memory"):
+                if memory_input:
+                    with st.spinner("Integrating into memory..."):
+                        try:
+                            response = sync_post(f"{API_URL}/memory", {"text": memory_input})
+                            if response.status_code == 200:
+                                st.toast("Memory updated! 🧠", icon="✅")
+                                st.rerun()
+                            else:
+                                st.error(f"Memory error: {response.json().get('detail', 'Failed to update memory')}")
+                        except Exception as e:
+                            st.error(f"Connection Error: {e}")
+                else:
+                    st.warning("Please enter a fact first.")
+            
+            st.divider()
+            st.markdown("**Current Memory:**")
+            try:
+                # The MemoryService just overwrites the file. 
+                # We can fetch the current content via a new endpoint or just read it if we have access.
+                # Since the API doesn't have a GET /memory, I should add one or just use the file if I'm on same machine.
+                # But frontend is a separate process usually. I should add a GET /memory endpoint in api.py.
+                resp = sync_get(f"{API_URL}/memory")
+                if resp.status_code == 200:
+                    st.markdown(resp.json().get("content", "No memory stored yet."))
+                else:
+                    st.info("No memory stored yet.")
+            except Exception as e:
+                st.info("No memory stored yet.")
     else:
         st.error("Could not fetch summary data.")
 except Exception as e:
@@ -405,8 +507,8 @@ with tabs[1]:
     camera_photo = st.camera_input("Take a picture of your food")
     
     if camera_photo:
-        try:
-            with st.spinner('Gemma 4 is estimating macros...'):
+        with st.spinner('Gemma 4 is estimating macros...'):
+            try:
                 result = send_vision_log(camera_photo.getvalue(), environment)
                 if result.get("status") == "success":
                     items = result.get("items", [])
@@ -416,9 +518,13 @@ with tabs[1]:
                     st.rerun()
                 else:
                     st.error(f"Vision API Error: {result.get('detail', 'Unknown error')}")
-        except Exception as e:
-            st.error(f"Connection Error: {e}")
-
+            except httpx.HTTPStatusError as err:
+                if err.response.status_code == 400:
+                    st.warning("No edible food detected in the image.")
+                else:
+                    st.error(f"Vision API Error: {err}")
+            except Exception as e:
+                st.error(f"Connection Error: {e}")
 st.divider()
 
 # --- FOOD JOURNAL VIEW ---
