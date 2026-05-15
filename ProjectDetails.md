@@ -1,36 +1,40 @@
 # 📖 Project Details: MacroManager
 
 ## 1. Introduction
-MacroManager is an intelligent nutrition tracking system designed specifically for PCOS/PCOD dietary management. It bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech (e.g., "a plate of poha") and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately. A one-shot onboarding flow extracts user biometrics from free-text bios and calculates PCOS-calibrated macro targets.
+MacroManager is an intelligent nutrition tracking system designed specifically for PCOS/PCOD dietary management. It bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately. 
+
+A one-shot onboarding flow extracts user biometrics from free-text bios and calculates PCOS-calibrated macro targets to help users manage insulin resistance and metabolic health.
 
 ---
 
 ## 2. High-Level Design (HLD)
 
 ### 2.1 Architecture Overview
-The system follows a decoupled **Client-Server Architecture**:
-- **Frontend (Streamlit)**: Provides a high-fidelity interface for logging food and visualizing progress. Features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities via the Web Speech API. Uses synchronous `httpx.Client` for reliable communication with the backend to prevent event-loop conflicts.
-- **Backend (FastAPI)**: Orchestrates the data flow between the LLM, the nutrition database, the user logs, and the vision pipeline.
-- **Nutritional Intelligence (Gemma 4 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent utilizing the Tavily API for high-precision nutritional data extraction.
-- **Persistence Layer (SQLite)**: Two distinct databases-one for static/learned food data (`foodbank.db`) and one for user meal logs (`macros.db`).
-- **Vision Pipeline (Gemma 4 multimodal)**: An encapsulated, decoupled module that extracts food items from images with environment-aware portion size estimation (Home vs. Wild).
-- **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation (Mifflin-St Jeor BMR $\rightarrow$ TDEE $\rightarrow$ PCOS Penalty $\rightarrow$ Macro Split).
+The system employs a decoupled **Client-Server Architecture**:
 
-### 2.2 Data Flow
-1. **User Input** $\rightarrow$ Natural language text (e.g., "2 eggs and a bowl of dal") OR image (base64 + environment flag).
-2. **Extraction Pipeline** $\rightarrow$ 
-    - Text Path (Optimized): Single-pass LLM extraction with internal self-verification.
-    - Vision Path (Encapsulated): Pass 1 $\rightarrow$ Multimodal image analysis (Analysis $\rightarrow$ Extraction) with environment-aware portion estimation and optional user hints.
-    - Convergence: Both paths produce a list of extracted items which are then processed by the Unified Resolver.
-    - Cleanup: Deduplication and quantifier removal.
-    - **Async Pipeline (Sprint 6)**: Shifted from a blocking request to a **Job-Status** model. The system returns extracted items immediately and resolves nutrition as a background task, allowing the UI to poll for completion via `/log/status/{meal_id}`.
-3. **Nutritional Resolution (Async Parallelized)** $\rightarrow$ 
-    - **Parallel Lookup**: All extracted items are processed concurrently using `asyncio.gather`.
-    - **Canonicalization Layer**: Before triggering slow web searches, the system uses fuzzy matching (Levenshtein distance) to map input names to existing DB entries, maximizing L1/L2 cache hits.
-    - **Streamlined Logic**: Local DB Check $\rightarrow$ (if missing/unverified) $\rightarrow$ Authoritative Web Search $\rightarrow$ General Web Search $\rightarrow$ LLM Estimate $\rightarrow$ DB Upsert.
-    - **Verification**: Items fetched authoritatively are marked as `verified=1` immediately.
-4. **Caloric Validation** $\rightarrow$ Apply Atwater's formula to ensure calories match macros.
-5. **Persistence** $\rightarrow$ Save result to `macros.db` and return summary to UI.
+*   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities.
+*   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline.
+*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) for high-precision data extraction.
+*   **Persistence Layer (SQLite)**: Two specialized databases:
+    *   `foodbank.db`: Static and learned food nutrition data.
+    *   `macros.db`: User meal logs and goal settings.
+*   **Vision Pipeline**: A multimodal module that extracts food items from images with environment-aware portion size estimation.
+
+### 2.2 Data Flow: The Async Pipeline
+To ensure a snappy UX, the system uses a **Job-Status model** instead of blocking requests:
+
+**1. Input Phase**
+`User Text/Voice` $\rightarrow$ `ExtractionService.extract_items()` $\rightarrow$ **Returns `meal_id` & `items` instantly to UI**
+
+**2. Background Resolution (Async)**
+The server triggers a background task to resolve nutrition for each item in parallel:
+`Local DB Check` $\rightarrow$ `Canonicalization (Fuzzy Match)` $\rightarrow$ `Authoritative Web Search` $\rightarrow$ `General Search` $\rightarrow$ `LLM Estimate` $\rightarrow$ `DB Upsert`
+
+**3. UI Synchronization**
+The Frontend polls `GET /log/status/{meal_id}` $\rightarrow$ Updates item spinners to checkmarks as they resolve $\rightarrow$ Refreshes Dashboard on completion.
+
+**4. Finalization**
+`Atwater Guardrail` (Calorie Validation) $\rightarrow$ `Persistence` $\rightarrow$ `Daily Summary Update`
 
 ---
 
@@ -39,79 +43,82 @@ The system follows a decoupled **Client-Server Architecture**:
 ### 3.1 Core Components
 
 #### A. `DatabaseManager`
-- **Purpose**: Centralizes all SQLite interactions.
-- **Key Logic**: 
-    - Uses **FTS5 (Full-Text Search)** for the foodbank to allow fast, alias-based lookups (e.g., searching 'chawal' finds 'Rice').
-    - Implements automated schema migration to ensure the database evolves without data loss.
-    - **Temporal Aggregation**: Provides weekly summaries for the current calendar week (Monday-Sunday).
-    - **Standardized Seeding**: Maintains `DEFAULT_FOODS` matching the 13-column schema to ensure consistent initial nutrition data.
+*   **FTS5 Search**: Uses Full-Text Search for alias-based lookups (e.g., "chawal" $\rightarrow$ "Rice").
+*   **Temporal Aggregation**: Calculates weekly summaries based on the static calendar week (Monday-Sunday).
+*   **Schema Evolution**: Implements automated migrations to ensure database stability.
 
 #### B. `FoodbankService`
-- **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence. All paths are standardized to return a flat macro dictionary.
-- **Canonicalization Layer**: Implements fuzzy string matching (using `difflib`) to resolve near-identical food names to existing database entries, significantly reducing the frequency of slow web searches.
-- **L1 In-Memory Cache**: Utilizes a fast dictionary-based cache to store recently resolved food items, eliminating redundant DB and network calls for frequent foods.
-- **Async Core**: Fully refactored to use `asyncio` and `httpx`, allowing non-blocking network requests and database operations via `to_thread`. Implements `close()` for graceful resource cleanup of the shared HTTP client.
-- **Recipe Store**: Saves and retrieves JSON-based recipes for complex dishes to ensure consistency in expansion.
-- **Learning Mode**: Automatically persists newly discovered foods to the database to reduce future LLM calls.
-- **Consistent Seeding**: Uses a shared `DEFAULT_FOODS` constant to seed the database via `upsert_food`, preventing duplicate entries in the FTS5 table.
+*   **Canonicalization Layer**: Uses Levenshtein-based fuzzy matching (`difflib`) to resolve typos or name variations to existing DB entries, bypassing slow web searches.
+*   **L1 In-Memory Cache**: High-speed dictionary cache for frequent items to eliminate redundant DB/Network roundtrips.
+*   **Learning Mode**: Automatically persists newly discovered foods to the database to reduce future LLM dependency.
 
 #### C. `ExtractionService`
-- **Unified Resolver (`_resolve_and_build_log`)**: A centralized engine that takes a list of extracted items and a meal ID to build a complete `FoodLog`. It handles recipe expansion and nutrition resolution identically for both text and vision inputs, eliminating logic duplication. It utilizes `asyncio.gather` to resolve all ingredients in parallel.
-- **Optimized Extraction (Text)**: Uses a high-recall, self-verifying prompt to extract all items and estimated weights in a single pass, minimizing API latency while maintaining accuracy.
-- **Vision Extraction (Image)**: Implements a two-step reasoning process (Analysis $\rightarrow$ Extraction). The model first analyzes the image to confirm food presence and describes it in a 'reasoning' field before extracting specific items and weights. This prevents placeholders and improves identification accuracy. Supports `Home` (smaller portions) and `Wild` (restaurant-scale) environment rules, and utilizes optional `hint` strings to disambiguate items in the image.
-- **Parallel Execution**: Processes all base ingredients concurrently using `asyncio.gather`, minimizing API latency for meals with multiple items.
-- **Density-Aware Estimation**: Instead of static weights, the prompt instructs the LLM to consider the nature of the food (e.g., Sev Puri vs. Rice) when estimating grams for "plates" or "bowls".
-- **Deduplication**: a custom logic filter that removes non-food terms (like "plate") and overlapping names.
+*   **Unified Resolver**: A centralized engine (`_resolve_and_build_log`) that handles recipe expansion and nutrition resolution identically for both text and vision paths.
+*   **Async Decoupling**: Separates item extraction from nutritional resolution to prevent API timeouts.
+*   **Vision Analysis**: Implements a Two-Step reasoning process (**Analysis $\rightarrow$ Extraction**). It uses environment rules (`Home` vs `Wild`) to estimate portion sizes accurately.
 
+#### D. `OnboardingService` (PCOS Calibration)
+Extracts user biometrics via LLM and applies the following deterministic logic:
 
-#### D. `Pydantic Schemas`
-- Enforces strict data types and constraints (e.g., `ge=0` for macros) to prevent negative values or `NoneType` errors.
-
-#### E. `OnboardingService`
-- **Purpose**: One-shot user onboarding — extracts physical attributes from a free-text bio dump and calculates optimized PCOS macro targets.
-- **Key Logic**:
-    - **LLM Extraction**: Sends user bio text to Gemma 4 with `onboarding_parse` prompt; parses JSON for `height_cm`, `weight_kg`, `activity_level`, `goal`.
-    - **BMR (Mifflin-St Jeor, Female)**: $(10 \times \text{weight\_kg}) + (6.25 \times \text{height\_cm}) - (5 \times 25) - 161$ (assumes age 25).
-    - **TDEE**: $\text{BMR} \times \text{activity\_level}$ where activity_level = 1.2 (sedentary), 1.375 (light), 1.55 (moderate), 1.725 (active).
-    - **Goal Modifier**: $\text{lose} = -500$, $\text{maintain} = 0$, $\text{gain} = +500$ applied to TDEE.
-    - **PCOS Penalty**: $\text{target\_calories} = \text{adjusted\_tdee} \times 0.85$ (15% metabolic reduction for PCOS context).
-    - **Macro Split (40/35/25)**: Protein = $(\text{target\_cals} \times 0.4) / 4$, Fat = $(\text{target\_cals} \times 0.35) / 9$, Carbs = $(\text{target\_cals} \times 0.25) / 4$.
-    - **Persistence**: Returns `{protein, carbs, fat, calories}` dict; endpoint writes to `goals` table via `DatabaseManager.set_daily_goals()`.
+1.  **BMR (Mifflin-St Jeor)**: `(10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161` (Age default: 25).
+2.  **TDEE**: `BMR * activity_level`
+    *   *Sedentary*: 1.2 | *Light*: 1.375 | *Moderate*: 1.55 | *Active*: 1.725
+3.  **Goal Modifier**: Applied to TDEE: `Lose: -500` | `Maintain: 0` | `Gain: +500`.
+4.  **PCOS Penalty**: `target_calories = adjusted_tdee * 0.85` (15% metabolic reduction).
+5.  **Macro Split (40/35/25)**:
+    *   **Protein**: `(target_calories * 0.4) / 4`
+    *   **Fat**: `(target_calories * 0.35) / 9`
+    *   **Carbs**: `(target_calories * 0.25) / 4`
 
 ---
 
-## 4. Functional Specifications
+## 4. Gemma Integration
 
-### 4.2 Vision UI Integration (Implemented)
-- **Camera Interface**: Integrated `st.camera_input` in the Streamlit frontend.
-- **Environment Context**: Added `Home` vs `Wild` toggle to influence portion size estimation.
-- **Real-time Feedback**: Implemented loading spinners and success notifications upon meal extraction.
-- **Frontend-Backend Link**: Created `app/utils/vision_client.py` to handle the encoding and transmission of image data to the `/vision-log` endpoint.
+The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multiple specialized tasks:
+
+| Task | Implementation | Key Strategy |
+| :--- | :--- | :--- |
+| **Text Extraction** | `ExtractionService` | High-recall, single-pass extraction from natural language. |
+| **Vision Analysis** | `ExtractionService` | Multimodal (Image + Text) analysis for item identification and portion estimation. |
+| **Nutritional Search** | `FoodbankService` | Validates search results against "Sources of Truth" to assign confidence tiers. |
+| **User Onboarding** | `OnboardingService` | Attribute extraction from free-text bios to fuel the calibration engine. |
+
+**Operational Guardrails**:
+*   **Determinism**: `temperature = 0.0` is used across all calls to ensure consistent outputs.
+*   **Concurrency**: A global `asyncio.Semaphore` prevents local LLM (Ollama) saturation during parallel item resolution.
+*   **Prompt Management**: All prompts are externalized in `prompts.yaml` for rapid tuning without code changes.
+
+---
+
+## 5. Functional Specifications
+
+### 5.1 Feature Matrix
 | Feature | Description | Implementation |
 | :--- | :--- | :--- |
-| **Natural Language Parsing** | Converts "2 eggs" $\rightarrow$ `FoodItem(name="Egg", grams=100)` | Gemma 4 + Two-Pass Pipeline |
-| **Vision-Based Logging** | Extracts food items from meal images with environment-aware portions | Gemma 4 Multimodal + Home/Wild Rules |
-| **Regional Support** | Handles complex dishes like Misal Pav or Puran Poli | Recipe Expansion + SoT Web Search |
-| **Caloric Guardrail** | Prevents macro-calorie mismatch | Atwater Formula: $P*4 + C*4 + F*9$ |
-| **Verified Database** | Marks data as `verified` once confirmed via web | `verified` flag in SQLite |
-| **Deterministic Output** | Same input always yields same output | Temperature = 0.0 |
-| **Interactive Macro HUD** | 3D flip-cards showing primary macros and sub-macros (Fiber, Sugar, Sat Fat) | Custom Glass CSS/HTML + Streamlit Components |
-| **Voice-to-Log** | Hands-free food logging via voice recording $\rightarrow$ text $\rightarrow$ API | Web Speech API $\rightarrow$ Query Params $\rightarrow$ `/log` |
+| **Async Logging** | Instant item extraction $\rightarrow$ Background resolution | Job-Status Model + BackgroundTasks |
+| **Fuzzy Matching** | Maps "Budhani Chipss" $\rightarrow$ "Budhani Potato Chips" | `difflib` Canonicalization Layer |
+| **Vision Logging** | Image $\rightarrow$ Item + Weight extraction | Multimodal Gemma 4 + Env Rules |
+| **Regional Support** | Complex dish decomposition (e.g., Poha) | Recipe Expansion $\rightarrow$ Base Ingredients |
+| **PCOS Calibration** | Bio-text $\rightarrow$ Calibrated macro targets | Onboarding Engine + metabolic penalty |
+| **Atwater Guardrail** | Corrects LLM calorie deviations > 20% | `Cals = P*4 + C*4 + F*9` |
+| **Interactive HUD** | 3D Glass flip-cards for macros and sub-macros | Custom CSS/HTML + Streamlit |
 
-### 4.2 API Endpoints
-- `POST /log`: Parses text, calculates macros, and saves the meal.
-- `POST /vision-log`: Extracts food from a base64-encoded image with environment context (`Home`/`Wild`) and optional user hints, resolves nutrition via the Unified Resolver, and saves the meal.
-- `POST /onboard`: Accepts `{bio_text: str}`, calls `OnboardingService.calculate_pcos_baseline()` to extract attributes and compute PCOS-calibrated macros, persists to `goals` table, returns computed macros.
-- `GET /summary`: Returns aggregated totals for the day, daily goals, and a static calendar week summary.
-- `POST /goals`: Updates user-defined macro targets.
-- `GET /meals`: Lists all detailed food items logged today.
-- `DELETE /clear`: Resets daily progress (Async).
+### 5.2 API Reference
+| Endpoint | Method | Purpose |
+| :--- | :--- | :--- |
+| `/log/start` | `POST` | Extract items from text; start background resolution. Returns `meal_id`. |
+| `/log/status/{id}` | `GET` | Poll resolution status (`processing` $\rightarrow$ `completed`). |
+| `/vision-log` | `POST` | Multimodal extraction from image $\rightarrow$ Resolve $\rightarrow$ Save. |
+| `/onboard` | `POST` | Bio-text $\rightarrow$ Calculate PCOS targets $\rightarrow$ Save goals. |
+| `/summary` | `GET` | Daily aggregated totals + goals + weekly buffer. |
+| `/meals` | `GET` | Chronological list of today's food items. |
+| `/goals` | `POST` | Manual update of macro targets. |
+| `/clear` | `DELETE` | Reset daily progress. |
 
 ---
 
-## 5. Design Decisions & Trade-offs
-- **SQLite FTS5 vs. Standard SQL**: Chosen for superior alias searching and performance with nutrition datasets.
-- **Externalized Prompts**: Prompts are stored in `prompts.yaml` to allow non-developers to tune the AI's behavior without modifying Python code.
-- **Local LLM (Ollama)**: Prioritizes privacy and offline capability over cloud-based APIs. Uses `gemma4:e2b` for both text extraction and multimodal vision analysis. Implements a global `asyncio.Semaphore` via `app/core/llm.py` to prevent server saturation during parallel resolution.
-- **Self-Verifying Extraction**: Replaced the two-pass pipeline with a high-recall single-pass prompt to reduce latency without sacrificing accuracy.
-- **Home vs. Wild Environment Rules**: Vision extraction uses environment-specific portion size heuristics (Home: ~250-500g plates; Wild: ~300-600g plates) to improve accuracy for home-cooked vs. restaurant meals.
+## 6. Design Decisions & Trade-offs
+*   **SQLite FTS5**: Chosen over standard SQL for superior alias searching and performance with large nutrition datasets.
+*   **Local LLM (Ollama)**: Prioritizes user privacy and eliminates API costs. The `gemma4:e2b` model provides the best balance of reasoning and speed for local deployment.
+*   **Decoupled Resolution**: By splitting extraction and resolution, the UI remains responsive even when the system is performing slow web searches for obscure foods.
+*   **Environment-Aware Vision**: Recognizes that a "plate" at home differs from a "plate" at a restaurant, applying different weight heuristics to improve estimation accuracy.
