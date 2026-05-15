@@ -14,11 +14,14 @@ The system employs a decoupled **Client-Server Architecture**:
 
 *   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities.
 *   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline.
-*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) for high-precision data extraction.
+*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API). The backend prompts are specifically **primed with PCOS metabolic context** to move beyond generic FDA guidelines and instead provide specialized, context-aware dietary guidance.
 *   **Persistence Layer (SQLite)**: Two specialized databases:
     *   `foodbank.db`: Static and learned food nutrition data.
     *   `macros.db`: User meal logs and goal settings.
 *   **Vision Pipeline**: A multimodal module that extracts food items from images with environment-aware portion size estimation.
+*   **Sovereign Memory**: A personalized dietary glossary (`personal_glossary.md`) that stores user-specific facts (e.g., utensil sizes, dietary preferences) to enhance extraction accuracy.
+*   **Offline Sync Queue**: A robust background mechanism that captures unverified data while offline and automatically synchronizes with authoritative sources via a heartbeat lifecycle.
+*   **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation.
 
 ### 2.2 Data Flow: The Async Pipeline
 To ensure a snappy UX, the system uses a **Job-Status model** instead of blocking requests:
@@ -94,7 +97,7 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 
 ### 5.1 Feature Matrix
 | Feature | Description | Implementation |
-| :--- | :--- | :--- |
+| :--- | :--- | : |
 | **Async Logging** | Instant item extraction $\rightarrow$ Background resolution | Job-Status Model + BackgroundTasks |
 | **Fuzzy Matching** | Maps "Budhani Chipss" $\rightarrow$ "Budhani Potato Chips" | `difflib` Canonicalization Layer |
 | **Vision Logging** | Image $\rightarrow$ Item + Weight extraction | Multimodal Gemma 4 + Env Rules |
