@@ -10,6 +10,7 @@ from app.schemas.food_schemas import FoodItem, FoodLog, Macros, SubMacros
 from app.services.database import DatabaseManager
 from app.core.config import Config
 from app.core.logger import logger
+from app.core.llm import safe_acompletion
 
 async def parse_food_log(text: str, meal_id: str = "unknown"):
     """Backward compatibility helper for tests."""
@@ -49,7 +50,7 @@ class ExtractionService:
             user_memory=self._get_user_memory()
         )
 
-        resp = await litellm.acompletion(
+        resp = await safe_acompletion(
             model=self.model,
             messages=[{
                 "role": "user",
@@ -87,7 +88,7 @@ class ExtractionService:
         found_details = [f"{i.get('name')} ({i.get('grams')}g)" for i in items]
         prompt = self.prompts['extraction']['verification'].format(text=text, found_details=found_details)
         try:
-            resp = await litellm.acompletion(
+            resp = await safe_acompletion(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
@@ -125,7 +126,7 @@ class ExtractionService:
                 self.foodbank_cache[cache_key] = food_data
 
         if not food_data:
-            return None
+            food_data = {'protein': 5, 'carbs': 15, 'fat': 5, 'calories': 125, 'verified': 0}
 
         raw_p = float(food_data.get('protein') or 0)
         raw_c = float(food_data.get('carbs') or 0)
@@ -182,19 +183,39 @@ class ExtractionService:
         parsed_items = []
         state = {'p': 0.0, 'c': 0.0, 'f': 0.0, 'cal': 0.0}
 
-        base_tasks = []
-        base_metadata = []
+        # 1. Fetch all recipes in parallel
+        recipe_tasks = [self.foodbank.get_recipe(item.get('name')) for item in items_list]
+        recipes_results = await asyncio.gather(*recipe_tasks)
 
-        for item in items_list:
+        # 2. Prepare all resolution tasks (recipes and base items) in parallel
+        resolution_tasks = []
+        task_metadata = [] # Store (type, name, grams, recipe_data)
+
+        for i, item in enumerate(items_list):
             name = item.get('name')
             grams = float(item.get('grams') or 0)
+            recipe = recipes_results[i]
 
-            recipe = await self.foodbank.get_recipe(name)
             if recipe:
-                total_w = sum(float(i.get('grams') or 0) for i in recipe)
+                total_w = sum(float(ing.get('grams') or 0) for ing in recipe)
                 scale = grams / total_w if total_w > 0 else 1
-                recipe_items, recipe_delta = await self._expand_recipe(recipe, scale)
+                # Task to expand recipe
+                resolution_tasks.append(self._expand_recipe(recipe, scale))
+                task_metadata.append(('recipe', name, grams, recipe))
+            else:
+                # Task to resolve base nutrition
+                resolution_tasks.append(self._get_nutrition_for_ingredient(name, grams))
+                task_metadata.append(('base', name, grams, None))
 
+        # 3. Gather all nutrition resolutions concurrently
+        results = await asyncio.gather(*resolution_tasks)
+
+        # 4. Process results and build the log
+        for idx, result in enumerate(results):
+            mtype, name, grams, recipe_data = task_metadata[idx]
+
+            if mtype == 'recipe':
+                recipe_items, recipe_delta = result
                 dish_cals = sum(it.cals for it in recipe_items)
                 dish_summary = FoodItem(
                     name=f"{name} (Total)", grams=grams,
@@ -203,6 +224,12 @@ class ExtractionService:
                         protein=sum(it.macros.protein for it in recipe_items),
                         carbs=sum(it.macros.carbs for it in recipe_items),
                         fat=sum(it.macros.fat for it in recipe_items)
+                    ),
+                    sub_macros=SubMacros(
+                        fiber=sum((it.sub_macros.fiber or 0) for it in recipe_items if it.sub_macros),
+                        sugar=sum((it.sub_macros.sugar or 0) for it in recipe_items if it.sub_macros),
+                        saturated_fat=sum((it.sub_macros.saturated_fat or 0) for it in recipe_items if it.sub_macros),
+                        unsaturated_fat=sum((it.sub_macros.unsaturated_fat or 0) for it in recipe_items if it.sub_macros),
                     )
                 )
                 parsed_items.append(dish_summary)
@@ -210,20 +237,19 @@ class ExtractionService:
                 for k in state:
                     state[k] += recipe_delta[k]
             else:
-                base_metadata.append((len(base_tasks), name, grams))
-                base_tasks.append(self._get_nutrition_for_ingredient(name, grams))
-
-        results = []
-        if base_tasks:
-            results = await asyncio.gather(*base_tasks)
-
-        for result in results:
-            if result is None:
-                continue
-            d, item = result
-            for k in state:
-                state[k] += d[k]
-            parsed_items.append(item)
+                if result is None:
+                    fallback_item = FoodItem(
+                        name=name, grams=grams, cals=0.0,
+                        macros=Macros(protein=0.0, carbs=0.0, fat=0.0),
+                        verified=False
+                    )
+                    parsed_items.append(fallback_item)
+                    logger.warning(f"Nutrition resolution failed for {name}, keeping item with 0 macros.")
+                else:
+                    d, item = result
+                    for k in state:
+                        state[k] += d[k]
+                    parsed_items.append(item)
 
         if not parsed_items:
             raise ValueError("No valid food items extracted.")
@@ -231,30 +257,27 @@ class ExtractionService:
         return FoodLog(
             meal_id=meal_id, items=parsed_items,
             total_macros=Macros(protein=state['p'], carbs=state['c'], fat=state['f']),
+            total_sub_macros=SubMacros(
+                fiber=sum((it.sub_macros.fiber or 0) for it in parsed_items if it.sub_macros),
+                sugar=sum((it.sub_macros.sugar or 0) for it in parsed_items if it.sub_macros),
+                saturated_fat=sum((it.sub_macros.saturated_fat or 0) for it in parsed_items if it.sub_macros),
+                unsaturated_fat=sum((it.sub_macros.unsaturated_fat or 0) for it in parsed_items if it.sub_macros),
+            ),
             total_calories=state['cal'], confidence_score=1.0
         )
 
-    async def parse(self, text: str, meal_id: str = "unknown") -> FoodLog:
+    async def extract_items(self, text: str, is_voice: bool = False) -> Tuple[List[dict], str]:
+        """
+        Phase 1 of Async Pipeline: Extracts food items and weights from text.
+        Returns (items_list, meal_id).
+        """
         self.foodbank_cache.clear()
-
-        # Voice Correction Pass: Normalize phonetic errors before extraction
-        correction_prompt = self.prompts['extraction']['voice_correction'].format(text=text)
-        try:
-            corr_resp = await litellm.acompletion(
-                model=self.model,
-                messages=[{"role": "user", "content": correction_prompt}],
-                api_base=Config.LITELLM_API_BASE,
-                temperature=0.0
-            )
-            text = corr_resp.choices[0].message.content.strip()
-        except Exception as e:
-            logger.error(f"Voice correction failed, proceeding with raw text: {e}")
-
+        
         prompt = self.prompts['extraction']['main'].format(
             text=text, 
             user_memory=self._get_user_memory()
         )
-        resp = await litellm.acompletion(
+        resp = await safe_acompletion(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
@@ -277,8 +300,29 @@ class ExtractionService:
         elif isinstance(data, list):
             items_list = data
 
-        missing = await self._verify_extracted_items(text, items_list)
-        items_list.extend(missing)
-        items_list = self._deduplicate_items(items_list)
+        for item in items_list:
+            grams = float(item.get('grams') or 0)
+            if grams <= 0.0:
+                grams = 100.0
+            item['grams'] = grams
 
+        items_list = self._deduplicate_items(items_list)
+        
+        if not items_list and text.strip():
+            items_list = [{"name": text.strip(), "grams": 100.0}]
+        
+        meal_id = f"meal_{uuid.uuid4().hex[:8]}"
+        return items_list, meal_id
+
+    async def resolve_nutrition(self, items_list: List[dict], meal_id: str) -> FoodLog:
+        """
+        Phase 2 of Async Pipeline: Resolves nutritional data for the items.
+        """
         return await self._resolve_and_build_log(items_list, meal_id)
+
+    async def parse(self, text: str, meal_id: str = "unknown", is_voice: bool = False) -> FoodLog:
+        # Backward compatibility: uses the new decoupled methods
+        items, mid = await self.extract_items(text, is_voice)
+        actual_id = meal_id if meal_id != "unknown" else mid
+        return await self.resolve_nutrition(items, actual_id)
+

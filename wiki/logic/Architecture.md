@@ -8,18 +8,21 @@ FastAPI + Streamlit + SQLite (FTS5) + LiteLLM (ollama/gemma4:e2b) + httpx + Pyda
 
 ```
 app/
-  api.py              FastAPI: POST /log, POST /vision-log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear. Lifespan manages heartbeat and closes FoodbankService.
+  api.py              FastAPI: POST /log/start, GET /log/status/{id}, POST /log, POST /vision-log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear. Lifespan manages heartbeat and closes FoodbankService.
   frontend.py         Streamlit: daily progress, static calendar week buffer, food journal, meal logging, goal settings. Uses shared httpx.AsyncClient for pooling.
   core/config.py      Config: LITELLM_API_BASE, LLM_MODEL, DB paths, prompts path
+  core/llm.py            LLM Utility: Global concurrency control (Semaphore) for Ollama stability
   schemas/food_schemas.py  Pydantic: Macros, SubMacros, FoodItem, FoodLog, GoalRequest
   services/
-     database.py       DatabaseManager: 2 SQLite DBs (foodbank.db + macros.db).
-                       FTS5 foods table, recipes, pending_verification, sync_status, meals.
-                       Defines DEFAULT_FOODS for consistent seeding.
+       database.py       DatabaseManager: 2 SQLite DBs (foodbank.db + macros.db).
+                        FTS5 foods table, recipes, pending_verification, sync_status, meals.
+                        Defines DEFAULT_FOODS for consistent seeding.
                         Implements weekly summary aggregation (static calendar week).
-     foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
-     extraction.py     ExtractionService: Two-pass LLM extraction + Unified Resolution Engine (_resolve_and_build_log) for both text and vision paths. Vision pipeline handles multimodal payload (text + image + optional hint) for Home/Wild estimation.
-     onboarding.py     OnboardingService: PCOS baseline macro calibration from user bio text.
+                        Provides `run_foodbank()` and `run_macros()` helpers for efficient thread-safe execution.
+      foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements Canonicalization Layer (fuzzy matching) and L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
+       extraction.py     ExtractionService: Decoupled async pipeline (Item Extraction -> Background Resolution). Unified Resolution Engine (_resolve_and_build_log) for both text and vision paths. Vision pipeline handles multimodal payload (text + image + optional hint) for Home/Wild estimation.
+      onboarding.py     OnboardingService: PCOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
+
 
 
 prompts/prompts.yaml  Externalized LLM prompts (extraction.main/verification/vision_estimate, foodbank.web_search/internal_estimate, planner.empathetic_suggestion)
@@ -40,45 +43,22 @@ User Bio Text -> OnboardingService.calculate_pcos_baseline()
   -> Persist to macros.db (goals table)
 
 Food Logging Flow:
-User Text -> ExtractionService.parse()
-  1. LLM extraction (prompts.yaml extraction.main)
-  2. Verification Guardrail (extraction.verification) -> detect missed items
-  3. Deduplication (remove junk terms, overlapping names)
-  4. For each item:
-     a. Recipe check -> if known recipe, expand into base ingredients (parallel asyncio.gather)
-     b. Base ingredient -> get_nutrition_data():
-        - L1 Cache lookup (In-memory dictionary)
-        - DB lookup (FTS5 exact + fuzzy)
-        - [OFFLINE] cached data or LLM estimate (verified=0, queued)
-        - [ONLINE] find_source_of_truth -> search_web_for_food -> internal_estimate
-        - Standardized flat macro return for all paths
-        - Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
-C. Unified Resolution Convergence:
-   Both Text and Vision paths converge into `_resolve_and_build_log()`:
-     1. Input: [{name, grams}] list + meal_id
-     2. Parallel Resolution: Recipe check -> Base ingredient lookup (Parallel asyncio.gather)
-     3. Build FoodLog: Aggregates items, total_macros, total_calories
-     4. Returns standardized `FoodLog` object
-```
-User Text -> ExtractionService.parse()
-  1. LLM extraction (prompts.yaml extraction.main)
-  2. Verification Guardrail (extraction.verification) -> detect missed items
-  3. Deduplication (remove junk terms, overlapping names)
-  4. For each item:
-     a. Recipe check -> if known recipe, expand into base ingredients (parallel asyncio.gather)
-     b. Base ingredient -> get_nutrition_data():
-        - L1 Cache lookup (In-memory dictionary)
-        - DB lookup (FTS5 exact + fuzzy)
-        - [OFFLINE] cached data or LLM estimate (verified=0, queued)
-        - [ONLINE] find_source_of_truth -> search_web_for_food -> internal_estimate
-        - Standardized flat macro return for all paths
-        - Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
-C. Unified Resolution Convergence:
-   Both Text and Vision paths converge into `_resolve_and_build_log()`:
-     1. Input: [{name, grams}] list + meal_id
-     2. Parallel Resolution: Recipe check -> Base ingredient lookup (Parallel asyncio.gather)
-     3. Build FoodLog: Aggregates items, total_macros, total_calories
-     4. Returns standardized `FoodLog` object
+User Text -> ExtractionService.extract_items()
+  1. Fast LLM extraction (prompts.yaml extraction.main)
+  2. Returns {items, meal_id} immediately to UI
+  3. Triggers Background Resolution via FastAPI BackgroundTasks:
+     a. For each item:
+        - Recipe check -> expand into base ingredients (parallel asyncio.gather)
+        - Base ingredient -> get_nutrition_data():
+           - L1 Cache lookup
+           - Canonicalization Layer (Fuzzy match against DB)
+           - DB lookup (FTS5)
+           - [OFFLINE] cached data or LLM estimate (verified=0, queued)
+           - [ONLINE] Authoritative web search -> General search -> LLM estimate
+           - Standardized flat macro return for all paths
+     b. Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
+     c. Persist to macros.db
+  4. UI polls GET /log/status/{meal_id} to update progress spinners.
 
 
 Vision Pipeline (POST /vision-log):
@@ -108,8 +88,10 @@ Heartbeat (asyncio task, lifespan-managed):
 
 ## Key Design Decisions
 
-- **Async**: All DB operations via `asyncio.to_thread`; all LLM calls via `litellm.acompletion`; shared `httpx.AsyncClient` for connection pooling
-- **Two-pass extraction**: 1st pass extracts items, 2nd pass (verification guardrail) catches missed items
+- **Async**: All DB operations via `asyncio.to_thread`; all LLM calls routed through `safe_acompletion` (global semaphore) to prevent Ollama saturation; shared `httpx.AsyncClient` for connection pooling
+- **Async Pipeline**: Decoupled extraction and resolution. Returns extracted items instantly and resolves nutrition as a background task to eliminate UI hang.
+- **Canonicalization Layer**: Use of Levenshtein-based fuzzy matching to map item variations to DB entries, reducing slow web search triggers.
+- **Self-Verifying Extraction**: High-recall single-pass LLM extraction to maximize recall while minimizing API latency
 - **Recipe expansion**: Known dishes decomposed into base ingredients before macro calculation (anti-hallucination)
 - **Offline-first**: DB cached data returned immediately when offline; unverified items queued for later sync
 - **Atwater guardrail**: LLM calorie estimates validated against macro-derived calories

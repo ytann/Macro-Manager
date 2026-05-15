@@ -132,6 +132,30 @@ class DatabaseManager:
             conn.row_factory = sqlite3.Row
             self._local.macros_conn = conn
         return self._local.macros_conn
+
+    def run_foodbank(self, query, params=(), fetchone=False, fetchall=False, commit=False):
+        """Helper to execute a query on the foodbank DB."""
+        conn = self.get_foodbank_conn()
+        cursor = conn.execute(query, params)
+        if commit:
+            conn.commit()
+        if fetchone:
+            return cursor.fetchone()
+        if fetchall:
+            return cursor.fetchall()
+        return cursor
+
+    def run_macros(self, query, params=(), fetchone=False, fetchall=False, commit=False):
+        """Helper to execute a query on the macros DB."""
+        conn = self.get_macros_conn()
+        cursor = conn.execute(query, params)
+        if commit:
+            conn.commit()
+        if fetchone:
+            return cursor.fetchone()
+        if fetchall:
+            return cursor.fetchall()
+        return cursor
  
     def set_daily_goals(self, protein: float, carbs: float, fat: float, calories: float):
         with self.get_macros_conn() as conn:

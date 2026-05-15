@@ -30,6 +30,7 @@ class FoodLog(BaseModel):
     meal_id: str
     items: List[FoodItem]
     total_macros: Macros
+    total_sub_macros: Optional[SubMacros] = None
     total_calories: float
     confidence_score: float = Field(..., ge=0, le=1)
 

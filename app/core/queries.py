@@ -66,7 +66,7 @@ SCHEMA_MEALS_INFO = "PRAGMA table_info(meals)"
 SCHEMA_MEALS_ADD_COL = "ALTER TABLE meals ADD COLUMN {col} {col_type}"
 
 # External Query Templates
-DDG_SEARCH_URL = "https://html.duckduckgo.com/html/?q={query}"
+# DDG_SEARCH_URL = "https://html.duckduckgo.com/html/?q={query}"
 NUTRITION_FACTS_QUERY = "nutrition facts {name} per 100g calories protein carbs fat fiber"
 WEB_SEARCH_QUERIES = [
     "{dish_name} nutrition facts per 100g",

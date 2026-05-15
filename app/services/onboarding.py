@@ -1,9 +1,10 @@
 import litellm
 import json
 import yaml
+from pydantic import ValidationError
 from app.core.config import Config
 from app.core.logger import logger
-
+from app.schemas.food_schemas import OnboardingAttributes
 
 class OnboardingService:
     def __init__(self):
@@ -24,13 +25,19 @@ class OnboardingService:
             api_base=Config.LITELLM_API_BASE,
             temperature=0.0
         )
-        data = json.loads(resp.choices[0].message.content)
+        
+        try:
+            raw_data = json.loads(resp.choices[0].message.content)
+            attrs = OnboardingAttributes(**raw_data)
+        except (json.JSONDecodeError, ValidationError, TypeError) as e:
+            logger.error(f"Onboarding extraction failed validation: {e}")
+            raise ValueError(f"Failed to extract valid biometrics from bio: {e}")
 
-        age = int(data.get('age', 25))
-        height_cm = int(data.get('height_cm', 160))
-        weight_kg = float(data.get('weight_kg', 65))
-        activity_level = float(data.get('activity_level', 1.2))
-        goal = str(data.get('goal', 'maintain')).lower()
+        age = attrs.age
+        height_cm = attrs.height_cm
+        weight_kg = attrs.weight_kg
+        activity_level = attrs.activity_level
+        goal = attrs.goal.lower()
 
         bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161
         tdee = bmr * activity_level

@@ -7,8 +7,8 @@
 - PCOS one-shot onboarding, BMR/TDEE math, macro split logic -> [[wiki/logic/Onboarding.md]]
 - QA rules (lint checks, guardrails, failure patterns to avoid) -> [[wiki/QA_Failures.md]]
 - Database operations, init logic, connection management, weekly aggregation -> [[app/services/database.py]]
-- Foodbank service (Consolidated nutrition resolution, L1 caching, DB lookups, web search, estimates, upsert, verification) -> [[app/services/foodbank.py]]
-- Extraction service (unified resolution engine, two-pass LLM parsing, recipe expansion, async nutrition resolution) -> [[app/services/extraction.py]]
+- Foodbank service (Consolidated nutrition resolution, canonicalization layer/fuzzy matching, L1 caching, DB lookups, web search, estimates, upsert, verification) -> [[app/services/foodbank.py]]
+- Extraction service (unified resolution engine, self-verifying single-pass LLM parsing, recipe expansion, async nutrition resolution, global LLM concurrency control, async job-status pipeline) -> [[app/services/extraction.py]]
 - Vision-based food extraction (unified resolution, image-to-items pipeline, Home vs. Wild environment rules, multimodal payload formatting, user hints) -> [[app/services/extraction.py]] (extract_from_image method)
 - Streamlit vision client utility (base64 encoding, API communication for vision logs) -> [[app/utils/vision_client.py]]
 - API endpoints, heartbeat lifecycle, daily/weekly summaries, vision-log handler -> [[app/api.py]]

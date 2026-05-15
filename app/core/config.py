@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     """
@@ -7,6 +10,7 @@ class Config:
     # API Config
     LITELLM_API_BASE = "http://localhost:11434"
     LLM_MODEL = 'ollama/gemma4:e2b'
+    TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
     
     # Database Config
     FOODBANK_DB_PATH = "foodbank.db"

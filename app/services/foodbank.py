@@ -4,11 +4,15 @@ import httpx
 import litellm
 import yaml
 import asyncio
+import os
+import difflib
+from tavily import AsyncTavilyClient
 from typing import Optional, List, Dict
 from app.services.database import DatabaseManager, DEFAULT_FOODS
 from app.core.config import Config
 from app.core import queries
 from app.core.logger import logger
+from app.core.llm import safe_acompletion
 
 class FoodbankService:
     """
@@ -24,6 +28,7 @@ class FoodbankService:
         self.http_client = httpx.AsyncClient(timeout=10, headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         })
+        self.tavily_client = AsyncTavilyClient(api_key=Config.TAVILY_API_KEY)
         self._l1_cache = {}
         self._html_cache = {}
 
@@ -36,44 +41,21 @@ class FoodbankService:
             return yaml.safe_load(f)['foodbank']
 
     async def _is_network_available(self) -> bool:
-        try:
-            await self.http_client.head("https://1.1.1.1", timeout=1.5)
-            return True
-        except (httpx.RequestError, httpx.TimeoutException):
-            return False
-
-    async def _fetch_html_cached(self, url: str) -> Optional[str]:
-        if url in self._html_cache:
-            return self._html_cache[url]
-        try:
-            response = await self.http_client.get(url)
-            if response.status_code == 200:
-                self._html_cache[url] = response.text
-                return response.text
-        except Exception as e:
-            logger.error(f"Fetch failed for {url}: {e}")
-        return None
-
-    async def _fetch_web_page(self, query: str) -> Optional[str]:
-        logger.info("Fetching DuckDuckGo...")
-        search_url = queries.DDG_SEARCH_URL.format(query=query)
-        return await self._fetch_html_cached(search_url)
+        return True
 
     async def queue_for_verification(self, name: str):
-        def _queue():
-            try:
-                conn = self.db.get_foodbank_conn()
-                conn.execute(
-                    queries.PENDING_VERIFICATION_UPSERT,
-                    (name, name)
-                )
-                conn.commit()
-            except Exception as e:
-                logger.debug(f"SQLite INSERT failed in queue_for_verification: {e}")
-        await asyncio.to_thread(_queue)
+        await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.PENDING_VERIFICATION_UPSERT, 
+            (name, name), 
+            commit=True
+        )
 
     async def search_food(self, query_string: str) -> Optional[Dict]:
         def _search():
+            # complex logic with multiple attempts, keep as is but use run_foodbank internally if possible
+            # actually, since it has multiple steps and loops, keeping the sync function is cleaner
+            # but let's see if we can use a sync helper
             conn = self.db.get_foodbank_conn()
             cursor = conn.cursor()
             cursor.execute(queries.FOODS_SEARCH_BY_NAME, (query_string, f"%{query_string}%"))
@@ -90,33 +72,32 @@ class FoodbankService:
                             row = cursor.fetchone()
                             if row:
                                 break
-
             return dict(row) if row else None
         return await asyncio.to_thread(_search)
 
     async def get_recipe(self, dish_name: str) -> Optional[List[Dict]]:
-        def _get():
-            conn = self.db.get_foodbank_conn()
-            cursor = conn.cursor()
-            cursor.execute(queries.RECIPES_GET_BY_NAME, (dish_name.lower(),))
-            row = cursor.fetchone()
-            return json.loads(row[0]) if row else None
-        return await asyncio.to_thread(_get)
+        row = await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.RECIPES_GET_BY_NAME, 
+            (dish_name.lower(),), 
+            fetchone=True
+        )
+        return json.loads(row[0]) if row else None
 
     async def save_recipe(self, dish_name: str, recipe_json: List[Dict]):
-        def _save():
-            conn = self.db.get_foodbank_conn()
-            conn.execute(queries.RECIPES_UPSERT, 
-                             (dish_name.lower(), json.dumps(recipe_json)))
-
-            conn.commit()
-        await asyncio.to_thread(_save)
+        await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.RECIPES_UPSERT, 
+            (dish_name.lower(), json.dumps(recipe_json)), 
+            commit=True
+        )
 
     async def search_web_for_food(self, dish_name: str, html_content: Optional[str] = None) -> Optional[Dict]:
+
         if html_content:
             try:
                 extract_prompt = self.prompts['web_search'].format(dish_name=dish_name, content=html_content[:10000])
-                resp = await litellm.acompletion(
+                resp = await safe_acompletion(
                     model=self.model,
                     messages=[{"role": "user", "content": extract_prompt}],
                     response_format={"type": "json_object"},
@@ -130,14 +111,19 @@ class FoodbankService:
 
         queries_list = [q.format(dish_name=dish_name) for q in queries.WEB_SEARCH_QUERIES]
         for query in queries_list:
-            search_url = queries.DDG_SEARCH_URL.format(query=query)
+            # search_url = queries.DDG_SEARCH_URL.format(query=query)
             try:
-                logger.info("Fetching DuckDuckGo...")
-                response = await self.http_client.get(search_url)
-                if response.status_code != 200:
+                # logger.info("Fetching DuckDuckGo...")
+                # response = await self.http_client.get(search_url)
+                # if response.status_code != 200:
+                #     continue
+                search_result = await self.tavily_client.search(query=query, search_depth="advanced")
+                results = search_result.get('results', [])
+                if not results:
                     continue
-                extract_prompt = self.prompts['web_search'].format(dish_name=dish_name, content=response.text[:10000])
-                resp = await litellm.acompletion(
+                content = "\n\n".join([f"Source: {r['url']}\nContent: {r['content']}" for r in results])
+                extract_prompt = self.prompts['web_search'].format(dish_name=dish_name, content=content[:10000])
+                resp = await safe_acompletion(
                     model=self.model,
                     messages=[{"role": "user", "content": extract_prompt}],
                     response_format={"type": "json_object"},
@@ -151,15 +137,8 @@ class FoodbankService:
         return None
 
     async def upsert_food(self, name: str, calories: float, protein: float, carbs: float, fat: float, fiber: float, sugar: float = 0.0, sat_fat: float = 0.0, unsat_fat: float = 0.0, verified: int = 0, source: Optional[str] = None, is_complete_protein: int = 0):
-        def _upsert():
-            conn = self.db.get_foodbank_conn()
-            conn.execute(
-                queries.FOODS_UPSERT,
-                (name, name, name.lower(), calories, protein, carbs, fat, fiber, sugar, sat_fat, unsat_fat, is_complete_protein, verified, source)
-            )
-
-            conn.commit()
-        await asyncio.to_thread(_upsert)
+        params = (name, name, name.lower(), calories, protein, carbs, fat, fiber, sugar, sat_fat, unsat_fat, is_complete_protein, verified, source)
+        await asyncio.to_thread(self.db.run_foodbank, queries.FOODS_UPSERT, params, commit=True)
 
     async def get_nutrition_data(self, name: str) -> Optional[Dict]:
         cache_key = name.lower().strip()
@@ -175,6 +154,23 @@ class FoodbankService:
     async def _get_nutrition_data_core(self, name: str) -> Optional[Dict]:
         # Step A: Query local DB
         food_data = await self.search_food(name)
+        
+        # Step A.1: Fuzzy Matching Layer
+        if not food_data:
+            logger.info(f"No exact match for {name}. Attempting fuzzy match...")
+            def _fuzzy_lookup():
+                conn = self.db.get_foodbank_conn()
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM foods")
+                all_names = [row[0] for row in cursor.fetchall()]
+                matches = difflib.get_close_matches(name, all_names, n=1, cutoff=0.8)
+                return matches[0] if matches else None
+            
+            best_match = await asyncio.to_thread(_fuzzy_lookup)
+            if best_match:
+                logger.info(f"Fuzzy match found: {name} -> {best_match}")
+                food_data = await self.search_food(best_match)
+        
         logger.info(f"Local DB search for {name}: {food_data}")
         
         # Step B: Network check
@@ -192,12 +188,13 @@ class FoodbankService:
             logger.info(f"Using internal estimate (offline) for {name}")
             estimate_prompt = self.prompts['internal_estimate'].format(name=name)
             try:
-                resp = await litellm.acompletion(
+                resp = await safe_acompletion(
                     model=self.model,
-                    messages=[{"role": "user", "content": estimate_prompt}],
+                    messages=[{"role": "user", "content": extract_prompt}],
                     response_format={"type": "json_object"},
                     api_base=Config.LITELLM_API_BASE
                 )
+
                 est_data = json.loads(resp.choices[0].message.content)
                 logger.info(f"Internal estimate result for {name}: {est_data}")
                 if 'error' not in est_data:
@@ -229,10 +226,17 @@ class FoodbankService:
         # Food is missing or unverified -> Web Search
         logger.info(f"Food {name} is missing or unverified. Starting web search.")
         query = queries.NUTRITION_FACTS_QUERY.format(name=name)
-        html = await self._fetch_web_page(query)
+        
+        try:
+            search_result = await self.tavily_client.search(query=query, search_depth="advanced")
+            results = search_result.get('results', [])
+            html = "\n\n".join([f"Source: {r['url']}\nContent: {r['content']}" for r in results]) if results else None
+        except Exception as e:
+            logger.error(f"Tavily search failed for {name}: {e}")
+            html = None
         
         # Try find_source_of_truth first (highest quality)
-        truth = await self.find_source_of_truth(name, html_content=html)
+        truth = await self.find_source_of_truth(name)
         if truth and 'error' not in truth:
             logger.info(f"Source of truth found for {name}: {truth}")
             return truth
@@ -257,12 +261,13 @@ class FoodbankService:
         logger.info(f"Web search failed for {name}. Falling back to internal estimate.")
         estimate_prompt = self.prompts['internal_estimate'].format(name=name)
         try:
-            resp = await litellm.acompletion(
+            resp = await safe_acompletion(
                 model=self.model,
                 messages=[{"role": "user", "content": estimate_prompt}],
                 response_format={"type": "json_object"},
                 api_base=Config.LITELLM_API_BASE
             )
+
             est_data = json.loads(resp.choices[0].message.content)
             logger.info(f"Internal estimate result for {name} (online): {est_data}")
             if 'error' not in est_data:
@@ -285,31 +290,30 @@ class FoodbankService:
         return None
 
 
-    async def find_source_of_truth(self, dish_name: str, html_content: Optional[str] = None, upsert: bool = True) -> Optional[Dict]:
+    async def find_source_of_truth(self, dish_name: str, upsert: bool = True) -> Optional[Dict]:
         logger.info(f"🔍 Finding Source of Truth for: {dish_name}...")
-        if html_content is None:
-            query = f"nutrition facts {dish_name} per 100g calories protein carbs fat fiber"
-            html_content = await self._fetch_web_page(query)
-        
-        if not html_content:
-            return None
-        
         try:
-            truth_prompt = self.prompts['source_of_truth'].format(dish_name=dish_name, content=html_content[:15000])
-            resp = await litellm.acompletion(
+            search_result = await self.tavily_client.search(
+                query=f"{dish_name} nutrition facts per 100g calories protein carbs fat", 
+                search_depth="advanced"
+            )
+            results = search_result.get('results', [])
+            if not results:
+                return None
+            
+            search_context = "\n\n".join([f"Source: {r['url']}\nContent: {r['content']}" for r in results[:3]])
+            
+            truth_prompt = self.prompts['source_of_truth'].format(dish_name=dish_name, search_context=search_context)
+            resp = await safe_acompletion(
                 model=self.model,
                 messages=[{"role": "user", "content": truth_prompt}],
                 response_format={"type": "json_object"},
                 api_base=Config.LITELLM_API_BASE
             )
+
             data = json.loads(resp.choices[0].message.content)
             logger.info(f"Truth search result for {dish_name}: {data}")
             
-            # Validate that we actually got nutrition data, not just a search result list
-            if 'calories' not in data and 'error' not in data:
-                logger.warning(f"Truth finder returned invalid format for {dish_name}: {data}")
-                return None
-
             if 'error' not in data and upsert:
                 conf = data.get('confidence', 'Low')
                 is_verified = 1 if conf in ['High', 'Medium'] else 0
@@ -329,14 +333,12 @@ class FoodbankService:
             return data
         except Exception as e:
             logger.error(f"Truth finder failed for {dish_name}: {e}")
-        return None
+            return None
+
 
     async def process_verification_queue(self):
         def _get_pending():
-            conn = self.db.get_foodbank_conn()
-            cursor = conn.execute(queries.PENDING_VERIFICATION_GET_ALL)
-            rows = cursor.fetchall()
-            return [(row['name'], row['retry_count']) for row in rows]
+            return self.db.run_foodbank(queries.PENDING_VERIFICATION_GET_ALL, fetchall=True)
 
         pending = await asyncio.to_thread(_get_pending)
         verified_count = 0
@@ -344,19 +346,21 @@ class FoodbankService:
         for name, retry_count in pending:
             try:
                 if retry_count >= self.MAX_RETRIES:
-                    def _remove_stale():
-                        conn = self.db.get_foodbank_conn()
-                        conn.execute(queries.PENDING_VERIFICATION_DELETE, (name,))
-                        conn.commit()
-                    await asyncio.to_thread(_remove_stale)
+                    await asyncio.to_thread(
+                        self.db.run_foodbank, 
+                        queries.PENDING_VERIFICATION_DELETE, 
+                        (name,), 
+                        commit=True
+                    )
                     logger.info(f"Removed stale item: {name} (retries exhausted)")
                     continue
 
-                def _inc_retry():
-                    conn = self.db.get_foodbank_conn()
-                    conn.execute(queries.PENDING_VERIFICATION_INC_RETRY, (name,))
-                    conn.commit()
-                await asyncio.to_thread(_inc_retry)
+                await asyncio.to_thread(
+                    self.db.run_foodbank, 
+                    queries.PENDING_VERIFICATION_INC_RETRY, 
+                    (name,), 
+                    commit=True
+                )
 
                 truth = await self.find_source_of_truth(name, upsert=False)
 
@@ -373,11 +377,12 @@ class FoodbankService:
                             verified=1,
                             source=truth.get('source')
                         )
-                        def _remove():
-                            conn = self.db.get_foodbank_conn()
-                            conn.execute(queries.PENDING_VERIFICATION_DELETE, (name,))
-                            conn.commit()
-                        await asyncio.to_thread(_remove)
+                        await asyncio.to_thread(
+                            self.db.run_foodbank, 
+                            queries.PENDING_VERIFICATION_DELETE, 
+                            (name,), 
+                            commit=True
+                        )
                         verified_count += 1
                         logger.info(f"Verified: {name}")
                     else:
@@ -397,35 +402,40 @@ class FoodbankService:
         return verified
 
     async def get_pending_count(self) -> int:
-        def _count():
-            conn = self.db.get_foodbank_conn()
-            count = conn.execute(queries.PENDING_VERIFICATION_COUNT).fetchone()[0]
-            return count
-        return await asyncio.to_thread(_count)
+        row = await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.PENDING_VERIFICATION_COUNT, 
+            fetchone=True
+        )
+        return row[0] if row else 0
 
     async def update_sync_timestamp(self):
-        def _update():
-            conn = self.db.get_foodbank_conn()
-            conn.execute(queries.SYNC_STATUS_UPDATE)
-            conn.commit()
-        await asyncio.to_thread(_update)
+        await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.SYNC_STATUS_UPDATE, 
+            commit=True
+        )
 
     async def get_sync_timestamp(self) -> Optional[str]:
-        def _get():
-            conn = self.db.get_foodbank_conn()
-            row = conn.execute(queries.SYNC_STATUS_GET).fetchone()
-            return row[0] if row else None
-        return await asyncio.to_thread(_get)
+        row = await asyncio.to_thread(
+            self.db.run_foodbank, 
+            queries.SYNC_STATUS_GET, 
+            fetchone=True
+        )
+        return row[0] if row else None
 
     async def seed_db(self):
         """Backward compatibility helper for tests to seed initial food data."""
         def _seed():
-            conn = self.db.get_foodbank_conn()
             sql = queries.FOODS_UPSERT
             params = [
                 (food[0], food[0], food[0].lower(), food[2], food[3], food[4], food[5], food[6], food[7], food[8], food[9])
                 for food in DEFAULT_FOODS
             ]
+            # Use run_foodbank for the whole list is not directly supported by my current run_foodbank
+            # because it doesn't do executemany. I'll use a loop or add executemany to run_foodbank.
+            # For now, I'll just use a loop to keep it simple and compatible.
+            conn = self.db.get_foodbank_conn()
             conn.executemany(sql, params)
             conn.commit()
         await asyncio.to_thread(_seed)

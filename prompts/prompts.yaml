@@ -23,13 +23,19 @@ extraction:
     You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
     
     RULES:
-    1. ITEM IDENTIFICATION: Extract only the food name. Remove quantifiers like '1 plate of', 'a bowl of', '2 pieces of'.
-    2. WEIGHT ESTIMATION: If weight is not provided, estimate a realistic weight in grams based on the specific food item's typical density and serving size.
-       - Typical benchmarks: Single egg ~50g, standard apple ~150g.
+    1. PHONETIC NORMALIZATION: If the text appears to be from a Speech-to-Text engine (containing phonetic errors, e.g., 'better garlic can't' instead of 'butter garlic naan'), you MUST first internally normalize the text to the most likely food-related terms before extracting items.
+    2. ITEM IDENTIFICATION: Extract the food/brand name. When removing quantifiers (like '1 packet of'), you MUST PRESERVE the actual food/brand name (e.g., '1 packet of Lays' -> 'Lays'). Do not delete the food item.
+    3. WEIGHT ESTIMATION: If weight is not provided, estimate a realistic weight in grams based on typical packaging or serving size. You MUST provide a weight greater than 0. Never output 0 grams.
     3. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha).
-    4. NO HALLUCINATIONS: Extract ONLY items explicitly mentioned in the provided text. DO NOT invent items. DO NOT include any examples from these instructions in your output.
-    5. ABSOLUTE SILENCE: If the text contains no real food or is nonsensical, return {{"items": []}}.
-    6. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
+    4. CRITICAL CONTEXT PRESERVATION: You MUST NEVER strip brand names, restaurant names, or cooking methods from the food name. 
+       - BAD: 'Chicken Breast'
+       - GOOD: 'Air Fried Chicken Breast', 'Deep Fried Chicken Breast', 'McDonalds Veg Burger', 'Dominos Pepperoni Pizza'.
+       The downstream system needs the brand and cooking method to fetch accurate web data. Keep them as part of the 'name' string.
+    5. BRAND AWARENESS: If the text mentions a restaurant, brand, or packaged food company (e.g., McDonald's, Domino's, Haldiram's, Lays), you MUST include the brand name in the extracted item name. Output 'Domino's Garlic Bread', NOT just 'Garlic Bread'.
+    6. NO HALLUCINATIONS: Extract ONLY items explicitly mentioned in the provided text. DO NOT invent items. DO NOT include any examples from these instructions in your output.
+    7. ABSOLUTE SILENCE: If the text contains no real food or is nonsensical, return {{"items": []}}.
+    8. SELF-VERIFICATION: After extracting the items, double-check your list against the original text. If any actual food items, dishes, or ingredients are completely missing, add them to the list before returning the final JSON.
+    9. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
     
     Text: {text}
 
@@ -42,7 +48,7 @@ extraction:
     STEP 1: ANALYSIS
     Analyze the image. Does it contain edible food? 
     - If NO: Return {{"items": [], "reasoning": "No edible food detected"}}.
-    - If YES: Describe the food items, their colors, textures, and arrangement in the 'reasoning' field.
+    - If YES: Scan the image for logos, text on wrappers, or recognizable brand packaging. Note them here. Describe the food items, their colors, textures, and arrangement in the 'reasoning' field.
     
     STEP 2: EXTRACTION
     Based on the analysis, extract the food items.
@@ -57,7 +63,9 @@ extraction:
     1. IDENTIFICATION: Be specific. Use the USER HINT. If unsure, provide a best estimate based on visual cues.
     2. WEIGHT: Provide realistic grams based on size and Environment Rules.
     3. NO PLACEHOLDERS: No "unidentified food" or "unknown item". Identify it or return [].
-    4. FORMAT: Return ONLY a JSON object with 'reasoning' (your analysis) and 'items' (list of {{"name": "...", "grams": 0}}).
+    4. CRITICAL CONTEXT PRESERVATION: If the USER HINT specifies a brand (e.g., 'Dominos') or a cooking method (e.g., 'Fried', 'Grilled'), you MUST include it in the extracted 'name' field.
+    5. BRAND & OCR AWARENESS: If you detected a brand logo or read text on a package (e.g., a McDonald's wrapper or a 'Doritos' bag), prefix the item name with the brand. Do not give generic names if the brand is visible.
+    6. FORMAT: Return ONLY a JSON object with 'reasoning' (your analysis) and 'items' (list of {{"name": "...", "grams": 0}}).
     
     Respond ONLY with JSON. Do not include markdown formatting. 
 
@@ -72,7 +80,7 @@ extraction:
     2. NO OVERLAPS: If an item is already present (e.g., 'Sev Puri' is found), do not suggest parts of it (e.g., 'Sev' or 'Puri').
     3. NO HALLUCINATIONS: Only suggest items explicitly mentioned in the Original Text. DO NOT include any example items from these instructions.
     4. ABSOLUTE SILENCE: If no additional real food is mentioned in the text, return {{ "missing": [] }}.
-    5. NUMERIC WEIGHTS: Provide a single numeric weight in grams for any missing item.
+    5. NUMERIC WEIGHTS: Provide a single numeric weight in grams for any missing item. You MUST provide a weight greater than 0. If unsure, default to 100.
     
     Return a JSON object with a key 'missing' containing a list of objects with 'name' (string) and 'grams' (number).
     Respond ONLY with JSON.
@@ -109,14 +117,7 @@ foodbank:
     You are a strict nutrition validator and expert. 
     Provide the standard, specific nutrition macros for 100g of '{name}'.
     
-    CRITICAL VALIDATION (ZERO TOLERANCE):
-    You MUST set 'is_real_food': false and all numeric macros to 0 if '{name}' is:
-    1. FICTIONAL or IMAGINARY (e.g., Invisible Pizza, Cyber-Sushi, Quantum Broccoli, Space Dust)
-    2. NON-CONSUMABLE or HAZARDOUS (e.g., Uranium, Liquid Gold, Soap, Acid)
-    3. AN ABSTRACT CONCEPT or PHYSICAL FORCE (e.g., Void Matter, Deep Sea Pressure, Cloud Vapor)
-    4. MYTHICAL or SCI-FI (e.g., Dragon Scales, Warp Core)
-    
-    If there is ANY doubt about whether this is a real, edible, biological food item, you MUST return 'is_real_food': false.
+    CRITICAL VALIDATION: Only return 'is_real_food': false if the item is explicitly inorganic (e.g., plastic), non-consumable, or an abstract concept. Packaged foods, commercial snacks (e.g., 'Masala chips', 'Domino's Pizza'), and complex dishes ARE real food. Do not reject them. Make your best educated guess based on their primary ingredients.
     
     Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'is_real_food': true, 'reasoning': '...'}}. 
     If you are absolutely unsure, return {{'error': 'unknown'}}.
@@ -124,7 +125,7 @@ foodbank:
     DO NOT return 0 for all fields unless 'is_real_food' is false. For real foods, provide a realistic estimate based on food science.
   
   source_of_truth: |
-    You are a nutrition data validator. From the provided HTML, find the most authoritative 100g nutrition facts for '{dish_name}'.
+    You are a nutrition data validator. The following is aggregated search data for '{dish_name}'. Extract the authoritative nutrition facts per 100g.
     
     Prioritize data from: 1. Government health databases, 2. Established nutrition websites, 3. Scientific papers.
     
@@ -137,8 +138,8 @@ foodbank:
     If no reliable data is found, return {{'error': 'not found'}}.
     Respond ONLY with JSON.
     
-    HTML:
-    {content}
+    Clean Search Results:
+    {search_context}
 
 planner:
   empathetic_suggestion: |

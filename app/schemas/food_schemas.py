@@ -25,6 +25,7 @@ class FoodLog(BaseModel):
     meal_id: str
     items: List[FoodItem]
     total_macros: Macros
+    total_sub_macros: Optional[SubMacros] = None
     total_calories: float
     confidence_score: float = Field(..., ge=0, le=1)
  
@@ -40,4 +41,11 @@ class GoalRequest(BaseModel):
     carbs: float = Field(..., ge=0)
     fat: float = Field(..., ge=0)
     calories: float = Field(..., ge=0)
+
+class OnboardingAttributes(BaseModel):
+    age: int = Field(..., ge=0, le=120)
+    height_cm: float = Field(..., ge=0)
+    weight_kg: float = Field(..., ge=0)
+    activity_level: float = Field(..., ge=1.0, le=2.5)
+    goal: str = Field(...)
 

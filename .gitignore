@@ -7,3 +7,6 @@ __pycache__/
 .streamlit/
 .opencode
 AGENTS.md
+.env
+.ruff_cache
+.log

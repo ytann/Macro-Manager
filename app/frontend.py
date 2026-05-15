@@ -10,7 +10,7 @@ API_URL = "http://127.0.0.1:8000"
 st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
 
 # --- Helpers for Sync Calls in Streamlit ---
-_client = httpx.Client(timeout=120.0)
+_client = httpx.Client(timeout=300.0)
 
 def sync_get(url):
     return _client.get(url)
@@ -264,6 +264,10 @@ voice_text = query_params.get("voice_text")
 # Initialize session state for reruns
 if "log_success" not in st.session_state:
     st.session_state.log_success = False
+if "polling_meal_id" not in st.session_state:
+    st.session_state.polling_meal_id = None
+if "extracted_items" not in st.session_state:
+    st.session_state.extracted_items = []
 
 if st.session_state.log_success:
     st.session_state.log_success = False
@@ -439,57 +443,91 @@ try:
 except Exception as e:
     st.error(f"Connection Error: {e}")
 
+# --- Async Polling UI ---
+if st.session_state.polling_meal_id:
+    with st.status("🚀 Resolving Nutrition...", expanded=True) as status:
+        st.write("Extracted items:")
+        for item in st.session_state.extracted_items:
+            st.write(f"- {item['name']} ({item['grams']}g) ... ⏳")
+        
+        # Poll for completion
+        import time
+        meal_id = st.session_state.polling_meal_id
+        completed = False
+        for _ in range(30): # 30 second timeout
+            time.sleep(1)
+            resp = sync_get(f"{API_URL}/log/status/{meal_id}")
+            if resp.status_code == 200 and resp.json()["status"] == "completed":
+                completed = True
+                break
+        
+        if completed:
+            status.update(label="✅ Meal Logged!", state="complete", expanded=False)
+            st.session_state.polling_meal_id = None
+            st.session_state.extracted_items = []
+            st.session_state.log_success = True
+            st.rerun()
+        else:
+            status.update(label="❌ Resolution Timed Out", state="error")
+            st.session_state.polling_meal_id = None
+            st.session_state.extracted_items = []
+
 st.divider()
 
 # --- LOGGING SECTION ---
+
 st.subheader("📝 Log Food")
 tabs = st.tabs(["⌨️ Text", "📸 Camera"])
 
 with tabs[0]:
     # We use columns to place the record button next to the text input
     with st.form("log_form"):
-        meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack", "General"])
+        col_type, col_input, col_voice = st.columns([0.2, 0.65, 0.15])
         
-        col1, col2 = st.columns([0.85, 0.15])
-        with col1:
+        with col_type:
+            meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack", "General"])
+        
+        with col_input:
             user_input = st.text_input("What did you eat?", value=voice_text, placeholder="e.g. 200g chicken breast and 100g brown rice")
-        with col2:
+        
+        with col_voice:
             # Voice recording button using Web Speech API
             # We use a custom HTML component to handle the 'Hold to Record' logic
             st.iframe(src=f"{API_URL}/static/voice_btn.html", height=70)
- 
+     
         submit_button = st.form_submit_button("Log Meal")
-        
-        success = False
-        if submit_button:
-            if user_input:
-                try:
-                             with st.spinner("Parsing and logging food..."):
-                                 payload = {"text": user_input, "meal_type": meal_type}
-                                 response = sync_post(f"{API_URL}/log", payload)
-                                 if response.status_code == 200:
-                                     st.toast("Meal logged successfully! 🥗", icon="✅")
-                                     st.session_state.log_success = True
-                                 else:
-                                     st.error(f"Error: {response.json().get('detail', 'Failed to log meal')}")
+    
+    success = False
+    if submit_button:
+        if user_input:
+            try:
+                with st.spinner("Extracting items..."):
+                    payload = {"text": user_input, "meal_type": meal_type, "is_voice": False}
+                    response = sync_post(f"{API_URL}/log/start", payload)
+                    if response.status_code == 200:
+                        data = response.json()
+                        st.session_state.polling_meal_id = data["meal_id"]
+                        st.session_state.extracted_items = data["items"]
+                        st.rerun()
+                    else:
+                        st.error(f"Error: {response.json().get('detail', 'Failed to start logging')}")
+            except Exception as e:
+                st.error(f"Connection Error: {e}")
+        else:
+            st.warning("Please enter some text first.")
 
-                except Exception as e:
-                    st.error(f"Connection Error: {e}")
-            else:
-                st.warning("Please enter some text first.")
-        
-        if st.session_state.log_success:
-            st.rerun()
 
 
 # Automatic Trigger for Voice Logging
 if voice_text:
         try:
-            payload = {"text": voice_text, "meal_type": "General"} # Defaulting to General for voice
-            response = sync_post(f"{API_URL}/log", payload)
+            payload = {"text": voice_text, "meal_type": "General", "is_voice": True} # Defaulting to General for voice
+            response = sync_post(f"{API_URL}/log/start", payload)
             if response.status_code == 200:
-                st.toast("Meal logged via voice! 🎤", icon="✅")
-                st.session_state.log_success = True
+                data = response.json()
+                st.session_state.polling_meal_id = data["meal_id"]
+                st.session_state.extracted_items = data["items"]
+                st.toast("Voice extraction started! 🎤", icon="✅")
             else:
                 st.error(f"Voice log failed: {response.json().get('detail')}")
                 
@@ -498,8 +536,7 @@ if voice_text:
         except Exception as e:
             st.error(f"Voice log error: {e}")
         
-        if st.session_state.log_success:
-            st.rerun()
+        st.rerun()
 
 
 with tabs[1]:

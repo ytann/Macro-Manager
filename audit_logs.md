@@ -4,6 +4,14 @@
 
 | Issue Name | Brief Description | Criticality | Status |
 | :--- | :--- | :--- | :--- |
+| [Nutritional Resolution Silent Failures](#nutritional-resolution-silent-failures) | Items extracted but all resolution paths fail, returning 0 calories | High | [PENDING] |
+| [Fragile Internal Nutrition Estimates](#fragile-internal-nutrition-estimates) | `internal_estimate` frequently returns `unknown` for regional foods | Medium | [PENDING] |
+| [Web Search Precision for Regional Foods](#web-search-precision-for-regional-foods) | Generic search results for specific regional dishes | Medium | [FIXED] |
+| [Complex and Inefficient Database Calls in FoodbankService](#complex-and-inefficient-database-calls-in-foodbankservice) | `FoodbankService` uses verbose, repetitive `asyncio.to_thread` for db calls | High | [PENDING] |
+| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure | Medium | [PENDING] |
+| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [PENDING] |
+| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [PENDING] |
+| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED | Low | [PENDING] |
 | [Database still drops foods table on startup](#database-still-drops-foods-table-on-startup) | `DROP TABLE IF EXISTS` regression — data wiped every restart | Critical | [FIXED] |
 | [Verification prompt `KeyError`](#verification-prompt-keyerror-on-content-placeholder) | `{content}` placeholder in prompt but not passed to `.format()` | Critical | [FIXED] |
 | [`NameError` when all items are recipes](#nameerror-in-extraction-when-all-items-are-recipes) | `results` undefined when no base ingredients | Critical | [FIXED] |
@@ -45,7 +53,6 @@
 | [Heartbeat startup sleep](#heartbeat-sleeps-60s-on-startup-before-first-check) | Cold start delay for first sync | Low | [FIXED] |
 | [No logging/metrics on `process_verification_queue`](#no-loggingmetrics-on-process_verification_queue-return-value) | No visibility into verification success rate | Low | [FIXED] |
 | [Duplicated Code in Meal Logging](#duplicated-code-in-meal-logging) | `log_meal` and `log_vision_meal` have near-identical db insertion logic | Medium | [FIXED] |
-| [Complex DB Calls in FoodbankService](#complex-and-inefficient-database-calls-in-foodbankservice) | `FoodbankService` uses verbose, repetitive `asyncio.to_thread` for db calls | High | [PENDING] |
 | [Redundant Web Searches](#redundant-web-searches-in-foodbankservice) | `search_web_for_food` and `find_source_of_truth` both fetch web pages | Medium | [FIXED] |
 | [Inefficient DB Seeding](#inefficient-database-seeding) | `seed_db` calls `upsert_food` in a loop instead of `executemany` | Low | [FIXED] |
 | [Hardcoded Queries](#hardcoded-sql-and-search-queries) | SQL and web search queries are hardcoded in services | Low | [FIXED] |
@@ -268,6 +275,21 @@
 - **Issue Detail:** The `log_meal` and `log_vision_meal` endpoints in `app/api.py` contain nearly identical code for calculating total sub-macros and inserting meal data into the database. This violates the DRY (Don't Repeat Yourself) principle, making the code harder to maintain and increasing the risk of introducing inconsistencies.
 - **Fix Plan:** Refactor the duplicated logic into a private helper function. This function will take the meal data (items, totals, meal_type, etc.) as arguments and handle the database insertion, promoting code reuse and simplifying the endpoint logic.
 
+### Nutritional Resolution Silent Failures
+- **Files:** `app/services/foodbank.py`, `app/services/extraction.py`
+- **Issue Detail:** Items successfully extracted from text/image often end up with 0 calories because all resolution paths (Local DB $\rightarrow$ Web Search $\rightarrow$ Internal Estimate) return `None` or `error`. The system currently keeps the item but fails to provide nutritional value.
+- **Fix Plan:** Implement a tiered fallback system. If all specific lookups fail, attempt a "category-based" estimate (e.g. "generic snack" or "generic meal") to avoid absolute zeros.
+
+### Fragile Internal Nutrition Estimates
+- **Files:** `prompts/prompts.yaml`, `app/services/foodbank.py`
+- **Issue Detail:** The `internal_estimate` prompt is overly restrictive or fails to handle regional names, often returning `{'error': 'unknown'}` for valid foods.
+- **Fix Plan:** Refine the `internal_estimate` prompt to be more permissive with regional cuisines and provide a structured "best guess" instead of a hard error when high confidence is not possible.
+
+### Web Search Precision for Regional Foods
+- **Files:** `prompts/prompts.yaml`, `app/services/foodbank.py`
+- **Issue Detail:** DuckDuckGo searches for regional dishes (e.g. "Misal Pav") often return generic results or blogs rather than authoritative nutrition facts per 100g.
+- **Fix Plan:** Update `NUTRITION_FACTS_QUERY` and `web_search` prompts to explicitly request "nutrition facts per 100g" and "authoritative data sources" to minimize generic noise.
+
 ### Complex and Inefficient Database Calls in FoodbankService
 - **Files:** `app/services/foodbank.py`
 - **Issue Detail:** Many functions in `FoodbankService` wrap synchronous database calls in `asyncio.to_thread`. While this correctly prevents blocking the event loop, the implementation is verbose and inefficient as each database operation opens and closes a new connection.
@@ -298,10 +320,22 @@
 - **Issue Detail:** The `calculate_pcos_baseline` method parses LLM JSON and uses `.get()` with default values. If the LLM returns an empty object or incorrect keys, the system silently proceeds with default biometrics (160cm, 65kg) without informing the user or raising a validation error.
 - **Fix Plan:** Define an `OnboardingAttributes` Pydantic model and validate the LLM response against it. Raise `ValueError` if validation fails.
 
-### Wiki Architecture out of sync (Phase 5)
-- **Files:** `wiki/logic/Architecture.md`
-- **Issue Detail:** The architecture documentation has not been updated to include the `OnboardingService` or the new `/onboard` endpoint. Additionally, the `foods` table description is missing the recently added `sugar`, `saturated_fat`, `unsaturated_fat`, and `source` columns.
-- **Fix Plan:** Update `Architecture.md` to reflect Phase 5 changes and align the database schema description with `queries.py`.
+
+### Nutritional Resolution Silent Failures
+- **Files:** `app/services/foodbank.py`, `app/services/extraction.py`
+- **Issue Detail:** Items successfully extracted from text/image often end up with 0 calories because all resolution paths (Local DB $\rightarrow$ Web Search $\rightarrow$ Internal Estimate) return `None` or `error`. The system currently keeps the item but fails to provide nutritional value.
+- **Fix Plan:** Implement a tiered fallback system. If all specific lookups fail, attempt a "category-based" estimate (e.g. "generic snack" or "generic meal") to avoid absolute zeros.
+
+### Fragile Internal Nutrition Estimates
+- **Files:** `prompts/prompts.yaml`, `app/services/foodbank.py`
+- **Issue Detail:** The `internal_estimate` prompt is overly restrictive or fails to handle regional names, often returning `{'error': 'unknown'}` for valid foods.
+- **Fix Plan:** Refine the `internal_estimate` prompt to be more permissive with regional cuisines and provide a structured "best guess" instead of a hard error when high confidence is not possible.
+
+### Web Search Precision for Regional Foods
+- **Files:** `prompts/prompts.yaml`, `app/services/foodbank.py`
+- **Issue Detail:** DuckDuckGo searches for regional dishes (e.g. "Misal Pav") often return generic results or blogs rather than authoritative nutrition facts per 100g.
+- **Fix Plan:** Update `NUTRITION_FACTS_QUERY` and `web_search` prompts to explicitly request "nutrition facts per 100g" and "authoritative data sources" to minimize generic noise.
+
 
 ### Vision Client connection overhead
 - **Files:** `app/utils/vision_client.py`

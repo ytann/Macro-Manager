@@ -44,6 +44,7 @@ memory_service = MemoryService()
 class LogRequest(BaseModel):
     text: str
     meal_type: str = "General"
+    is_voice: bool = False
 
 class VisionLogRequest(BaseModel):
     base64_image: str
@@ -73,10 +74,59 @@ async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str
         )
         conn.commit()
 
+async def _process_and_save_meal(meal_id: str, items: List[dict], meal_type: str):
+    try:
+        logger.info(f"Background resolution started for meal {meal_id}")
+        meal_data = await extraction_service.resolve_nutrition(items, meal_id)
+        
+        totals = {
+            'p': meal_data.total_macros.protein,
+            'c': meal_data.total_macros.carbs,
+            'f': meal_data.total_macros.fat,
+            'cal': meal_data.total_calories
+        }
+        
+        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, meal_type)
+        logger.info(f"Background resolution completed for meal {meal_id}")
+    except Exception as e:
+        logger.error(f"Background resolution failed for meal {meal_id}: {e}")
+
+@app.post("/log/start")
+async def start_log_meal(request: LogRequest, background_tasks: BackgroundTasks):
+    try:
+        items, meal_id = await extraction_service.extract_items(request.text, request.is_voice)
+        
+        # Trigger background resolution
+        background_tasks.add_task(_process_and_save_meal, meal_id, items, request.meal_type)
+        
+        return {
+            "status": "processing",
+            "meal_id": meal_id,
+            "items": items
+        }
+    except Exception as e:
+        logger.error(f"Log Start Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/log/status/{meal_id}")
+async def get_log_status(meal_id: str):
+    with db_manager.get_macros_conn() as conn:
+        # Check if the meal exists in the meals table
+        cursor = conn.execute("SELECT 1 FROM meals WHERE meal_id = ?", (meal_id,))
+        exists = cursor.fetchone()
+        
+    if exists:
+        return {"status": "completed", "meal_id": meal_id}
+    return {"status": "processing", "meal_id": meal_id}
+
+
 @app.post("/log")
 async def log_meal(request: LogRequest):
     try:
-        meal_data = await extraction_service.parse(request.text)
+        import getpass
+        logger.info(f"User running API: {getpass.getuser()}")
+        
+        meal_data = await extraction_service.parse(request.text, meal_id=request.text[:10], is_voice=request.is_voice)
         
         totals = {
             'p': meal_data.total_macros.protein,

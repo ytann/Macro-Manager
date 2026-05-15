@@ -1,6 +1,9 @@
 import httpx
 import base64
 
+# Shared client to reuse TCP connections (Connection Pooling)
+_client = httpx.Client(timeout=60.0)
+
 def send_vision_log(image_bytes: bytes, environment: str):
     """
     Encodes image bytes to base64 and sends it to the vision-log API endpoint.
@@ -13,6 +16,6 @@ def send_vision_log(image_bytes: bytes, environment: str):
         "environment": environment
     }
     
-    response = httpx.post(url, json=payload, timeout=60.0)
+    response = _client.post(url, json=payload)
     response.raise_for_status()
     return response.json()

@@ -4,7 +4,7 @@ AI-powered nutrition tracking for PCOS/PCOD management. Natural language food lo
  
 ## Flow
 
-`User Input` -> `Two-Pass LLM Extraction` -> `Async Parallel Nutrition Resolution` -> `Atwater Guardrail` -> `Persistence` -> `Dashboard`
+`User Input` -> `Item Extraction` -> `Background Resolution` -> `Status Polling` -> `Persistence` -> `Dashboard`
 `Onboarding Bio Text` -> `LLM Attribute Extraction` -> `PCOS Baseline Math (BMR/TDEE/Penalty/Macros)` -> `Goal Persistence`
  
 ## Quick Start
@@ -33,12 +33,13 @@ MacroManager/
     core/
       config.py               # Centralized configuration
       logger.py               # Standardized logging utility
+      llm.py                  # Global LLM concurrency control (Semaphore)
     schemas/
       food_schemas.py         # Pydantic: Macros, SubMacros, FoodItem, FoodLog
     services/
       database.py             # DatabaseManager: SQLite FTS5 + meals
       foodbank.py             # FoodbankService: lookups, web search, offline sync
-      extraction.py           # ExtractionService: two-pass LLM parsing
+      extraction.py           # ExtractionService: optimized single-pass LLM parsing
       onboarding.py           # OnboardingService: PCOS baseline macros from bio text
   prompts/
     prompts.yaml              # Externalized LLM prompts
@@ -66,21 +67,25 @@ MacroManager/
 | Component | Description |
 |---|---|
 | **Async parallel** | `asyncio.gather` resolves all food items concurrently |
-| **Two-pass extraction** | 1st pass extracts, 2nd pass (verification guardrail) catches missed items |
+| **Self-Verifying Extraction** | Single-pass extraction with internal self-verification to maximize recall and minimize latency |
 | **Offline sync queue** | Cached data returned immediately when offline; unverified items queued for heartbeat sync |
-| **Source of Truth** | Authoritative web search (DuckDuckGo) with LLM validation, confidence tiers |
+| **Source of Truth** | Authoritative web search (Tavily) with LLM validation, confidence tiers |
 | **Unified Resolver** | Shared resolution engine for text and vision paths ensuring consistent macro calculation and recipe expansion |
 | **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
 | **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
 | **FTS5 food search** | Full-text search for alias-based food lookups (case-insensitive) |
 | **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
+| **Canonicalization Layer** | Fuzzy matching (Levenshtein) to map typos/variations to existing DB entries, minimizing slow web searches |
 | **Advanced Macros** | Tracks Sugar, Saturated Fat, and Unsaturated Fat alongside primary macros |
 | **PCOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PCOS penalty -> 40/35/25 macro split |
+| **Global LLM Throttle** | Semaphore-based concurrency control to prevent local LLM (Ollama) saturation |
 | **Telemetry** | Standardized logging across all services for traceability |
  
 ## API Endpoints
   
-- `POST /log` — Parse text, calculate macros, save meal
+- `POST /log/start` — Fast item extraction, returns `meal_id` for background resolution
+- `GET /log/status/{meal_id}` — Poll status of background nutrition resolution
+- `POST /log` — Backward compatibility: synchronous parse and save
 - `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting and optional `hint` for better item identification.
 - `POST /onboard` — One-shot PCOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PCOS penalty (0.85x), sets daily macro goals
 - `GET /summary` — Daily aggregated totals + goals AND static calendar week summary

@@ -4,6 +4,7 @@ pydantic
 litellm
 pandas
 streamlit
-requests
 httpx
 pyyaml
+python-dotenv
+tavily-python

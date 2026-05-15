@@ -11,7 +11,7 @@ MacroManager is an intelligent nutrition tracking system designed specifically f
 The system follows a decoupled **Client-Server Architecture**:
 - **Frontend (Streamlit)**: Provides a high-fidelity interface for logging food and visualizing progress. Features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities via the Web Speech API. Uses synchronous `httpx.Client` for reliable communication with the backend to prevent event-loop conflicts.
 - **Backend (FastAPI)**: Orchestrates the data flow between the LLM, the nutrition database, the user logs, and the vision pipeline.
-- **Nutritional Intelligence (Gemma 4 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent.
+- **Nutritional Intelligence (Gemma 4 + Foodbank)**: A hybrid system that combines a local FTS5-powered database with an LLM-driven web-search agent utilizing the Tavily API for high-precision nutritional data extraction.
 - **Persistence Layer (SQLite)**: Two distinct databases-one for static/learned food data (`foodbank.db`) and one for user meal logs (`macros.db`).
 - **Vision Pipeline (Gemma 4 multimodal)**: An encapsulated, decoupled module that extracts food items from images with environment-aware portion size estimation (Home vs. Wild).
 - **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation (Mifflin-St Jeor BMR $\rightarrow$ TDEE $\rightarrow$ PCOS Penalty $\rightarrow$ Macro Split).
@@ -19,12 +19,14 @@ The system follows a decoupled **Client-Server Architecture**:
 ### 2.2 Data Flow
 1. **User Input** $\rightarrow$ Natural language text (e.g., "2 eggs and a bowl of dal") OR image (base64 + environment flag).
 2. **Extraction Pipeline** $\rightarrow$ 
-    - Text Path (Two-Pass): Pass 1 $\rightarrow$ Initial Item/Weight Extraction. Pass 2 $\rightarrow$ Verification Guardrail.
+    - Text Path (Optimized): Single-pass LLM extraction with internal self-verification.
     - Vision Path (Encapsulated): Pass 1 $\rightarrow$ Multimodal image analysis (Analysis $\rightarrow$ Extraction) with environment-aware portion estimation and optional user hints.
     - Convergence: Both paths produce a list of extracted items which are then processed by the Unified Resolver.
     - Cleanup: Deduplication and quantifier removal.
+    - **Async Pipeline (Sprint 6)**: Shifted from a blocking request to a **Job-Status** model. The system returns extracted items immediately and resolves nutrition as a background task, allowing the UI to poll for completion via `/log/status/{meal_id}`.
 3. **Nutritional Resolution (Async Parallelized)** $\rightarrow$ 
     - **Parallel Lookup**: All extracted items are processed concurrently using `asyncio.gather`.
+    - **Canonicalization Layer**: Before triggering slow web searches, the system uses fuzzy matching (Levenshtein distance) to map input names to existing DB entries, maximizing L1/L2 cache hits.
     - **Streamlined Logic**: Local DB Check $\rightarrow$ (if missing/unverified) $\rightarrow$ Authoritative Web Search $\rightarrow$ General Web Search $\rightarrow$ LLM Estimate $\rightarrow$ DB Upsert.
     - **Verification**: Items fetched authoritatively are marked as `verified=1` immediately.
 4. **Caloric Validation** $\rightarrow$ Apply Atwater's formula to ensure calories match macros.
@@ -46,6 +48,7 @@ The system follows a decoupled **Client-Server Architecture**:
 
 #### B. `FoodbankService`
 - **Streamlined Intelligence**: Implements a single-entry `get_nutrition_data` method that handles the entire lifecycle from DB lookup to authoritative web search and persistence. All paths are standardized to return a flat macro dictionary.
+- **Canonicalization Layer**: Implements fuzzy string matching (using `difflib`) to resolve near-identical food names to existing database entries, significantly reducing the frequency of slow web searches.
 - **L1 In-Memory Cache**: Utilizes a fast dictionary-based cache to store recently resolved food items, eliminating redundant DB and network calls for frequent foods.
 - **Async Core**: Fully refactored to use `asyncio` and `httpx`, allowing non-blocking network requests and database operations via `to_thread`. Implements `close()` for graceful resource cleanup of the shared HTTP client.
 - **Recipe Store**: Saves and retrieves JSON-based recipes for complex dishes to ensure consistency in expansion.
@@ -53,12 +56,13 @@ The system follows a decoupled **Client-Server Architecture**:
 - **Consistent Seeding**: Uses a shared `DEFAULT_FOODS` constant to seed the database via `upsert_food`, preventing duplicate entries in the FTS5 table.
 
 #### C. `ExtractionService`
-- **Unified Resolver (`_resolve_and_build_log`)**: A centralized engine that takes a list of extracted items and a meal ID to build a complete `FoodLog`. It handles recipe expansion and nutrition resolution identically for both text and vision inputs, eliminating logic duplication.
-- **Two-Pass Pipeline (Text)**: Uses a "Check and Balance" system. The first pass extracts; the second pass (Verification Guardrail) explicitly asks the LLM: *"Did you miss anything?"*
-    - **Vision Extraction (Image)**: Implements a two-step reasoning process (Analysis $\rightarrow$ Extraction). The model first analyzes the image to confirm food presence and describes it in a 'reasoning' field before extracting specific items and weights. This prevents placeholders and improves identification accuracy. Supports `Home` (smaller portions) and `Wild` (restaurant-scale) environment rules, and utilizes optional `hint` strings to disambiguate items in the image.
+- **Unified Resolver (`_resolve_and_build_log`)**: A centralized engine that takes a list of extracted items and a meal ID to build a complete `FoodLog`. It handles recipe expansion and nutrition resolution identically for both text and vision inputs, eliminating logic duplication. It utilizes `asyncio.gather` to resolve all ingredients in parallel.
+- **Optimized Extraction (Text)**: Uses a high-recall, self-verifying prompt to extract all items and estimated weights in a single pass, minimizing API latency while maintaining accuracy.
+- **Vision Extraction (Image)**: Implements a two-step reasoning process (Analysis $\rightarrow$ Extraction). The model first analyzes the image to confirm food presence and describes it in a 'reasoning' field before extracting specific items and weights. This prevents placeholders and improves identification accuracy. Supports `Home` (smaller portions) and `Wild` (restaurant-scale) environment rules, and utilizes optional `hint` strings to disambiguate items in the image.
 - **Parallel Execution**: Processes all base ingredients concurrently using `asyncio.gather`, minimizing API latency for meals with multiple items.
 - **Density-Aware Estimation**: Instead of static weights, the prompt instructs the LLM to consider the nature of the food (e.g., Sev Puri vs. Rice) when estimating grams for "plates" or "bowls".
 - **Deduplication**: a custom logic filter that removes non-food terms (like "plate") and overlapping names.
+
 
 #### D. `Pydantic Schemas`
 - Enforces strict data types and constraints (e.g., `ge=0` for macros) to prevent negative values or `NoneType` errors.
@@ -108,6 +112,6 @@ The system follows a decoupled **Client-Server Architecture**:
 ## 5. Design Decisions & Trade-offs
 - **SQLite FTS5 vs. Standard SQL**: Chosen for superior alias searching and performance with nutrition datasets.
 - **Externalized Prompts**: Prompts are stored in `prompts.yaml` to allow non-developers to tune the AI's behavior without modifying Python code.
-- **Local LLM (Ollama)**: Prioritizes privacy and offline capability over cloud-based APIs. Uses `gemma4:e2b` for both text extraction and multimodal vision analysis.
-- **Two-Pass vs. Single-Pass**: Single-pass extraction often misses items in long lists. The verification pass adds a small latency but significantly increases recall.
+- **Local LLM (Ollama)**: Prioritizes privacy and offline capability over cloud-based APIs. Uses `gemma4:e2b` for both text extraction and multimodal vision analysis. Implements a global `asyncio.Semaphore` via `app/core/llm.py` to prevent server saturation during parallel resolution.
+- **Self-Verifying Extraction**: Replaced the two-pass pipeline with a high-recall single-pass prompt to reduce latency without sacrificing accuracy.
 - **Home vs. Wild Environment Rules**: Vision extraction uses environment-specific portion size heuristics (Home: ~250-500g plates; Wild: ~300-600g plates) to improve accuracy for home-cooked vs. restaurant meals.
