@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Query
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict
+import asyncio
+from contextlib import asynccontextmanager
 from app.services.extraction import ExtractionService
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
@@ -14,8 +17,12 @@ from app.core import queries
 from app.core.logger import logger
 from app.schemas.food_schemas import GoalRequest, FoodItem
 import json
-import asyncio
-from contextlib import asynccontextmanager
+def safe_json_loads(s):
+    try:
+        return json.loads(s)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 
 async def heartbeat():
     while True:
@@ -37,6 +44,15 @@ async def lifespan(app: FastAPI):
     await foodbank_service.close()
 
 app = FastAPI(title="MacroManager API", lifespan=lifespan)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception occurred: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. Our team has been notified."},
+    )
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 db_manager = DatabaseManager()
 foodbank_service = FoodbankService(db_manager)
@@ -46,7 +62,7 @@ memory_service = MemoryService()
 planner_service = PlannerService()
 
 class LogRequest(BaseModel):
-    text: str
+    text: str = Field(..., max_length=5000)
     meal_type: str = "General"
     is_voice: bool = False
 
@@ -56,13 +72,13 @@ class VisionLogRequest(BaseModel):
     hint: str = ""
 
 class OnboardRequest(BaseModel):
-    bio_text: str
+    bio_text: str = Field(..., max_length=5000)
 
 class MemoryRequest(BaseModel):
-    text: str
+    text: str = Field(..., max_length=5000)
 
 class PlannerRequest(BaseModel):
-    user_query: str
+    user_query: str = Field(..., max_length=5000)
     remaining_macros: dict
 
 async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str, float], meal_type: str):
@@ -73,14 +89,13 @@ async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str
                 val = getattr(item.sub_macros, key, 0)
                 total += val if val is not None else 0
         return total
-
-    with db_manager.get_macros_conn() as conn:
+    
+    with db_manager.transaction('macros') as conn:
         items_json = json.dumps([item.model_dump() for item in items])
         conn.execute(
             queries.MEALS_INSERT,
             (meal_id, items_json, totals['p'], totals['c'], totals['f'], totals['cal'], sum_sub('fiber'), sum_sub('sugar'), sum_sub('saturated_fat'), sum_sub('unsaturated_fat'), meal_type)
         )
-        conn.commit()
 
 async def _process_and_save_meal(meal_id: str, items: List[dict], meal_type: str):
     try:
@@ -152,9 +167,12 @@ async def log_meal(request: LogRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/summary")
-async def get_summary():
+async def get_summary(date: str = Query(None, description="Date in YYYY-MM-DD format")):
     with db_manager.get_macros_conn() as conn:
-        cursor = conn.execute(queries.MEALS_GET_TODAY_FULL)
+        if date:
+            cursor = conn.execute(queries.MEALS_GET_FULL_BY_DATE, (date,))
+        else:
+            cursor = conn.execute(queries.MEALS_GET_TODAY_FULL)
         rows = cursor.fetchall()
         
         consumed = {k: sum(row[i] or 0 for row in rows) for i, k in enumerate(['protein', 'carbs', 'fat', 'calories', 'fiber', 'sugar', 'saturated_fat', 'unsaturated_fat'])}
@@ -163,7 +181,7 @@ async def get_summary():
             m_type = row['meal_type'] or "General"
             if m_type not in grouped:
                 grouped[m_type] = []
-            grouped[m_type].append(json.loads(row['items_json']))
+            grouped[m_type].append(safe_json_loads(row['items_json']))
             
         daily_data = {
             "consumed": consumed, 
@@ -177,11 +195,75 @@ async def get_summary():
         "weekly": weekly_data
     }
 
-@app.get("/meals")
-async def get_meals():
+@app.delete("/meals/clear")
+async def clear_meals(date: str = Query(..., description="Date in YYYY-MM-DD format")):
     with db_manager.get_macros_conn() as conn:
-        cursor = conn.execute(queries.MEALS_GET_TODAY_IDS)
-        return [{"id": r[0], "meal_id": r[1], "timestamp": r[2], "items": json.loads(r[3])} for r in cursor.fetchall()]
+        conn.execute(queries.MEALS_DELETE_BY_DATE, (date,))
+        conn.commit()
+    return {"status": "success", "message": f"Cleared meals for {date}"}
+
+@app.get("/meals")
+async def get_meals(date: str = Query(None, description="Date in YYYY-MM-DD format"), meal_type: str = Query(None)):
+    with db_manager.get_macros_conn() as conn:
+        if date:
+            cursor = conn.execute(queries.MEALS_GET_IDS_BY_DATE, (date,))
+        else:
+            # Use a formatted string for the default 'now' query
+            query_now = queries.MEALS_GET_IDS_BY_DATE.replace('?', "date('now', 'localtime')")
+            cursor = conn.execute(query_now)
+        
+        meals = [{"id": r[0], "meal_id": r[1], "timestamp": r[2], "items": safe_json_loads(r[3]), "type": r[4]} for r in cursor.fetchall()]
+        
+        if meal_type and meal_type != "All":
+            meals = [m for m in meals if m["type"] == meal_type]
+            
+        return meals
+
+
+@app.delete("/meals/{meal_id}")
+async def delete_meal(meal_id: int):
+    try:
+        with db_manager.get_macros_conn() as conn:
+            conn.execute(queries.MEALS_DELETE_BY_ID, (meal_id,))
+            conn.commit()
+        return {"status": "success", "message": f"Meal {meal_id} deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class UpdateMealRequest(BaseModel):
+    items: List[FoodItem]
+
+@app.patch("/meals/{meal_id}")
+async def update_meal(meal_id: int, request: UpdateMealRequest):
+    try:
+        items = request.items
+        # Recalculate totals
+        def sum_val(key):
+            return sum((getattr(item.sub_macros, key, 0) or 0) for item in items if item.sub_macros)
+            
+        total_p = sum(item.macros.protein for item in items)
+        total_c = sum(item.macros.carbs for item in items)
+        total_f = sum(item.macros.fat for item in items)
+        total_cal = sum(item.cals for item in items)
+        
+        fiber = sum_val('fiber')
+        sugar = sum_val('sugar')
+        sat_fat = sum_val('saturated_fat')
+        unsat_fat = sum_val('unsaturated_fat')
+        
+        items_json = json.dumps([item.model_dump() for item in items])
+        
+        with db_manager.get_macros_conn() as conn:
+            conn.execute(
+                queries.MEALS_UPDATE,
+                (items_json, total_p, total_c, total_f, total_cal, fiber, sugar, sat_fat, unsat_fat, meal_id)
+            )
+            conn.commit()
+            
+        return {"status": "success", "message": f"Meal {meal_id} updated"}
+    except Exception as e:
+        logger.error(f"Update Meal Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/pending-count")
 async def get_pending_count():

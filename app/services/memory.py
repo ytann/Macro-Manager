@@ -1,4 +1,4 @@
-import litellm
+from app.core.llm import safe_acompletion
 import yaml
 import os
 from app.core.config import Config
@@ -26,7 +26,7 @@ class MemoryService:
         )
 
         try:
-            resp = await litellm.acompletion(
+            resp = await safe_acompletion(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 api_base=Config.LITELLM_API_BASE,

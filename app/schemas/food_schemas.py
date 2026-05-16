@@ -2,9 +2,9 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 class Macros(BaseModel):
-    protein: float = Field(..., ge=0, description="Protein in grams")
-    carbs: float = Field(..., ge=0, description="Carbohydrates in grams")
-    fat: float = Field(..., ge=0, description="Fat in grams")
+    protein: float = Field(..., ge=0, le=1000, description="Protein in grams")
+    carbs: float = Field(..., ge=0, le=1000, description="Carbohydrates in grams")
+    fat: float = Field(..., ge=0, le=1000, description="Fat in grams")
 
 class SubMacros(BaseModel):
     fiber: Optional[float] = Field(None, ge=0)
@@ -15,8 +15,8 @@ class SubMacros(BaseModel):
 
 class FoodItem(BaseModel):
     name: str
-    grams: float = Field(..., ge=0)
-    cals: float = Field(..., ge=0)
+    grams: float = Field(..., ge=0, le=10000)
+    cals: float = Field(..., ge=0, le=10000)
     macros: Macros
     sub_macros: Optional[SubMacros] = None
     verified: bool = False
@@ -26,7 +26,7 @@ class FoodLog(BaseModel):
     items: List[FoodItem]
     total_macros: Macros
     total_sub_macros: Optional[SubMacros] = None
-    total_calories: float
+    total_calories: float = Field(..., ge=0, le=20000)
     confidence_score: float = Field(..., ge=0, le=1)
  
     @field_validator('confidence_score')

@@ -1,633 +1,1178 @@
+"""
+MacroManager — Notebook-aesthetic Streamlit frontend
+PCOS-focused nutrition tracking interface.
+Connects to FastAPI backend at API_URL (default: http://localhost:8000).
+"""
+
 import streamlit as st
-import httpx
-import asyncio
+import streamlit.components.v1 as components
+import requests
 import base64
-from app.utils.vision_client import send_vision_log
+import time
+import math
+from datetime import datetime
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
+API_URL   = "http://localhost:8000"
+RING_R    = 40
+RING_CIRC = 2 * math.pi * RING_R
+
+PALETTE = {
+    "protein": {"fill": "#7F77DD", "track": "#E1DEFC", "dark": "#3C3489", "mid": "#534AB7"},
+    "carbs":   {"fill": "#EF9F27", "track": "#FCE8BE", "dark": "#633806", "mid": "#854F0B"},
+    "fat":     {"fill": "#1D9E75", "track": "#B5EDD8", "dark": "#085041", "mid": "#0F6E56"},
+}
+
+_DIV = '<hr style="border:none;border-top:1px solid rgba(42,31,16,0.12);margin:8px 0;"/>'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE CONFIG  (must be first Streamlit call)
+# ─────────────────────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="MacroManager",
+    page_icon="📓",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CSS
+# ─────────────────────────────────────────────────────────────────────────────
+def inject_css():
+    st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* ── Notebook paper background ── */
+[data-testid="stAppViewContainer"] {
+    background-color: #F8FAFB;
+    background-image: 
+        linear-gradient(to right, rgba(100, 116, 139, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(100, 116, 139, 0.06) 1px, transparent 1px);
+    background-size: 26px 26px;
+}
+[data-testid="stHeader"]  { background: transparent !important; }
+[data-testid="stSidebar"] { display: none !important; }
+
+/* ── Main column: clean layout ── */
+.block-container {
+    max-width:  460px !important;
+    padding:    1.5rem 1.5rem 3rem 1.5rem !important;
+    border-left: none !important;
+    background:  transparent !important;
+}
+
+/* ── Base font ── */
+* { font-family: 'Courier Prime', monospace !important; }
+h1, h2, h3 { color: #2a1f10 !important; }
+
+/* Force dark text for notebook aesthetic, overriding dark mode */
+.stMarkdown p, .stMarkdown span, .stMarkdown div, 
+[data-testid="stAppViewContainer"] .stMarkdown p, 
+[data-testid="stAppViewContainer"] .stMarkdown span {
+    color: #2a1f10 !important;
+}
+
+/* ── Restore Streamlit Icons ── */
+[data-testid="stIcon"],
+[data-testid="stIconMaterial"],
+[data-testid="stExpanderToggleIcon"],
+[class*="MaterialSymbols"],
+[class*="material-icons"] {
+    font-family: "Material Symbols Rounded", "Material Icons", sans-serif !important;
+}
+
+/* ── Text inputs ── */
+.stTextInput  > div > div > input,
+.stTextArea   > div > div > textarea,
+.stNumberInput > div > div > input {
+    background:    rgba(255, 255, 255, 0.88) !important;
+    border:        1px solid rgba(42, 31, 16, 0.26) !important;
+    font-size:     16px !important;
+    color:         #2a1f10 !important;
+    border-radius: 4px !important;
+    caret-color:   #7F77DD;
+}
+textarea::placeholder, input::placeholder {
+    font-size: 13px !important;
+    color: #9a8d7c !important;
+    opacity: 1 !important;
+}
+.stTextInput > div > div > input:focus,
+.stTextArea  > div > div > textarea:focus {
+    border-color: rgba(127, 119, 221, 0.5) !important;
+    box-shadow:   none !important;
+    outline:      none !important;
+}
+.stTextInput label, .stTextArea label,
+.stNumberInput label, .stSelectbox label {
+    font-size: 14px !important;
+    color:     #7a6d5a !important;
+}
+
+/* ── Select ── */
+[data-baseweb="select"] > div {
+    background:   rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(42, 31, 16, 0.26) !important;
+    font-size:    16px !important;
+    color:        #2a1f10 !important;
+}
+
+/* ── Buttons ── */
+.stButton > button,
+[data-testid="stBaseButton-secondary"],
+[data-testid="stButton"] > button {
+    background:      #EDEFF1 !important;
+    border:          1.5px solid rgba(42, 31, 16, 0.30) !important;
+    font-size:       16px !important;
+    color:           #2a1f10 !important;
+    border-radius:   4px !important;
+    transition:      background 0.14s;
+    height:          44px !important;
+    min-height:      44px !important;
+    padding:         0 !important;
+    display:         flex !important;
+    align-items:     center !important;
+    justify-content: center !important;
+    text-align:      center !important;
+    width:           100% !important;
+    box-sizing:      border-box !important;
+}
+.stButton > button div,
+[data-testid="stBaseButton-secondary"] div,
+[data-testid="stButton"] > button div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+.stButton > button:hover,
+[data-testid="stBaseButton-secondary"]:hover   { background: #E2E6E9 !important; }
+.stButton > button:active,
+[data-testid="stBaseButton-secondary"]:active  { background: #D7DBDF !important; }
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {
+    background:    transparent !important;
+    border-bottom: 1px solid rgba(42, 31, 16, 0.14) !important;
+    gap: 0 !important;
+}
+.stTabs [data-baseweb="tab"] {
+    font-size:   15px !important;
+    color:       #9a8d7c !important;
+    background:  transparent !important;
+    padding:     6px 14px !important;
+}
+.stTabs [aria-selected="true"] {
+    color:         #2a1f10 !important;
+    background:    transparent !important;
+}
+div[data-baseweb="tab-highlight"],
+[data-testid="stTabsSelectionIndicator"] {
+    background-color: #8a8a8a !important;
+}
+.stTabs [data-baseweb="tab-panel"] { padding-top: 12px !important; }
+
+/* ── Expanders ── */
+[data-testid="stExpander"] {
+    border:        1px solid rgba(42, 31, 16, 0.13) !important;
+    background:    rgba(255, 255, 255, 0.65) !important;
+    border-radius: 4px !important;
+    margin-bottom: 6px !important;
+}
+[data-testid="stExpander"] div[role="button"] p,
+[data-testid="stExpander"] details summary p,
+[data-testid="stExpanderToggleIcon"] { color: #2a1f10 !important; }
+
+/* ── Spinner ── */
+.stSpinner > div { border-top-color: #7F77DD !important; }
+
+/* ── Alerts ── */
+.stAlert { border-radius: 4px !important; }
+
+/* ── Camera ── */
+[data-testid="stCameraInput"] label { font-size: 15px !important; color: #7a6d5a !important; }
+
+/* ── Journal Containment ── */
+div[style*="overflow-y: auto"] {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(42, 31, 16, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    padding: 16px !important;
+    color: #2a1f10 !important;
+}
+
+.journal-section-box {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(42, 31, 16, 0.2) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
+}
+
+.nowrap { white-space: nowrap !important; }
+.wrap { white-space: normal !important; word-break: break-word !important; }
+
+/* ── Hide Streamlit chrome ── */
+#MainMenu, footer, .stDeployButton,
+[data-testid="stToolbar"] { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
 
 
-API_URL = "http://127.0.0.1:8000"
+# ─────────────────────────────────────────────────────────────────────────────
+# SESSION STATE
+# ─────────────────────────────────────────────────────────────────────────────
+def init_session():
+    defaults = {
+        "consumed":         {"protein": 0.0, "carbs": 0.0, "fat": 0.0,
+                             "calories": 0.0, "fiber": 0.0, "sugar": 0.0},
+        "goals":            {"protein": 140.0, "carbs": 200.0,
+                             "fat": 65.0, "calories": 1800.0},
+        "weekly":           {},
+        "journal_grouped":  {},
+        "memory_content":   "",
+        "pending_meal_id":  None,
+        "last_refreshed":   0.0,
+        "current_page":     "onboarding",
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
 
-st.set_page_config(page_title="MacroManager", page_icon="🥗", layout="centered")
 
-# --- Helpers for Sync Calls in Streamlit ---
-_client = httpx.Client(timeout=300.0)
+# ─────────────────────────────────────────────────────────────────────────────
+# API HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+def fetch_summary(date=None):
+    try:
+        params = {"date": date} if date else {}
+        r = requests.get(f"{API_URL}/summary", params=params, timeout=6)
+        r.raise_for_status()
+        d = r.json()
+        st.session_state.consumed        = d["daily"]["consumed"]
+        st.session_state.goals           = d["daily"]["goals"]
+        st.session_state.weekly          = d.get("weekly", {})
+        st.session_state.journal_grouped = d["daily"].get("grouped", {})
+        st.session_state.last_refreshed  = time.time()
+    except requests.exceptions.ConnectionError:
+        st.error("Cannot reach the backend — make sure the API is running on localhost:8000.")
+    except Exception as exc:
+        st.warning(f"Data fetch failed: {exc}")
 
-def sync_get(url):
-    return _client.get(url)
 
-def sync_post(url, json_data):
-    return _client.post(url, json=json_data)
+def api_start_log(text, meal_type, is_voice=False):
+    r = requests.post(
+        f"{API_URL}/log/start",
+        json={"text": text, "meal_type": meal_type, "is_voice": is_voice},
+        timeout=15,
+    )
+    r.raise_for_status()
+    return r.json()["meal_id"]
 
-def sync_delete(url):
-    return _client.delete(url)
 
-async def async_onboard(bio_text: str):
-    """Async wrapper for onboarding using the shared sync client."""
-    return await asyncio.to_thread(sync_post, f"{API_URL}/onboard", {"bio_text": bio_text})
+def api_log_status(meal_id):
+    r = requests.get(f"{API_URL}/log/status/{meal_id}", timeout=5)
+    r.raise_for_status()
+    return r.json().get("status", "processing")
 
-def render_macro_hud(consumed, goals):
-    """Renders a minimalist equidistant glass Macro HUD with 3D flip animations."""
-    total_cals = consumed.get('calories', 0.0)
-    hud_config = [
-        {
-            "label": "Protein", 
-            "key": "protein", 
-            "unit": "g", 
-            "color": "rgba(79, 70, 229, 0.2)", 
-            "sub": f"Fiber: {consumed.get('fiber', 0):.1f}g",
-            "pos": "top: 20px; left: 145px;"
-        },
-        {
-            "label": "Carbs", 
-            "key": "carbs", 
-            "unit": "g", 
-            "color": "rgba(245, 158, 11, 0.2)", 
-            "sub": f"Sugar: {consumed.get('sugar', 0):.1f}g",
-            "pos": "top: 228px; left: 25px;"
-        },
-        {
-            "label": "Fat", 
-            "key": "fat", 
-            "unit": "g", 
-            "color": "rgba(16, 185, 129, 0.2)", 
-            "sub": f"Sat Fat: {consumed.get('saturated_fat', 0):.1f}g",
-            "pos": "top: 228px; left: 265px;"
-        },
-    ]
+
+def api_vision_log(b64, environment, hint):
+    r = requests.post(
+        f"{API_URL}/vision-log",
+        json={"base64_image": b64, "environment": environment, "hint": hint},
+        timeout=30,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def api_update_goals(p, c, f, cal):
+    r = requests.post(
+        f"{API_URL}/goals",
+        json={"protein": p, "carbs": c, "fat": f, "calories": cal},
+        timeout=5,
+    )
+    r.raise_for_status()
+
+
+def api_onboard(bio):
+    r = requests.post(f"{API_URL}/onboard", json={"bio_text": bio}, timeout=25)
+    r.raise_for_status()
+    return r.json()
+
+
+def api_save_memory(text):
+    r = requests.post(f"{API_URL}/memory", json={"text": text}, timeout=10)
+    r.raise_for_status()
+    return r.json().get("content", "")
+
+
+def api_fetch_memory():
+    r = requests.get(f"{API_URL}/memory", timeout=5)
+    r.raise_for_status()
+    return r.json().get("content", "")
+
+
+def api_ask_copilot(query, remaining):
+    r = requests.post(
+        f"{API_URL}/planner",
+        json={"user_query": query, "remaining_macros": remaining},
+        timeout=30,
+    )
+    r.raise_for_status()
+    return r.json().get("suggestion", "No suggestion available.")
+
+
+def api_delete_meal(meal_id):
+    r = requests.delete(f"{API_URL}/meals/{meal_id}", timeout=5)
+    r.raise_for_status()
+    return r.json()
+
+
+def api_update_meal(meal_id, items):
+    r = requests.patch(
+        f"{API_URL}/meals/{meal_id}",
+        json={"items": items},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def api_clear_meals(date):
+    r = requests.delete(f"{API_URL}/meals/clear", params={"date": date}, timeout=5)
+    r.raise_for_status()
+    return r.json()
+
+
+def sync_get(url, params=None):
+    return requests.get(url, params=params, timeout=10)
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+def _section_header(text, sub=None):
+    """Renders a bold 17px section heading, with an optional 13px grey sub-label."""
+    sub_html = (
+        f'<span style="font-family:\'Courier Prime\',monospace;font-size:13px;'
+        f'color:#9a8d7c;"> ({sub})</span>' if sub else ""
+    )
+    st.markdown(
+        f'<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:17px;'
+        f'color:#2a1f10;margin:18px 0 6px;">{text}{sub_html}</p>',
+        unsafe_allow_html=True,
+    )
+
+
+def _weekly_bar(label, consumed, goal, fill, track):
+    """Renders a single horizontal weekly progress bar as an HTML string."""
+    p     = min(consumed / max(goal, 1), 1.0)
+    pct_w = round(p * 100, 1)
+    color = "#EF9F27" if (p >= 0.88 and label == "carbs") else fill
+    return (
+        f'<div style="margin:5px 0;">'
+        f'<div style="display:flex;justify-content:space-between;align-items:baseline;'
+        f'font-family:\'Courier Prime\',monospace;font-size:12px;color:#7a6d5a;margin-bottom:3px;">'
+        f'<span style="font-size:15px;color:#2a1f10;">{label}</span>'
+        f'<span>{int(round(consumed))}g / {int(round(goal))}g</span></div>'
+        f'<div style="background:{track};border-radius:3px;height:6px;overflow:hidden;">'
+        f'<div style="background:{color};width:{pct_w}%;height:100%;border-radius:3px;"></div>'
+        f'</div></div>'
+    )
+
+
+def macro_state(consumed, goal):
+    """Returns (state, clamped_pct).  state: 'normal' | 'warning' | 'complete'"""
+    if goal <= 0:
+        return "normal", 0.0
+    pct = consumed / goal
+    if pct >= 1.0:
+        return "complete", 1.0
+    if pct >= 0.82:
+        return "warning", pct
+    return "normal", pct
+
+
+def arc_dash(pct):
+    fill = round(min(max(pct, 0.0), 1.0) * RING_CIRC, 2)
+    gap  = round(RING_CIRC - fill + 8, 2)   # +8 gap prevents visual closure
+    return fill, gap
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: HUD
+# ─────────────────────────────────────────────────────────────────────────────
+def _ring(macro, consumed, goal, cx, pct, state):
+    """Build SVG group for a single progress ring."""
+    pal       = PALETTE[macro]
+    fill, gap = arc_dash(pct)
+    sw        = 9.5 if state == "warning" else 7
+    v_weight  = "700" if state == "complete" else "400"
+    v_color   = pal["dark"] if state in ("complete", "warning") else "#2a1f10"
+    cy        = 62
+
+    val_str  = f"{int(round(consumed))}g"
+    goal_str = f"of {int(round(goal))}g"
+
+    out = []
+    # track ring
+    out.append(
+        f'<circle cx="{cx}" cy="{cy}" r="{RING_R}" fill="none" '
+        f'stroke="{pal["track"]}" stroke-width="7"/>'
+    )
+    # progress arc
+    out.append(
+        f'<circle cx="{cx}" cy="{cy}" r="{RING_R}" fill="none" '
+        f'stroke="{pal["fill"]}" stroke-width="{sw}" '
+        f'stroke-dasharray="{fill} {gap}" stroke-linecap="round" '
+        f'transform="rotate(-90 {cx} {cy})"/>'
+    )
+    # completion: thin outer halo
+    if state == "complete":
+        out.append(
+            f'<circle cx="{cx}" cy="{cy}" r="47" fill="none" '
+            f'stroke="{pal["fill"]}" stroke-width="1.5" opacity="0.36"/>'
+        )
+    # warning: small dot at ~1 o'clock
+    if state == "warning":
+        wx = cx + int(RING_R * 0.72)
+        wy = cy - int(RING_R * 0.72)
+        out.append(f'<circle cx="{wx}" cy="{wy}" r="5.5" fill="{pal["fill"]}"/>')
+        out.append(
+            f'<text x="{wx}" y="{wy + 4}" text-anchor="middle" '
+            f'font-size="8" font-weight="700" '
+            f'fill="{pal["dark"]}">!</text>'
+        )
+    # consumed value
+    out.append(
+        f'<text x="{cx}" y="{cy - 6}" text-anchor="middle" '
+        f'font-size="13" font-weight="{v_weight}" '
+        f'fill="{v_color}">{val_str}</text>'
+    )
+    # macro label
+    out.append(
+        f'<text x="{cx}" y="{cy + 9}" text-anchor="middle" '
+        f'font-size="13" fill="{pal["mid"]}">{macro}</text>'
+    )
+    # goal label below ring
+    out.append(
+        f'<text x="{cx}" y="{cy + 53}" text-anchor="middle" '
+        f'font-size="10" fill="#9a8d7c">{goal_str}</text>'
+    )
+    return "".join(out)
+
+
+def render_hud():
+    c, g = st.session_state.consumed, st.session_state.goals
+
+    p_st,  p_pct  = macro_state(c["protein"],  g["protein"])
+    ca_st, ca_pct = macro_state(c["carbs"],     g["carbs"])
+    f_st,  f_pct  = macro_state(c["fat"],       g["fat"])
+
+    cal_pct    = min(c["calories"] / max(g["calories"], 1), 1.4)
+    cal_val    = f'{int(round(c["calories"])):,}'
+    cal_goal   = f'{int(round(g["calories"])):,}'
+    cal_color  = "#085041" if cal_pct >= 1.0 else ("#633806" if cal_pct >= 0.92 else "#2a1f10")
+    cal_weight = "700" if cal_pct >= 1.0 else "400"
+
+    rings = (
+        _ring("protein", c["protein"], g["protein"], 50,  p_pct,  p_st)  +
+        _ring("carbs",   c["carbs"],   g["carbs"],   150, ca_pct, ca_st) +
+        _ring("fat",     c["fat"],     g["fat"],     250, f_pct,  f_st)
+    )
+
+    st.markdown(f"""
+<div style="margin:4px 0 14px;">
+  <div style="text-align:center;margin-bottom:10px;line-height:1.1;">
+    <span style="font-family:'Courier Prime',monospace;font-size:28px;
+                 font-weight:{cal_weight};color:{cal_color};">{cal_val}</span>
+    <span style="font-family:'Courier Prime',monospace;font-size:14px;
+                 color:#9a8d7c;">&thinsp;/ {cal_goal} kcal</span>
+  </div>
+  <svg viewBox="0 0 300 125" width="100%" xmlns="http://www.w3.org/2000/svg"
+       style="font-family:'Courier Prime',monospace;">
+    {rings}
+  </svg>
+</div>""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: EMPATHETIC MESSAGES
+# ─────────────────────────────────────────────────────────────────────────────
+def render_message():
+    c, g = st.session_state.consumed, st.session_state.goals
+
+    def pct(k):
+        return c[k] / max(g[k], 1)
+
+    msgs = []
+
+    if pct("protein") >= 1.0:
+        msgs.append(("#1D9E75", "✓  Protein goal hit — muscles sorted for the day."))
+    elif pct("protein") >= 0.70:
+        rem = int(round(g["protein"] - c["protein"]))
+        msgs.append(("#7F77DD", f"→  {rem}g of protein to go. You've got this!"))
+
+    if pct("carbs") > 1.0:
+        msgs.append(("#854F0B", "·  Carbs are over today. It happens! Let's just focus on balancing tomorrow."))
+    elif pct("carbs") >= 0.85:
+        msgs.append(("#EF9F27", "·  Carbs are close to the daily limit. Be mindful of the next meal."))
+
+    if pct("calories") >= 1.0:
+        msgs.append(("#633806", "·  Calorie goal reached. Your body has enough for today — time to rest."))
+
+    if not msgs and c["calories"] < 50:
+        msgs.append(("#9a8d7c", "→  Nothing logged yet — how's the day starting?"))
+
+    for color, text in msgs[:2]:
+        st.markdown(
+            f'<p style="font-family:\'Courier Prime\',monospace;font-size:14px;'
+            f'color:{color};margin:2px 0;line-height:1.4;">{text}</p>',
+            unsafe_allow_html=True,
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: WEEKLY BUFFER
+# ─────────────────────────────────────────────────────────────────────────────
+def render_weekly():
+    w = st.session_state.weekly
+    if not w:
+        return
+ 
+    st.markdown(_DIV, unsafe_allow_html=True)
+    wg   = w.get("weekly_goals", {})
+    days = w.get("days_logged", 0)
     
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-                :root {{
-                    --hud-text: white;
-                    --hud-glass-border: rgba(255, 255, 255, 0.3);
-                    --hud-glass-shadow: inset 0 0 20px rgba(255,255,255,0.1), 0 10px 30px rgba(0, 0, 0, 0.1);
-                    --hud-orb-border: rgba(255, 255, 255, 0.4);
-                    --hud-orb-shadow: inset 0 0 15px rgba(255,255,255,0.3), 0 10px 25px rgba(0, 0, 0, 0.2);
-                }}
-
-                @media (prefers-color-scheme: light) {{
-                    :root {{
-                        --hud-text: #111827;
-                        --hud-glass-border: rgba(0, 0, 0, 0.3);
-                        --hud-glass-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 10px 30px rgba(255, 255, 255, 0.1);
-                        --hud-orb-border: rgba(0, 0, 0, 0.4);
-                        --hud-orb-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 10px 25px rgba(255, 255, 255, 0.2);
-                    }}
-                }}
-
-                body {{
-                    margin: 0;
-                    padding: 0;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    background-color: transparent;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    overflow: hidden;
-                }}
-                .venn-container {{
-                    position: relative;
-                    width: 550px;
-                    height: 500px;
-                    perspective: 1000px;
-                }}
-                .macro-card {{
-                    width: 260px;
-                    height: 260px;
-                    cursor: pointer;
-                    position: absolute;
-                    transform-style: preserve-3d;
-                    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-                    z-index: 1;
-                }}
-                .macro-card.flipped {{
-                    transform: rotateY(180deg);
-                    z-index: 10;
-                }}
-                .card-face {{
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    backface-visibility: hidden;
-                    border-radius: 50%;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    text-align: center;
-                    border: 1px solid var(--hud-glass-border);
-                    box-shadow: var(--hud-glass-shadow);
-                    backdrop-filter: blur(25px);
-                    -webkit-backdrop-filter: blur(25px);
-                    color: var(--hud-text);
-                    padding: 30px;
-                    box-sizing: border-box;
-                }}
-                .card-front {{
-                    z-index: 2;
-                }}
-                .card-back {{
-                    transform: rotateY(180deg);
-                    background: rgba(255, 255, 255, 0.1);
-                }}
-                .macro-val {{
-                    font-size: 2.8rem;
-                    font-weight: 800;
-                    margin: 0;
-                    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                }}
-                .macro-label {{
-                    font-size: 1.2rem;
-                    opacity: 0.9;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                    margin-bottom: 10px;
-                    font-weight: 600;
-                }}
-                .macro-goal {{
-                    font-size: 0.9rem;
-                    opacity: 0.7;
-                }}
-                .breakdown-title {{
-                    font-size: 1.4rem;
-                    font-weight: bold;
-                    margin-bottom: 12px;
-                }}
-                .breakdown-item {{
-                    font-size: 1rem;
-                    margin: 6px 0;
-                }}
-                .calorie-orb {{
-                    position: absolute;
-                    top: 228.6px;
-                    left: 215px;
-                    width: 120px;
-                    height: 120px;
-                    border-radius: 50%;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    text-align: center;
-                    border: 1px solid var(--hud-orb-border);
-                    box-shadow: var(--hud-orb-shadow);
-                    backdrop-filter: blur(25px);
-                    -webkit-backdrop-filter: blur(25px);
-                    color: var(--hud-text);
-                    z-index: 20;
-                    pointer-events: none;
-                    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%), rgba(255, 255, 255, 0.3);
-                }}
-                .orb-val {{
-                    font-size: 1.3rem;
-                    font-weight: 800;
-                    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                }}
-                .orb-label {{
-                    font-size: 0.7rem;
-                    text-transform: uppercase;
-                    opacity: 0.8;
-                    letter-spacing: 1px;
-                }}
-                .macro-alert {{
-                    position: absolute;
-                    top: -25px;
-                    font-size: 1.5rem;
-                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-                    z-index: 11;
-                }}
-            </style>
+    # --- Insulin Guardrail Logic ---
+    c, g = st.session_state.consumed, st.session_state.goals
     
-        </head>
-        <body>
-            <div class="venn-container">
-                <div class="calorie-orb">
-                    <div class="orb-label">Total</div>
-                    <div class="orb-val">🔥 {total_cals:.1f} kcal</div>
-                </div>
-        """
+    # 7-day capacity
+    w_carb_max = g.get("carbs", 200.0) * 7
+    w_fat_max = g.get("fat", 65.0) * 7
     
-    for item in hud_config:
-        val = consumed.get(item['key'], 0.0)
-        goal = goals.get(item['key'], 1.0)
-        ratio = val / goal if goal > 0 else 0
-        clamped_ratio = min(ratio, 1.0)
-        
-        # Dynamic fill: from bottom (180deg)
-        # If val is 0, we use a transparent fallback
-        if val > 0:
-            fill_color = item['color'].replace('0.2', '0.5') # Slightly more opaque for fill
-            gloss_bg = f"conic-gradient(from 180deg, {fill_color} {clamped_ratio*100:.0f}%, transparent {clamped_ratio*100:.0f}%), radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%), {item['color']}"
-        else:
-            gloss_bg = f"radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%), {item['color']}"
-        
-        # Alert Logic
-        alert_html = ""
-        if ratio > 1.0:
-            if item['key'] == 'protein':
-                alert_html = '<div class="macro-alert">🟢!</div>'
-            else:
-                alert_html = '<div class="macro-alert">⚠️</div>'
-        
-        html_content += f"""
-        <div class="macro-card" style="{item['pos']}" onclick="this.classList.toggle('flipped')">
-            {alert_html}
-            <div class="card-face card-front" style="background: {gloss_bg};">
-                <div class="macro-label">{item['label']}</div>
-                <div class="macro-val">{val:.1f}{item['unit']}</div>
-                <div class="macro-goal">Goal: {goal:.1f}{item['unit']}</div>
-            </div>
-            <div class="card-face card-back" style="background: {item['color']};">
-                <div class="breakdown-title">{item['label']}</div>
-                <div class="breakdown-item">Total: {val:.1f}{item['unit']}</div>
-                <div class="breakdown-item">{item['sub']}</div>
-            </div>
-        </div>
-        """
-        
-    html_content += """
-        </div>
-    </body>
-    </html>
-    """
-    return html_content
-
-# --- Voice Input Handling ---
-query_params = st.query_params
-voice_text = query_params.get("voice_text")
-
-# Initialize session state for reruns
-if "log_success" not in st.session_state:
-    st.session_state.log_success = False
-if "polling_meal_id" not in st.session_state:
-    st.session_state.polling_meal_id = None
-if "extracted_items" not in st.session_state:
-    st.session_state.extracted_items = []
-
-if st.session_state.log_success:
-    st.session_state.log_success = False
-    st.rerun()
-
-st.title("🥗 MacroManager")
-
-# --- HERO SECTION: Daily Totals ---
-st.subheader("📅 Daily Progress")
-try:
-    response = sync_get(f"{API_URL}/summary")
-    if response.status_code == 200:
-        full_data = response.json()
-        
-        # Backward compatibility: handle both new (wrapped in 'daily') and old structures
-        if 'daily' in full_data:
-            daily_data = full_data.get('daily', {})
-            weekly_data = full_data.get('weekly', {})
-        else:
-            daily_data = full_data
-            weekly_data = {}
-            
-        consumed = daily_data.get('consumed', {})
-        goals = daily_data.get('goals', {})
-        
-        # Render Interactive Glass HUD with dynamic ceilings
-        dynamic_goals = goals.copy()
-        
-        # Capped Rollover (Cheat Bank) Calculations
-        days_active = weekly_data.get("days_logged", 1)
-        daily_carb_goal = goals.get("carbs", 200.0)
-        daily_fat_goal = goals.get("fat", 65.0)
-        
-        carb_savings = max(0, (daily_carb_goal * days_active) - weekly_data.get("carbs", 0.0))
-        carb_cheat_bank = min(carb_savings, daily_carb_goal * 0.3) if carb_savings > 0 else 0.0
-        dynamic_goals['carbs'] = daily_carb_goal + carb_cheat_bank
-        
-        fat_savings = max(0, (daily_fat_goal * days_active) - weekly_data.get("fat", 0.0))
-        fat_cheat_bank = min(fat_savings, daily_fat_goal * 0.3) if fat_savings > 0 else 0.0
-        dynamic_goals['fat'] = daily_fat_goal + fat_cheat_bank
-        
-        if carb_cheat_bank > (daily_carb_goal * 0.25) or fat_cheat_bank > (daily_fat_goal * 0.25):
-            st.success("🎉 You've been consistent! You have a cheat meal banked (up to +30% macros today).")
-
-        hud_html = render_macro_hud(consumed, dynamic_goals)
-        st.iframe(src=f"data:text/html;base64,{base64.b64encode(hud_html.encode()).decode()}", height=500)
-
-        # --- 🗓️ 7-Day Rolling Buffer ---
-        st.subheader("🗓️ 7-Day Rolling Buffer")
-        
-        # Fix: Always use 7-day capacity as visual maximum
-        w_carb_max = goals.get("carbs", 200.0) * 7
-        w_fat_max = goals.get("fat", 65.0) * 7
-        
-        w_carb_consumed = weekly_data.get("carbs", 0.0)
-        w_fat_consumed = weekly_data.get("fat", 0.0)
-        
-        # Render Progress Bars (capped at 1.0)
-        st.markdown("**Weekly Carbs**")
-        st.progress(min(w_carb_consumed / w_carb_max, 1.0) if w_carb_max > 0 else 0.0, text=f"{w_carb_consumed:.1f} / {w_carb_max:.1f}g")
-        
-        st.markdown("**Weekly Fats**")
-        st.progress(min(w_fat_consumed / w_fat_max, 1.0) if w_fat_max > 0 else 0.0, text=f"{w_fat_consumed:.1f} / {w_fat_max:.1f}g")
-        
-        # Insulin Ceiling Calculations
-        daily_carb_goal = goals.get("carbs", 200.0)
-        daily_fat_goal = goals.get("fat", 65.0)
-        today_carb = consumed.get('carbs', 0.0)
-        today_fat = consumed.get('fat', 0.0)
-        
-        # Carb Ceiling
-        standard_carb_buffer_left = w_carb_max - w_carb_consumed
-        todays_carb_ceiling_left = (daily_carb_goal * 1.3) - today_carb
-        allowable_carb_today = min(standard_carb_buffer_left, todays_carb_ceiling_left)
-        
-        # Fat Ceiling
-        standard_fat_buffer_left = w_fat_max - w_fat_consumed
-        todays_fat_ceiling_left = (daily_fat_goal * 1.3) - today_fat
-        allowable_fat_today = min(standard_fat_buffer_left, todays_fat_ceiling_left)
-        
-        if todays_carb_ceiling_left <= 0 or todays_fat_ceiling_left <= 0:
-            st.error("🚨 130% Daily Limit Reached. Weekly buffer locked to prevent insulin spike.")
-        else:
-            st.info(f"**Allowable today (Insulin Guardrail):** Carbs: {max(0, allowable_carb_today):.1f}g | Fats: {max(0, allowable_fat_today):.1f}g")
-
-        # Empathetic Messaging
-        daily_carb_limit = goals.get("carbs", 200.0)
-        daily_prot_limit = goals.get("protein", 150.0)
-        
-        if consumed.get('carbs', 0) > daily_carb_limit and w_carb_consumed < w_carb_max:
-            st.info("You are over your daily carbs, but don't stress! You are still perfectly within your weekly buffer. Enjoy your meal.")
-        
-        if consumed.get('protein', 0) > daily_prot_limit:
-            st.success("Great job hitting high protein! This helps stabilize your blood sugar.")
-        
-        with st.expander("🧬 Profile & Onboarding"):
-            st.markdown("### 🧬 PCOS Baseline Calibrator")
-            bio_text = st.text_area("Tell MacroManager about yourself", 
-                                   placeholder="e.g., 'I am 28 years old, 160cm, 65kg, want to maintain my weight, and work a desk job'")
-            
-            if st.button("Calibrate Macros"):
-                if bio_text:
-                    with st.spinner("Applying PCOS metabolic adjustments..."):
-                        try:
-                            # Use asyncio.run to call the async helper from sync Streamlit
-                            response = asyncio.run(async_onboard(bio_text))
-                            if response.status_code == 200:
-                                macros = response.json().get("macros", {})
-                                st.success(f"Calibration complete! 🎯\n\n**Target Calories:** {macros.get('calories')} kcal\n\n**Macros:** P: {macros.get('protein')}g | C: {macros.get('carbs')}g | F: {macros.get('fat')}g")
-                                st.rerun()
-                            else:
-                                st.error(f"Calibration failed: {response.json().get('detail', 'Unknown error')}")
-                        except Exception as e:
-                            st.error(f"Connection Error: {e}")
-                else:
-                    st.warning("Please provide your bio details first.")
-
-        with st.expander("⚙️ Goal Settings"):
-
-
-
-            g_col1, g_col2 = st.columns(2)
-            with g_col1:
-                g_prot = st.number_input("Protein (g)", value=float(goals.get("protein", 150.0)), min_value=0.0)
-                g_carb = st.number_input("Carbs (g)", value=float(goals.get("carbs", 200.0)), min_value=0.0)
-            with g_col2:
-                g_fat = st.number_input("Fat (g)", value=float(goals.get("fat", 65.0)), min_value=0.0)
-                g_cal = st.number_input("Calories (kcal)", value=float(goals.get("calories", 2000.0)), min_value=0.0)
-            
-            if st.button("Save Goals"):
-                payload = {"protein": g_prot, "carbs": g_carb, "fat": g_fat, "calories": g_cal}
-                sync_post(f"{API_URL}/goals", payload)
-                st.toast("Goals updated! 🎯")
-                st.rerun()
-
-        with st.expander("💾 Sovereign Memory"):
-            import os
-            memory_path = "app/data/personal_glossary.md"
-
-            # Read current memory
-            if os.path.exists(memory_path):
-                with open(memory_path, "r", encoding="utf-8") as f:
-                    current_memory = f.read()
-            else:
-                current_memory = ""
-
-            st.caption("This is your AI's long-term memory. Edit it to change how Gemma understands your routines. Limited to 1500 characters to ensure lightning-fast responses.")
-
-            # The editable text area with a hard limit (~350 tokens)
-            updated_memory = st.text_area("What should Gemma know about you?", value=current_memory, height=200, max_chars=1500)
-
-            if st.button("Update Memory"):
-                with open(memory_path, "w", encoding="utf-8") as f:
-                    f.write(updated_memory)
-                st.success("Memory updated successfully!")
-                st.rerun()
-
-        with st.expander("🧠 Clinical Copilot"):
-            st.markdown("### 🧠 PCOS Clinical Copilot")
-            st.markdown("Get personalized meal suggestions based on your remaining macros and clinical knowledge.")
-            
-            # Calculate Remaining Macros
-            remaining = {
-                "protein": max(0.0, goals.get("protein", 0.0) - consumed.get("protein", 0.0)),
-                "carbs": max(0.0, goals.get("carbs", 0.0) - consumed.get("carbs", 0.0)),
-                "fat": max(0.0, goals.get("fat", 0.0) - consumed.get("fat", 0.0)),
-                "calories": max(0.0, goals.get("calories", 0.0) - consumed.get("calories", 0.0)),
-            }
-            
-            user_query = st.text_input("Ask the Copilot:", placeholder="e.g., I had 120g carbs at breakfast, what should I eat for dinner?")
-            
-            if st.button("Consult Copilot"):
-                if user_query:
-                    with st.spinner("Consulting Clinical Knowledge Base..."):
-                        try:
-                            # Using sync_post as it's the available helper in this file
-                            resp = sync_post(f"{API_URL}/planner", {
-                                "user_query": user_query,
-                                "remaining_macros": remaining
-                            })
-                            if resp.status_code == 200:
-                                st.markdown(resp.json().get("suggestion", "Error generating response."))
-                            else:
-                                st.error(f"Copilot Error: {resp.json().get('detail', 'Unknown error')}")
-                        except Exception as e:
-                            st.error(f"Connection Error: {e}")
-                else:
-                    st.warning("Please enter a question first.")
-            
-            st.caption("⚠️ Medical Disclaimer: MacroManager is an AI-powered educational tool. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your physician or endocrinologist before making significant changes to your diet, especially if you have an underlying medical condition.")
-
+    w_carb_consumed = w.get("carbs", 0.0)
+    w_fat_consumed = w.get("fat", 0.0)
+    
+    # Daily ceiling (130%)
+    daily_carb_goal = g.get("carbs", 200.0)
+    daily_fat_goal = g.get("fat", 65.0)
+    today_carb = c.get("carbs", 0.0)
+    today_fat = c.get("fat", 0.0)
+    
+    # Carb Guardrail
+    carb_buffer_left = w_carb_max - w_carb_consumed
+    carb_ceiling_left = (daily_carb_goal * 1.3) - today_carb
+    allowable_carb = min(carb_buffer_left, carb_ceiling_left)
+    
+    # Fat Guardrail
+    fat_buffer_left = w_fat_max - w_fat_consumed
+    fat_ceiling_left = (daily_fat_goal * 1.3) - today_fat
+    allowable_fat = min(fat_buffer_left, fat_ceiling_left)
+    
+    day_label = f"{days} day{'s' if days != 1 else ''} logged"
+    inner = (
+        _weekly_bar("protein", w.get("protein", 0), wg.get("protein", 1), "#7F77DD", "#E1DEFC") +
+        _weekly_bar("carbs",   w.get("carbs", 0),   wg.get("carbs", 1),   "#EF9F27", "#FCE8BE") +
+        _weekly_bar("fat",     w.get("fat", 0),     wg.get("fat", 1),     "#1D9E75", "#B5EDD8")
+    )
+    
+    _section_header("this week", sub=day_label)
+    st.markdown(f'<div style="margin:0 0 16px;">{inner}</div>', unsafe_allow_html=True)
+    
+    st.markdown('<p style="font-size:12px; color:#7a6d5a; margin-bottom:4px; font-weight:bold;">Insulin Guardrail (Allowable Today):</p>', unsafe_allow_html=True)
+    if carb_ceiling_left <= 0 or fat_ceiling_left <= 0:
+        st.error("🚨 130% Daily Limit Reached. Weekly buffer locked to prevent insulin spike.")
     else:
-        st.error("Could not fetch summary data.")
+        st.info(f"Carbs: {max(0, allowable_carb):.1f}g | Fats: {max(0, allowable_fat):.1f}g")
 
-except Exception as e:
-    st.error(f"Connection Error: {e}")
 
-# --- Async Polling UI ---
-if st.session_state.polling_meal_id:
-    with st.status("🚀 Resolving Nutrition...", expanded=True) as status:
-        st.write("Extracted items:")
-        for item in st.session_state.extracted_items:
-            st.write(f"- {item['name']} ({item['grams']}g) ... ⏳")
-        
-        # Poll for completion
-        import time
-        meal_id = st.session_state.polling_meal_id
-        completed = False
-        for _ in range(30): # 30 second timeout
-            time.sleep(1)
-            resp = sync_get(f"{API_URL}/log/status/{meal_id}")
-            if resp.status_code == 200 and resp.json()["status"] == "completed":
-                completed = True
-                break
-        
-        if completed:
-            status.update(label="✅ Meal Logged!", state="complete", expanded=False)
-            st.session_state.polling_meal_id = None
-            st.session_state.extracted_items = []
-            st.session_state.log_success = True
-            st.rerun()
-        else:
-            status.update(label="❌ Resolution Timed Out", state="error")
-            st.session_state.polling_meal_id = None
-            st.session_state.extracted_items = []
 
-st.divider()
 
-# --- LOGGING SECTION ---
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: FOOD LOG
+# ─────────────────────────────────────────────────────────────────────────────
+_MIC_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { margin:0; padding:0; background:transparent; overflow:hidden; 
+          display:flex; justify-content:center; align-items:center; height:48px; }
+  #btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #EDEFF1;
+    border: 1.5px solid rgba(42, 31, 16, 0.30);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+    outline: none;
+  }
+  #btn svg { width: 20px; height: 20px; fill: #2a1f10; }
+  #btn:hover { background: #E2E6E9; }
+  #btn:active { background: #D7DBDF; }
+  #btn.recording {
+    background: #FFEBEB;
+    border-color: #C83232;
+    animation: pulse 1.2s infinite;
+  }
+  #btn.recording svg { fill: #C83232; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(200, 50, 50, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(200, 50, 50, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(200, 50, 50, 0); }
+  }
+</style>
+</head>
+<body>
+<button id="btn" onclick="toggle()" title="Tap to speak">
+  <svg id="icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+</button>
+<script>
+var rec = null, on = false;
+function toggle() {
+  var b = document.getElementById('btn');
+  var i = document.getElementById('icon');
+  if (on) { rec && rec.stop(); return; }
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Speech recognition not supported in this browser.');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  rec = new SR();
+  rec.lang = 'en-IN';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  rec.onstart = function() {
+    on = true;
+    b.classList.add('recording');
+    i.innerHTML = '<path d="M6 6h12v12H6z"/>';
+  };
+  rec.onresult = function(e) {
+    var t = Array.from(e.results).map(r => r[0].transcript).join('');
+    if (t.trim()) {
+      try {
+        var ta = window.parent.document.querySelector('div[data-testid="stTextArea"] textarea');
+        if (ta) {
+          var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          setter.call(ta, t);
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      } catch(err) {
+        navigator.clipboard.writeText(t);
+      }
+    }
+  };
+  rec.onend = function() {
+    on = false;
+    b.classList.remove('recording');
+    i.innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
+  };
+  rec.onerror = function(e) {
+    console.error(e);
+    rec.stop();
+  };
+  rec.start();
+}
+</script>
+</body>
+</html>"""
 
-st.subheader("📝 Log Food")
-tabs = st.tabs(["⌨️ Text", "📸 Camera"])
 
-with tabs[0]:
-    # We use columns to place the record button next to the text input
-    with st.form("log_form"):
-        col_type, col_input, col_voice = st.columns([0.2, 0.65, 0.15])
-        
-        with col_type:
-            meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack", "General"])
-        
-        with col_input:
-            user_input = st.text_input("What did you eat?", value=voice_text, placeholder="e.g. 200g chicken breast and 100g brown rice")
-        
-        with col_voice:
-            # Voice recording button using Web Speech API
-            # We use a custom HTML component to handle the 'Hold to Record' logic
-            st.iframe(src=f"{API_URL}/static/voice_btn.html", height=70)
-     
-        submit_button = st.form_submit_button("Log Meal")
+
+def render_copilot():
+    st.markdown(_DIV, unsafe_allow_html=True)
+    _section_header("clinical copilot")
     
-    success = False
-    if submit_button:
-        if user_input:
-            try:
-                with st.spinner("Extracting items..."):
-                    payload = {"text": user_input, "meal_type": meal_type, "is_voice": False}
-                    response = sync_post(f"{API_URL}/log/start", payload)
-                    if response.status_code == 200:
-                        data = response.json()
-                        st.session_state.polling_meal_id = data["meal_id"]
-                        st.session_state.extracted_items = data["items"]
-                        st.rerun()
-                    else:
-                        st.error(f"Error: {response.json().get('detail', 'Failed to start logging')}")
-            except Exception as e:
-                st.error(f"Connection Error: {e}")
+    c, g = st.session_state.consumed, st.session_state.goals
+    remaining = {
+        "protein": max(0.0, g["protein"] - c["protein"]),
+        "carbs": max(0.0, g["carbs"] - c["carbs"]),
+        "fat": max(0.0, g["fat"] - c["fat"]),
+        "calories": max(0.0, g["calories"] - c["calories"]),
+    }
+    
+    user_query = st.text_input("ask the copilot:", placeholder="e.g. I have 100g carbs left, what's a good dinner?", key="copilot_q")
+    
+    if st.button("consult →", key="btn_copilot", use_container_width=True):
+        if user_query:
+            with st.spinner("consulting clinical knowledge base…"):
+                try:
+                    suggestion = api_ask_copilot(user_query, remaining)
+                    st.markdown(f'<div style="background:rgba(255,255,255,0.5); padding:10px; border-radius:4px; border-left:3px solid #7F77DD; margin-top:10px; color:#7a6d5a;">{suggestion}</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Copilot error: {e}")
         else:
-            st.warning("Please enter some text first.")
+            st.warning("Please enter a question.")
 
+def render_food_log():
+    st.markdown(_DIV, unsafe_allow_html=True)
+    _section_header("log a meal")
 
+    tab_text, tab_cam = st.tabs(["✏️  text / voice", "📷  camera"])
 
-# Automatic Trigger for Voice Logging
-if voice_text:
-        try:
-            payload = {"text": voice_text, "meal_type": "General", "is_voice": True} # Defaulting to General for voice
-            response = sync_post(f"{API_URL}/log/start", payload)
-            if response.status_code == 200:
-                data = response.json()
-                st.session_state.polling_meal_id = data["meal_id"]
-                st.session_state.extracted_items = data["items"]
-                st.toast("Voice extraction started! 🎤", icon="✅")
+    # ── Text / Voice ──────────────────────────────────────
+    with tab_text:
+        meal_type = st.selectbox(
+            "meal type",
+            ["breakfast", "lunch", "dinner", "snack"],
+            key="mt_text",
+            label_visibility="collapsed",
+        )
+        st.markdown(
+            '<p style="font-size:15px;color:#9a8d7c;margin:8px 0 4px;">'
+            'what did you eat? (tap mic to speak)</p>',
+            unsafe_allow_html=True,
+        )
+        col_input, col_mic = st.columns([4.0, 0.5], vertical_alignment="center")
+        with col_input:
+            user_text = st.text_area(
+                "what did you eat?",
+                placeholder="e.g. 2 rotis with dal and a small bowl of rice…",
+                height=56,
+                key="log_text",
+                label_visibility="collapsed",
+            )
+        with col_mic:
+            # Convert HTML string to data URI for st.iframe to avoid deprecation warning
+            mic_b64 = base64.b64encode(_MIC_HTML.encode()).decode()
+            st.iframe(f"data:text/html;base64,{mic_b64}", height=48)
+
+        log_clicked = st.button("log it →", key="btn_log", use_container_width=True)
+
+        if log_clicked:
+            if user_text.strip():
+                try:
+                    meal_id = api_start_log(user_text.strip(), meal_type)
+                    st.session_state.pending_meal_id = meal_id
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Couldn't start log: {exc}")
             else:
-                st.error(f"Voice log failed: {response.json().get('detail')}")
-                
-            # Clear query params
-            st.query_params.clear()
-        except Exception as e:
-            st.error(f"Voice log error: {e}")
+                st.warning("Describe what you ate first.")
+
+    # ── Camera ────────────────────────────────────────────
+    with tab_cam:
+        env = st.selectbox(
+            "setting",
+            ["home", "restaurant", "street food", "packaged"],
+            key="cam_env",
+            label_visibility="collapsed",
+        )
+        hint = st.text_input(
+            "hint (optional)",
+            placeholder="e.g. South Indian thali",
+            key="cam_hint",
+            label_visibility="collapsed",
+        )
+        img = st.camera_input("photo", label_visibility="collapsed")
+        if img is not None:
+            b64 = base64.b64encode(img.read()).decode()
+            if st.button("analyse photo →", key="btn_vision"):
+                with st.spinner("Analysing image…"):
+                    try:
+                        api_vision_log(b64, env, hint or "")
+                        fetch_summary()
+                        st.success("Photo logged.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Vision log failed: {exc}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: JOURNAL
+# ─────────────────────────────────────────────────────────────────────────────
+def render_journal():
+    st.markdown('<div class="journal-section-box">', unsafe_allow_html=True)
+    st.markdown(_DIV, unsafe_allow_html=True)
+    _section_header("food journal")
+    
+    # --- Filters ---
+    col_date, col_type, col_clear = st.columns([2, 1, 1])
+    with col_date:
+        selected_date = st.date_input("date", value=datetime.now(), key="journal_date").strftime("%Y-%m-%d")
+    with col_type:
+        selected_type = st.selectbox("meal type", ["All", "breakfast", "lunch", "dinner", "snack"], key="journal_type")
+    with col_clear:
+        if st.button("Clear Day", key="btn_clear_day", help="Clear all meals for the selected date", use_container_width=True):
+            try:
+                api_clear_meals(selected_date)
+                fetch_summary(selected_date)
+                st.toast(f"Cleared meals for {selected_date}")
+                st.rerun()
+            except Exception as e:
+                err_msg = str(e)
+                if "404" in err_msg:
+                    st.error("Clear failed: API endpoint not found (404). Please restart the server.")
+                else:
+                    st.error(f"Clear failed: {err_msg[:100]}")
+    
+    try:
+        params = {"date": selected_date, "meal_type": selected_type}
+        response = sync_get(f"{API_URL}/meals", params=params)
         
+        if response.status_code != 200:
+            st.error("Could not fetch journal data.")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
+            
+        meals = response.json()
+        
+        if not meals:
+            st.info(f"No items logged on {selected_date}.")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
+        
+        # Group by type, include "General"
+        grouped = {}
+        for m in meals:
+            m_type = m.get("type") or "General"
+            if m_type not in grouped:
+                grouped[m_type] = []
+            grouped[m_type].append(m)
+
+        # --- Scrollable Container ---
+        with st.container(height=500):
+            if not grouped:
+                st.info("No categorized meals found for this date.")
+            else:
+                for m_type, m_list in grouped.items():
+                    st.markdown(f"**{m_type.capitalize()}**")
+                    
+                    # Table Header - Sticky Wrapper
+                    st.markdown('<div style="position: sticky; top: 0; z-index: 10; background: white; padding-bottom: 10px; border-bottom: 1px solid rgba(42,31,16,0.1);">', unsafe_allow_html=True)
+                    h_col1, h_col2, h_col3, h_col4, h_col5, h_col6, h_col7 = st.columns([0.35, 0.2, 0.15, 0.15, 0.15, 0.1, 0.1])
+                    with h_col1: st.markdown('<div class="wrap"><small>Name</small></div>', unsafe_allow_html=True)
+                    with h_col2: st.markdown('<div class="nowrap"><small>Qty (g)</small></div>', unsafe_allow_html=True)
+                    with h_col3: st.markdown('<div class="nowrap"><small>P (g)</small></div>', unsafe_allow_html=True)
+                    with h_col4: st.markdown('<div class="nowrap"><small>C (g)</small></div>', unsafe_allow_html=True)
+                    with h_col5: st.markdown('<div class="nowrap"><small>F (g)</small></div>', unsafe_allow_html=True)
+                    with h_col6: pass
+                    with h_col7: pass
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    for m in m_list:
+                        items = m['items']
+                        for i, item in enumerate(items):
+                            # State Check for Inline Edit
+                            is_editing = (st.session_state.get("editing_meal") and 
+                                          st.session_state.editing_meal["id"] == m['id'] and 
+                                          st.session_state.editing_meal["index"] == i)
+                            
+                            # Rounding Logic
+                            p_val = int(math.floor(item['macros'].get('protein', 0)))
+                            c_val = int(math.ceil(item['macros'].get('carbs', 0)))
+                            f_val = int(math.ceil(item['macros'].get('fat', 0)))
+                            g_val = int(round(item['grams']))
+                            
+                            # Row for each item
+                            r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7 = st.columns([0.35, 0.2, 0.15, 0.15, 0.15, 0.1, 0.1])
+                            with r_col1: st.markdown(f'<div class="wrap">**{item["name"]}**</div>', unsafe_allow_html=True)
+                            
+                            with r_col2:
+                                if is_editing:
+                                    # Inline Number Input
+                                    new_g = st.number_input("g", value=float(item['grams']), key=f"in_{m['id']}_{i}", label_visibility="collapsed")
+                                else:
+                                    st.markdown(f'<div class="nowrap">{g_val}</div>', unsafe_allow_html=True)
+                                    
+                            with r_col3: st.markdown(f'<div class="nowrap">{p_val}</div>', unsafe_allow_html=True)
+                            with r_col4: st.markdown(f'<div class="nowrap">{c_val}</div>', unsafe_allow_html=True)
+                            with r_col5: st.markdown(f'<div class="nowrap">{f_val}</div>', unsafe_allow_html=True)
+                            
+                            with r_col6: 
+                                if is_editing:
+                                    # Save Action
+                                    if st.button("✓", key=f"save_{m['id']}_{i}", help="Save changes"):
+                                        # Recalculate based on the input value
+                                        ratio = new_g / item['grams'] if item.get('grams', 0) > 0 else 1
+                                        
+                                        # 1. Construct the edited item strictly
+                                        old_macros = item.get('macros') if isinstance(item.get('macros'), dict) else {}
+                                        old_sub = item.get('sub_macros') if isinstance(item.get('sub_macros'), dict) else {}
+                                        
+                                        new_item = {
+                                            "name": str(item.get("name", "Unknown")),
+                                            "grams": float(new_g),
+                                            "cals": float(item.get("cals", 0) * ratio),
+                                            "macros": {
+                                                "protein": float(old_macros.get("protein", 0) * ratio),
+                                                "carbs": float(old_macros.get("carbs", 0) * ratio),
+                                                "fat": float(old_macros.get("fat", 0) * ratio),
+                                            },
+                                            "sub_macros": {
+                                                k: float(v * ratio) if isinstance(v, (int, float)) else v 
+                                                for k, v in old_sub.items()
+                                            } if old_sub else None,
+                                            "verified": bool(item.get("verified", False))
+                                        }
+                                        
+                                        # 2. Clean ALL items in the list to ensure they match the server schema
+                                        cleaned_list = []
+                                        for idx, itm in enumerate(items):
+                                            if idx == i:
+                                                cleaned_list.append(new_item)
+                                            else:
+                                                m_data = itm.get('macros') if isinstance(itm.get('macros'), dict) else {}
+                                                s_data = itm.get('sub_macros') if isinstance(itm.get('sub_macros'), dict) else {}
+                                                
+                                                cleaned_list.append({
+                                                    "name": str(itm.get("name", "Unknown")),
+                                                    "grams": float(itm.get("grams", 0)),
+                                                    "cals": float(itm.get("cals", 0)),
+                                                    "macros": {
+                                                        "protein": float(m_data.get("protein", 0)),
+                                                        "carbs": float(m_data.get("carbs", 0)),
+                                                        "fat": float(m_data.get("fat", 0)),
+                                                    },
+                                                    "sub_macros": s_data if s_data else None,
+                                                    "verified": bool(itm.get("verified", False))
+                                                })
+                                        
+                                        api_update_meal(m['id'], cleaned_list)
+                                        fetch_summary(selected_date)
+                                        del st.session_state.editing_meal
+                                        st.rerun()
+                                else:
+                                    # Edit Action
+                                    if st.button("✏️", key=f"edit_{m['id']}_{i}", help="Edit item"):
+                                        st.session_state.editing_meal = {"id": m['id'], "index": i, "items": items}
+                                        st.rerun()
+                                        
+                            with r_col7: 
+                                if st.button("🗑️", key=f"del_{m['id']}_{i}", help="Delete item"):
+                                    updated_items = items[:i] + items[i+1:]
+                                    if updated_items:
+                                        api_update_meal(m['id'], updated_items)
+                                    else:
+                                        api_delete_meal(m['id'])
+                                    fetch_summary(selected_date)
+                                    st.rerun()
+
+        
+        # Clear editing state if it persists across page changes or something
+        if st.session_state.get("current_page") == "onboarding":
+            if "editing_meal" in st.session_state:
+                del st.session_state.editing_meal
+
+    except Exception as e:
+        st.error(f"Journal Error: {e}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDER: MEMORY
+# ─────────────────────────────────────────────────────────────────────────────
+def render_memory_section():
+    st.markdown(_DIV, unsafe_allow_html=True)
+    _section_header("remember this about me")
+    
+    if not st.session_state.memory_content:
+        try:
+            st.session_state.memory_content = api_fetch_memory()
+        except Exception:
+            pass
+
+    mem_text = st.text_input("add a new fact:", placeholder="e.g. My blue bowl is 200ml", key="mem_input")
+    if st.button("remember this →", key="btn_mem_save", use_container_width=True):
+        if mem_text.strip():
+            with st.spinner("Integrating..."):
+                new_mem = st.session_state.memory_content + "\n" + mem_text.strip()
+                updated = api_save_memory(new_mem)
+                st.session_state.memory_content = updated
+                st.success("Memory updated.")
+                time.sleep(1)
+                st.rerun()
+        else:
+            st.warning("Please enter something to remember.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: ONBOARDING
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: ONBOARDING
+# ─────────────────────────────────────────────────────────────────────────────
+def render_onboarding_page():
+    st.markdown('<div style="margin-top:12px;"></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="'
+        f'background: linear-gradient(135deg, rgba(127, 119, 221, 0.16) 0%, rgba(239, 159, 39, 0.16) 50%, rgba(29, 158, 117, 0.16) 100%);'
+        f'border: 1.5px solid rgba(42, 31, 16, 0.12);'
+        f'border-radius: 12px;'
+        f'padding: 22px 16px;'
+        f'text-align: center;'
+        f'margin-bottom: 24px;'
+        f'box-shadow: 0 4px 24px rgba(42, 31, 16, 0.05);'
+        f'backdrop-filter: blur(12px);'
+        f'">'
+        f'<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:28px;'
+        f'color:#2a1f10;margin:0;line-height:1.1;">📓 MacroManager</p>'
+        f'<p style="font-size:14px;color:#7a6d5a;margin:6px 0 0 0;font-weight:500;letter-spacing:0.3px;">'
+        f'PCOS goals & calibration</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:17px;'
+        'color:#2a1f10;margin:0 0 6px;">PCOS baseline calibrator</p>'
+        '<p style="font-size:13px;color:#9a8d7c;margin-bottom:12px;">'
+        'Describe your profile for personalised PCOS macronutrient targets.</p>',
+        unsafe_allow_html=True,
+    )
+    bio = st.text_area(
+        "tell us about yourself",
+        placeholder=(
+            "e.g. 26F, 58 kg, 163 cm, lightly active, "
+            "managing PCOS, want to reduce insulin resistance…"
+        ),
+        height=95,
+        key="bio_text",
+        label_visibility="collapsed"
+    )
+    if st.button("calculate my goals →", key="btn_onboard", use_container_width=True):
+        if bio.strip():
+            with st.spinner("Calculating PCOS-adjusted goals…"):
+                try:
+                    res = api_onboard(bio.strip())
+                    mx  = res.get("macros", {})
+                    st.success(
+                        f"Goals set — Protein {int(mx.get('protein', 0))}g · "
+                        f"Carbs {int(mx.get('carbs', 0))}g · "
+                        f"Fat {int(mx.get('fat', 0))}g · "
+                        f"{int(mx.get('calories', 0))} kcal"
+                    )
+                    fetch_summary()
+                    time.sleep(1.5)
+                    st.session_state.current_page = "dashboard"
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Onboarding failed: {exc}")
+        else:
+            st.warning("Fill in your details first.")
+
+    st.markdown(
+        '<hr style="border:none;border-top:1px solid rgba(42,31,16,0.12);margin:24px 0;"/>'
+        '<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:17px;'
+        'color:#2a1f10;margin:0 0 14px;">manual override</p>',
+        unsafe_allow_html=True,
+    )
+    g = st.session_state.goals
+    c1, c2 = st.columns(2)
+    with c1:
+        new_p   = st.number_input("Protein (g)",     value=float(g["protein"]),   min_value=0.0, step=5.0,  key="g_p")
+        new_c   = st.number_input("Carbs (g)",       value=float(g["carbs"]),     min_value=0.0, step=5.0,  key="g_c")
+    with c2:
+        new_f   = st.number_input("Fat (g)",         value=float(g["fat"]),       min_value=0.0, step=5.0,  key="g_f")
+        new_cal = st.number_input("Calories (kcal)", value=float(g["calories"]),  min_value=0.0, step=50.0, key="g_cal")
+    
+    if st.button("save goals →", key="btn_goals", use_container_width=True):
+        try:
+            api_update_goals(new_p, new_c, new_f, new_cal)
+            st.success("Goals saved.")
+            fetch_summary()
+            time.sleep(1)
+            st.session_state.current_page = "dashboard"
+            st.rerun()
+        except Exception as exc:
+            st.error(f"Couldn't save: {exc}")
+
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ASYNC LOG POLLING
+# ─────────────────────────────────────────────────────────────────────────────
+def handle_pending_log():
+    """Polls /log/status until the background meal resolution completes."""
+    mid = st.session_state.pending_meal_id
+    if not mid:
+        return
+    with st.spinner("Logging your meal — calculating macros…"):
+        time.sleep(2.5)
+        try:
+            status = api_log_status(mid)
+            if status == "completed":
+                st.session_state.pending_meal_id = None
+                fetch_summary()
+                st.success("✓  Meal logged and macros updated.")
+                st.rerun()
+            else:
+                st.rerun()    # keep polling
+        except Exception:
+            st.session_state.pending_meal_id = None   # bail out silently on error
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+def render_dashboard_page():
+    now = datetime.now()
+    st.markdown(
+        f'<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:24px;'
+        f'color:#2a1f10;margin:0;line-height:1.1;">{now.strftime("%A").lower()}</p>'
+        f'<p style="font-size:15px;color:#9a8d7c;margin:0 0 14px;">'
+        f'{now.strftime("%d %B %Y")}</p>',
+        unsafe_allow_html=True,
+    )
+
+    render_hud()
+    render_message()
+    
+    if st.button("edit goals", key="btn_goto_onboarding", help="Edit your PCOS goals", use_container_width=True):
+        st.session_state.current_page = "onboarding"
         st.rerun()
 
+    st.markdown('<div style="margin-top:12px;"></div>', unsafe_allow_html=True)
+    render_food_log()
+    render_copilot()
+    render_memory_section()
+    render_journal()
+    render_weekly()
 
-with tabs[1]:
-    environment = st.radio("Environment", ["Home", "Wild"], horizontal=True)
-    camera_photo = st.camera_input("Take a picture of your food")
-    hint = st.text_input("Any hints? (e.g., 'This is a plate of Misal Pav', 'This is chicken curry')")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN ROUTER
+# ─────────────────────────────────────────────────────────────────────────────
+def main():
+    inject_css()
+    init_session()
     
-    if camera_photo:
-        with st.spinner('Gemma 4 is estimating macros...'):
-            try:
-                result = send_vision_log(camera_photo.getvalue(), environment, hint)
-                if result.get("status") == "success":
-                    items = result.get("items", [])
-                    item_list = ", ".join([f"{i['name']} ({i['calories']} kcal)" for i in items])
-                    st.success(f"Extracted: {item_list}")
-                    st.session_state.log_success = True
-                    st.rerun()
-                else:
-                    st.error(f"Vision API Error: {result.get('detail', 'Unknown error')}")
-            except httpx.HTTPStatusError as err:
-                if err.response.status_code == 400:
-                    st.warning("No edible food detected in the image.")
-                else:
-                    st.error(f"Vision API Error: {err}")
-            except Exception as e:
-                st.error(f"Connection Error: {e}")
-st.divider()
+    # Get current local date for consistency
+    today_str = datetime.now().strftime("%Y-%m-%d")
 
-# --- FOOD JOURNAL VIEW ---
-st.subheader("📖 Daily Food Journal")
-try:
-    # Fetch detailed meals for chronological timeline
-    response = sync_get(f"{API_URL}/meals")
-    if response.status_code == 200:
-        meals = response.json()
-        if not meals:
-            st.info("No items logged today.")
-        else:
-            meals.sort(key=lambda x: x['timestamp'], reverse=True)
-            for meal in meals:
-                items = meal.get('items', [])
-                with st.container():
-                    st.markdown(f"🕒 **{meal['timestamp'][:16]}**")
-                    for item in items:
-                        verified_mark = " ✅" if item.get('verified') else ""
-                        sub_macros = item.get('sub_macros') or {}
-                        fiber = sub_macros.get('fiber', 0) or 0
-                        sugar = sub_macros.get('sugar', 0) or 0
-                        sat_fat = sub_macros.get('saturated_fat', 0) or 0
-                        st.markdown(
-                            f"- {verified_mark} **{item['name']}** ({item['grams']}g) "
-                            f"→ `{item['cals']:.1f} kcal` | Fiber: `{fiber:.1f}g` | Sugar: `{sugar:.1f}g` | SatFat: `{sat_fat:.1f}g`"
-                        )
-                    st.divider()
+    # Auto-refresh summary every 30 s (or on first load)
+    if time.time() - st.session_state.last_refreshed > 30:
+        fetch_summary(today_str)
+
+
+    # Conditional Rendering based on Session Router
+    if st.session_state.current_page == "onboarding":
+        render_onboarding_page()
     else:
-        st.error("Could not fetch journal data.")
-except Exception as e:
-    st.error(f"Connection Error: {e}")
+        render_dashboard_page()
+        
+        # Poll for any in-flight meal log (only relevant on dashboard)
+        handle_pending_log()
 
 
-# --- CLEAR OPTIONS ---
-st.divider()
-if st.button("🗑️ Clear Daily Macros", use_container_width=True):
-    try:
-        clear_resp = sync_delete(f"{API_URL}/clear")
-        if clear_resp.status_code == 200:
-            st.success("Daily totals cleared!")
-            st.rerun()
-        else:
-            st.error("Failed to clear data.")
-    except Exception as e:
-        st.error(f"Connection Error: {e}")
+if __name__ == "__main__":
+    main()

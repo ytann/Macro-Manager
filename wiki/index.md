@@ -1,5 +1,5 @@
 # Agent Routing Table
-
+ 
 - Pydantic schemas for food logs (Macros, SubMacros, FoodItem, FoodLog) -> [[wiki/logic/FoodLogSchema.md]]
 - Project architecture, component map, data flow, database schema -> [[wiki/logic/Architecture.md]]
 - Clinical Copilot (Routing Engine, Medical Firewall, Planner Service) -> [[app/services/planner.py]]
@@ -22,3 +22,5 @@
   - Macronutrient strategy + meal recommendations (40/35/25, VPF sequencing, daily allocation algorithm) -> [[wiki/pcos_nutrition/02_Macronutrient_Strategy.md]]
   - Chrononutrition (diurnal IR rhythm, melatonin effects, LEO carryover, meal timing rules) -> [[wiki/pcos_nutrition/03_Chrononutrition.md]]
   - Inflammation, dysbiosis, fiber mechanics (DOGMA loop, fiber thresholds 28-36g, omega-3 vs MUFA) -> [[wiki/pcos_nutrition/04_Inflammation_Fiber_Lipids.md]]
+- **Recent UI/UX & Logic Overhaul** (Notebook aesthetic, Timezone alignment, Granular Journal CRUD, Inline Editing) -> [[ProjectDetails.md]]
+

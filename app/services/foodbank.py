@@ -137,7 +137,11 @@ class FoodbankService:
                     response_format={"type": "json_object"},
                     api_base=Config.LITELLM_API_BASE
                 )
-                data = json.loads(resp.choices[0].message.content)
+                try:
+                    data = json.loads(resp.choices[0].message.content)
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error in search_web_for_food (initial): {e}")
+                    data = {}
                 if 'error' not in data:
                     return data
             except Exception as e:
@@ -163,7 +167,11 @@ class FoodbankService:
                     response_format={"type": "json_object"},
                     api_base=Config.LITELLM_API_BASE
                 )
-                data = json.loads(resp.choices[0].message.content)
+                try:
+                    data = json.loads(resp.choices[0].message.content)
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error in search_web_for_food (loop): {e}")
+                    data = {}
                 if 'error' not in data:
                     return data
             except Exception as e:
@@ -208,12 +216,17 @@ class FoodbankService:
             try:
                 resp = await safe_acompletion(
                     model=self.model,
-                    messages=[{"role": "user", "content": extract_prompt}],
+                    messages=[{"role": "user", "content": estimate_prompt}],
                     response_format={"type": "json_object"},
                     api_base=Config.LITELLM_API_BASE
                 )
-
-                est_data = json.loads(resp.choices[0].message.content)
+                
+                try:
+                    est_data = json.loads(resp.choices[0].message.content)
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error in _get_nutrition_data_core (offline): {e}")
+                    est_data = {}
+                
                 logger.info(f"Internal estimate result for {name}: {est_data}")
                 if 'error' not in est_data:
                     is_real = est_data.get('is_real_food', False)
@@ -356,7 +369,11 @@ class FoodbankService:
                 api_base=Config.LITELLM_API_BASE,
                 temperature=0.0
             )
-            data = json.loads(resp.choices[0].message.content)
+            try:
+                data = json.loads(resp.choices[0].message.content)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error in _get_category_fallback: {e}")
+                data = {}
             category = data.get('category')
             
             if category in self.CATEGORY_PROFILES:
@@ -395,7 +412,11 @@ class FoodbankService:
                 api_base=Config.LITELLM_API_BASE
             )
 
-            data = json.loads(resp.choices[0].message.content)
+            try:
+                data = json.loads(resp.choices[0].message.content)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error in find_source_of_truth: {e}")
+                data = {}
             logger.info(f"Truth search result for {dish_name}: {data}")
             
             if 'error' not in data and upsert:

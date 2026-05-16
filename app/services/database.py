@@ -1,7 +1,8 @@
 import sqlite3
 import json
 import threading
-from typing import Dict
+from contextlib import contextmanager
+from typing import Dict, Generator
 from app.core.config import Config
 from app.core import queries
 
@@ -133,6 +134,17 @@ class DatabaseManager:
             self._local.macros_conn = conn
         return self._local.macros_conn
 
+    @contextmanager
+    def transaction(self, db_type='macros') -> Generator[sqlite3.Connection, None, None]:
+        """Provides a transactional context for DB operations."""
+        conn = self.get_macros_conn() if db_type == 'macros' else self.get_foodbank_conn()
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
     def run_foodbank(self, query, params=(), fetchone=False, fetchall=False, commit=False):
         """Helper to execute a query on the foodbank DB."""
         conn = self.get_foodbank_conn()
@@ -193,16 +205,16 @@ class DatabaseManager:
             row = cursor.fetchone()
             
             days_logged = row['days_logged'] if row else 0
-            days_active = max(1, days_logged)
             
             goals = self.get_daily_goals()
+            # Weekly goals are always based on a 7-day window for the progress bars
             weekly_goals = {
-                'calories': goals['calories'] * days_active,
-                'protein': goals['protein'] * days_active,
-                'carbs': goals['carbs'] * days_active,
-                'fat': goals['fat'] * days_active,
+                'calories': goals['calories'] * 7,
+                'protein': goals['protein'] * 7,
+                'carbs': goals['carbs'] * 7,
+                'fat': goals['fat'] * 7,
             }
-
+ 
             if not row or row['cal'] is None:
                 return {
                     'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 
@@ -217,5 +229,6 @@ class DatabaseManager:
                 'days_logged': days_logged,
                 'weekly_goals': weekly_goals
             }
+
 
 

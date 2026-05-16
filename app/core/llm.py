@@ -6,6 +6,6 @@ import litellm
 llm_semaphore = asyncio.Semaphore(2)
 
 async def safe_acompletion(*args, **kwargs):
-    """Wrapper for litellm.acompletion that respects the global concurrency limit."""
+    """Wrapper for litellm.acompletion that respects the global concurrency limit and timeout."""
     async with llm_semaphore:
-        return await litellm.acompletion(*args, **kwargs)
+        return await asyncio.wait_for(litellm.acompletion(*args, **kwargs), timeout=Config.LLM_TIMEOUT)

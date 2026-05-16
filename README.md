@@ -63,9 +63,11 @@ MacroManager/
 ```
  
 ## Key Architecture
- 
+  
 | Component | Description |
 |---|---|
+| **Plain Notebook UI** | High-fidelity, emotionally intimate aesthetic (Courier Prime, grid-paper) for reduced cognitive load |
+| **Timezone-Aware Logs** | Server-side `localtime` alignment in SQLite to prevent date-mismatch/ghost entries |
 | **Async parallel** | `asyncio.gather` resolves all food items concurrently |
 | **Self-Verifying Extraction** | Single-pass extraction with internal self-verification to maximize recall and minimize latency |
 | **Offline sync queue** | Cached data returned immediately when offline; unverified items queued for heartbeat sync |
@@ -83,6 +85,8 @@ MacroManager/
 | **PCOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PCOS penalty -> 40/35/25 macro split |
 | **Global LLM Throttle** | Semaphore-based concurrency control to prevent local LLM (Ollama) saturation |
 | **Telemetry** | Standardized logging across all services for traceability |
+| **Granular Journal CRUD** | Inline quantity editing with ratio-based macro scaling and server-side validation |
+
  
 ## API Endpoints
   
@@ -92,10 +96,12 @@ MacroManager/
 - `POST /log` — Backward compatibility: synchronous parse and save
 - `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting and optional `hint` for better item identification.
 - `POST /onboard` — One-shot PCOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PCOS penalty (0.85x), sets daily macro goals
-- `GET /summary` — Daily aggregated totals + goals AND static calendar week summary
+- `GET /summary` — Daily aggregated totals + goals AND static calendar week summary (Supports `date` param)
 - `POST /goals` — Update user macro targets
-- `GET /meals` — All items logged today
-- `DELETE /clear` — Reset daily progress (Async)
+- `GET /meals` — Chronological list of food items for a specific date
+- `PATCH /meals/{meal_id}` — Update meal items with automatic macro recalculation
+- `DELETE /meals/{meal_id}` — Remove a specific meal record
+- `DELETE /meals/clear` — Reset all meals for a specific date
 - `GET /pending-count` — Verification queue size
 - `GET /sync-status` — Last sync timestamp
 - `POST /verify-queue` — Manual sync trigger

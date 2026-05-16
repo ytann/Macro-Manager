@@ -8,20 +8,21 @@ A one-shot onboarding flow extracts user biometrics from free-text bios and calc
 ---
 
 ## 2. High-Level Design (HLD)
-
+ 
 ### 2.1 Architecture Overview
 The system employs a decoupled **Client-Server Architecture**:
-
-*   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities.
-*   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline.
+ 
+*   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It utilizes a **"Plain Notebook" aesthetic** (Courier Prime typography, grid-paper background) to minimize cognitive load and create an emotionally intimate user experience. It features an interactive macro HUD, Integrated Voice-to-Log, and a granular, record-based Food Journal with inline editing.
+*   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline. It implements **timezone-aware query logic** using SQLite's `localtime` to ensure data consistency across server/client boundaries.
 *   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) and a **Clinical Copilot**. The system includes a **Medical Firewall** to ensure safety boundaries are maintained, prioritizing professional medical referral over AI diagnosis. Backend prompts are specifically **primed with PCOS metabolic context** to provide specialized, context-aware dietary guidance.
 *   **Persistence Layer (SQLite)**: Two specialized databases:
     *   `foodbank.db`: Static and learned food nutrition data.
     *   `macros.db`: User meal logs and goal settings.
 *   **Vision Pipeline**: A multimodal module that extracts food items from images with environment-aware portion size estimation.
-*   **Sovereign Memory**: A personalized dietary glossary (`personal_glossary.md`) that stores user-specific facts (e.g., utensil sizes, dietary preferences) to enhance extraction accuracy.
+*   **Sovereign Memory**: A personalized dietary glossary (`personal_glossary.md`) and an inline dashboard input that stores user-specific facts (e.g., utensil sizes, dietary preferences) to enhance extraction accuracy.
 *   **Offline Sync Queue**: A robust background mechanism that captures unverified data while offline and automatically synchronizes with authoritative sources via a heartbeat lifecycle.
 *   **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation.
+
 
 ### 2.2 Data Flow: The Async Pipeline
 To ensure a snappy UX, the system uses a **Job-Status model** instead of blocking requests:
@@ -125,9 +126,32 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 | `/clear` | `DELETE` | Reset daily progress. |
 
 ---
+ 
+## 7. UI/UX & Logic Overhaul (Sprints 7-8)
+ 
+The system underwent a comprehensive 4-phase overhaul to transition from a "prototype" feel to a "clinical notebook" experience, focusing on emotional intimacy and data granularity.
+ 
+### Phase 1: Notebook Aesthetic & HUD
+- **Design Language**: Transitioned to a "Plain Notebook" style using `Courier Prime` typography and a grid-paper CSS background.
+- **Emotional Design**: Replaced high-contrast "Glass" elements with muted, soft tones to reduce user anxiety associated with "overflowing" macros.
+- **HUD Refinement**: Simplified the macro rings and introduced "Empathetic Messaging" that provides kind, non-judgmental feedback based on current progress.
+ 
+### Phase 2: Timezone Alignment & API Expansion
+- **The Ghost Entry Fix**: Resolved a critical bug where server UTC timestamps caused meals to appear on the wrong day or journals to appear empty. implemented `date(timestamp, 'localtime')` in all SQLite queries.
+- **Granular API**: Expanded the API from simple "clear all" to a full CRUD suite:
+    - `GET /meals` (Date-filtered retrieval)
+    - `PATCH /meals/{id}` (Item-level updates)
+    - `DELETE /meals/{id}` (Targeted deletion)
+    - `DELETE /meals/clear` (Bulk date-based clear)
+ 
+### Phase 3: Intelligence Layer Integration
+- **Clinical Copilot**: Fully integrated the Copilot's dietary advice engine into the dashboard with a low-contrast, greyish text style for subtle guidance.
+- **Insulin Guardrails**: Re-implemented the "130% Daily Limit" logic in the weekly view to prevent dangerous insulin spikes by locking the weekly buffer when daily limits are breached.
+- **Inline Memory**: Moved Sovereign Memory from a disruptive dialog to a seamless inline input section.
+ 
+### Phase 4: Tabular Food Journal & Inline Editing
+- **High-Fidelity Journal**: Implemented a sticky-header tabular view for the daily log.
+- **Inline Quantity Scaling**: Introduced a ratio-based editing system. Changing the weight of a food item automatically scales its protein, carbs, and fat proportionally on the server.
+- **Schema Hardening**: Implemented strict Pydantic validation in the update pipeline to ensure `400 Bad Request` errors are eliminated during manual edits.
+- **Layout Optimization**: Applied smart wrapping for long food names and `nowrap` constraints for 3-digit numerical blocks to maintain table alignment.
 
-## 6. Design Decisions & Trade-offs
-*   **SQLite FTS5**: Chosen over standard SQL for superior alias searching and performance with large nutrition datasets.
-*   **Local LLM (Ollama)**: Prioritizes user privacy and eliminates API costs. The `gemma4:e2b` model provides the best balance of reasoning and speed for local deployment.
-*   **Decoupled Resolution**: By splitting extraction and resolution, the UI remains responsive even when the system is performing slow web searches for obscure foods.
-*   **Environment-Aware Vision**: Recognizes that a "plate" at home differs from a "plate" at a restaurant, applying different weight heuristics to improve estimation accuracy.

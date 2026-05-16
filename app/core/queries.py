@@ -16,11 +16,17 @@ FOODS_SEED_INSERT = "INSERT INTO foods (name, aliases, calories, protein, carbs,
 
 # Macros
 MEALS_INSERT = "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-MEALS_GET_TODAY_FULL = "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp) = date('now')"
-MEALS_GET_TODAY_BASIC = "SELECT total_protein, total_carbs, total_fat, total_cals FROM meals WHERE date(timestamp) = date('now')"
-MEALS_GET_TODAY_IDS = "SELECT id, meal_id, timestamp, items_json FROM meals WHERE date(timestamp) = date('now')"
-MEALS_DELETE_TODAY = "DELETE FROM meals WHERE date(timestamp) = date('now')"
-MEALS_WEEKLY_SUMMARY = "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp)) as days_logged FROM meals WHERE date(timestamp) >= date('now', 'localtime', 'weekday 0', '-6 days')"
+MEALS_GET_TODAY_FULL = "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp, 'localtime') = date('now', 'localtime')"
+MEALS_GET_FULL_BY_DATE = "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp, 'localtime') = ?"
+MEALS_GET_TODAY_BASIC = "SELECT total_protein, total_carbs, total_fat, total_cals FROM meals WHERE date(timestamp, 'localtime') = date('now', 'localtime')"
+MEALS_GET_TODAY_IDS = "SELECT id, meal_id, timestamp, items_json FROM meals WHERE date(timestamp, 'localtime') = date('now', 'localtime')"
+MEALS_GET_IDS_BY_DATE = "SELECT id, meal_id, timestamp, items_json, meal_type FROM meals WHERE date(timestamp, 'localtime') = ?"
+MEALS_GET_BY_DATE = "SELECT total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type, items_json FROM meals WHERE date(timestamp, 'localtime') = ?"
+MEALS_DELETE_BY_ID = "DELETE FROM meals WHERE id = ?"
+MEALS_DELETE_BY_DATE = "DELETE FROM meals WHERE date(timestamp, 'localtime') = ?"
+MEALS_UPDATE = "UPDATE meals SET items_json = ?, total_protein = ?, total_carbs = ?, total_fat = ?, total_cals = ?, total_fiber = ?, total_sugar = ?, total_saturated_fat = ?, total_unsaturated_fat = ? WHERE id = ?"
+MEALS_DELETE_TODAY = "DELETE FROM meals WHERE date(timestamp, 'localtime') = date('now', 'localtime')"
+MEALS_WEEKLY_SUMMARY = "SELECT SUM(total_cals) as cal, SUM(total_protein) as pro, SUM(total_carbs) as car, SUM(total_fat) as fat, COUNT(DISTINCT date(timestamp, 'localtime')) as days_logged FROM meals WHERE date(timestamp, 'localtime') >= date('now', 'localtime', 'weekday 0', '-6 days')"
 GOALS_UPSERT = "INSERT OR REPLACE INTO goals (id, protein, carbs, fat, calories) VALUES (1, ?, ?, ?, ?)"
 GOALS_GET = "SELECT protein, carbs, fat, calories FROM goals WHERE id = 1"
 

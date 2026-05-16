@@ -1,8 +1,8 @@
-import litellm
+from app.core.llm import safe_acompletion
 import json
 import yaml
 from pydantic import ValidationError
-from app.core.config import Config
+from app.core.config import Config, ClinicalConstants
 from app.core.logger import logger
 from app.schemas.food_schemas import OnboardingAttributes
 
@@ -15,7 +15,6 @@ class OnboardingValidationError(Exception):
 class OnboardingService:
     def __init__(self):
         self.prompts = self._load_prompts()
-        litellm.api_base = Config.LITELLM_API_BASE
         self.model = Config.LLM_MODEL
 
     def _load_prompts(self):
@@ -24,7 +23,7 @@ class OnboardingService:
 
     async def calculate_pcos_baseline(self, text: str) -> dict:
         prompt = self.prompts['extraction']['onboarding_parse'].format(text=text)
-        resp = await litellm.acompletion(
+        resp = await safe_acompletion(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
@@ -57,10 +56,14 @@ class OnboardingService:
         modifier = goal_modifiers.get(goal, 0)
         adjusted_tdee = tdee + modifier
 
-        target_calories = round(adjusted_tdee * 0.85)
-        protein = round((target_calories * 0.4) / 4)
-        fat = round((target_calories * 0.35) / 9)
-        carbs = round((target_calories * 0.25) / 4)
+        # Apply clinical metabolic penalty and ensure safety bounds
+        target_calories = round(adjusted_tdee * ClinicalConstants.PCOS_METABOLIC_PENALTY)
+        target_calories = max(ClinicalConstants.MIN_DAILY_CALORIES, min(target_calories, ClinicalConstants.MAX_DAILY_CALORIES))
+
+        # Macro Split: 40% Carbs, 35% Protein, 25% Fat (Wycherley RCT)
+        carbs = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["CHO"]) / 4)
+        protein = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["PRO"]) / 4)
+        fat = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["FAT"]) / 9)
 
         logger.info(f"PCOS baseline calculated: cal={target_calories}, p={protein}, c={carbs}, f={fat}")
 

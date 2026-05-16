@@ -44,6 +44,10 @@ class ExtractionService:
         return ""
 
     async def extract_from_image(self, base64_image: str, environment: str, hint: str = "") -> FoodLog:
+        # Limit image size to ~10MB binary (approx 13.3MB base64)
+        if len(base64_image) > 13_300_000:
+            raise ValueError("Image too large. Please upload an image smaller than 10MB.")
+
         prompt = self.prompts['extraction']['vision_estimate'].format(
             environment=environment, 
             hint=hint, 
@@ -64,7 +68,11 @@ class ExtractionService:
             response_format={"type": "json_object"}
         )
 
-        data = json.loads(resp.choices[0].message.content)
+        try:
+            data = json.loads(resp.choices[0].message.content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error in extract_from_image: {e}")
+            data = {}
 
         items_list = []
         if isinstance(data, dict):
@@ -95,8 +103,12 @@ class ExtractionService:
                 api_base=Config.LITELLM_API_BASE,
                 temperature=0.0
             )
-            data = json.loads(resp.choices[0].message.content)
-            return data.get('missing', [])
+            try:
+                data = json.loads(resp.choices[0].message.content)
+                return data.get('missing', [])
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error in verification guardrail: {e}")
+                return []
         except Exception as e:
             logger.error(f"Verification guardrail failed: {e}")
             return []
@@ -305,7 +317,11 @@ class ExtractionService:
             api_base=Config.LITELLM_API_BASE,
             temperature=0.0
         )
-        data = json.loads(resp.choices[0].message.content)
+        try:
+            data = json.loads(resp.choices[0].message.content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error in extract_items: {e}")
+            data = {}
 
         items_list = []
         if isinstance(data, dict):
