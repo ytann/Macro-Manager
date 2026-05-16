@@ -217,7 +217,14 @@ div[style*="overflow-y: auto"] {
 .nowrap { white-space: nowrap !important; }
 .wrap { white-space: normal !important; word-break: break-word !important; }
 
-/* ── Hide Streamlit chrome ── */
+/* Clean borders for containers */
+.stContainer {
+    border: 1px solid rgba(42, 31, 16, 0.15) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+}
+
+/* Hide Streamlit chrome */
 #MainMenu, footer, .stDeployButton,
 [data-testid="stToolbar"] { display: none !important; }
 </style>
@@ -318,10 +325,10 @@ def api_fetch_memory():
     return r.json().get("content", "")
 
 
-def api_ask_copilot(query, remaining):
+def api_ask_copilot(query, remaining, memory_context=""):
     r = requests.post(
         f"{API_URL}/planner",
-        json={"user_query": query, "remaining_macros": remaining},
+        json={"user_query": query, "remaining_macros": remaining, "memory_context": memory_context},
         timeout=30,
     )
     r.raise_for_status()
@@ -686,35 +693,15 @@ function toggle() {
 
 
 def render_copilot():
-    st.markdown(_DIV, unsafe_allow_html=True)
-    _section_header("clinical copilot")
-    
-    c, g = st.session_state.consumed, st.session_state.goals
-    remaining = {
-        "protein": max(0.0, g["protein"] - c["protein"]),
-        "carbs": max(0.0, g["carbs"] - c["carbs"]),
-        "fat": max(0.0, g["fat"] - c["fat"]),
-        "calories": max(0.0, g["calories"] - c["calories"]),
-    }
-    
-    user_query = st.text_input("ask the copilot:", placeholder="e.g. I have 100g carbs left, what's a good dinner?", key="copilot_q")
-    
-    if st.button("consult →", key="btn_copilot", use_container_width=True):
-        if user_query:
-            with st.spinner("consulting clinical knowledge base…"):
-                try:
-                    suggestion = api_ask_copilot(user_query, remaining)
-                    st.markdown(f'<div style="background:rgba(255,255,255,0.5); padding:10px; border-radius:4px; border-left:3px solid #7F77DD; margin-top:10px; color:#7a6d5a;">{suggestion}</div>', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Copilot error: {e}")
-        else:
-            st.warning("Please enter a question.")
+    # Deprecated: Copilot is now integrated into the dashboard page as a modal
+    pass
+
 
 def render_food_log():
     st.markdown(_DIV, unsafe_allow_html=True)
     _section_header("log a meal")
 
-    tab_text, tab_cam = st.tabs(["✏️  text / voice", "📷  camera"])
+    tab_text, tab_cam = st.tabs(["✏️  text", "📷  photo"])
 
     # ── Text / Voice ──────────────────────────────────────
     with tab_text:
@@ -725,16 +712,16 @@ def render_food_log():
             label_visibility="collapsed",
         )
         st.markdown(
-            '<p style="font-size:15px;color:#9a8d7c;margin:8px 0 4px;">'
-            'what did you eat? (tap mic to speak)</p>',
+            '<p style="font-size:13px;color:#9a8d7c;margin:4px 0 4px;">'
+            'what did you eat?</p>',
             unsafe_allow_html=True,
         )
         col_input, col_mic = st.columns([4.0, 0.5], vertical_alignment="center")
         with col_input:
             user_text = st.text_area(
                 "what did you eat?",
-                placeholder="e.g. 2 rotis with dal and a small bowl of rice…",
-                height=56,
+                placeholder="e.g. 2 rotis with dal…",
+                height=50,
                 key="log_text",
                 label_visibility="collapsed",
             )
@@ -788,16 +775,15 @@ def render_food_log():
 # RENDER: JOURNAL
 # ─────────────────────────────────────────────────────────────────────────────
 def render_journal():
-    st.markdown('<div class="journal-section-box">', unsafe_allow_html=True)
     st.markdown(_DIV, unsafe_allow_html=True)
     _section_header("food journal")
     
-    # --- Filters ---
-    col_date, col_type, col_clear = st.columns([2, 1, 1])
+    # --- Filters (on same line for mobile) ---
+    col_date, col_type, col_clear = st.columns([2, 1.5, 1.5])
     with col_date:
         selected_date = st.date_input("date", value=datetime.now(), key="journal_date").strftime("%Y-%m-%d")
     with col_type:
-        selected_type = st.selectbox("meal type", ["All", "breakfast", "lunch", "dinner", "snack"], key="journal_type")
+        selected_type = st.selectbox("meal type", ["All", "breakfast", "lunch", "dinner", "snack"], key="journal_type", label_visibility="collapsed")
     with col_clear:
         if st.button("Clear Day", key="btn_clear_day", help="Clear all meals for the selected date", use_container_width=True):
             try:
@@ -818,8 +804,145 @@ def render_journal():
         
         if response.status_code != 200:
             st.error("Could not fetch journal data.")
-            st.markdown('</div>', unsafe_allow_html=True)
             return
+            
+        meals = response.json()
+        
+        if not meals:
+            st.info(f"No items logged on {selected_date}.")
+            return
+        
+        # Group by type, include "General"
+        grouped = {}
+        for m in meals:
+            m_type = m.get("type") or "General"
+            if m_type not in grouped:
+                grouped[m_type] = []
+            grouped[m_type].append(m)
+
+        # --- Scrollable Container with border ---
+        with st.container(border=True):
+            for m_type, m_list in grouped.items():
+                st.markdown(f"**{m_type.capitalize()}**")
+                
+                # Table Header - Sticky Wrapper
+                st.markdown('<div style="position: sticky; top: 0; z-index: 10; background: white; padding-bottom: 10px; border-bottom: 1px solid rgba(42,31,16,0.1);">', unsafe_allow_html=True)
+                h_col1, h_col2, h_col3, h_col4, h_col5, h_col6, h_col7 = st.columns([0.35, 0.2, 0.15, 0.15, 0.15, 0.1, 0.1])
+                with h_col1: st.markdown('<div class="wrap"><small>Name</small></div>', unsafe_allow_html=True)
+                with h_col2: st.markdown('<div class="nowrap"><small>Qty</small></div>', unsafe_allow_html=True)
+                with h_col3: st.markdown('<div class="nowrap"><small>P</small></div>', unsafe_allow_html=True)
+                with h_col4: st.markdown('<div class="nowrap"><small>C</small></div>', unsafe_allow_html=True)
+                with h_col5: st.markdown('<div class="nowrap"><small>F</small></div>', unsafe_allow_html=True)
+                with h_col6: pass
+                with h_col7: pass
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                for m in m_list:
+                    items = m['items']
+                    for i, item in enumerate(items):
+                        # State Check for Inline Edit
+                        is_editing = (st.session_state.get("editing_meal") and 
+                                      st.session_state.editing_meal["id"] == m['id'] and 
+                                      st.session_state.editing_meal["index"] == i)
+                        
+                        # Rounding Logic
+                        p_val = int(math.floor(item['macros'].get('protein', 0)))
+                        c_val = int(math.ceil(item['macros'].get('carbs', 0)))
+                        f_val = int(math.ceil(item['macros'].get('fat', 0)))
+                        g_val = int(round(item['grams']))
+                        
+                        # Row for each item
+                        r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7 = st.columns([0.35, 0.2, 0.15, 0.15, 0.15, 0.1, 0.1])
+                        with r_col1: st.markdown(f'<div class="wrap"><small>**{item["name"]}**</small></div>', unsafe_allow_html=True)
+                        
+                        with r_col2:
+                            if is_editing:
+                                # Inline Number Input
+                                new_g = st.number_input("g", value=float(item['grams']), key=f"in_{m['id']}_{i}", label_visibility="collapsed")
+                            else:
+                                st.markdown(f'<div class="nowrap"><small>{g_val}g</small></div>', unsafe_allow_html=True)
+                                
+                        with r_col3: st.markdown(f'<div class="nowrap"><small>{p_val}</small></div>', unsafe_allow_html=True)
+                        with r_col4: st.markdown(f'<div class="nowrap"><small>{c_val}</small></div>', unsafe_allow_html=True)
+                        with r_col5: st.markdown(f'<div class="nowrap"><small>{f_val}</small></div>', unsafe_allow_html=True)
+                        
+                        with r_col6: 
+                            if is_editing:
+                                # Save Action
+                                if st.button("✓", key=f"save_{m['id']}_{i}", help="Save changes"):
+                                    # Recalculate based on the input value
+                                    ratio = new_g / item['grams'] if item.get('grams', 0) > 0 else 1
+                                    
+                                    # 1. Construct the edited item strictly
+                                    old_macros = item.get('macros') if isinstance(item.get('macros'), dict) else {}
+                                    old_sub = item.get('sub_macros') if isinstance(item.get('sub_macros'), dict) else {}
+                                    
+                                    new_item = {
+                                        "name": str(item.get("name", "Unknown")),
+                                        "grams": float(new_g),
+                                        "cals": float(item.get("cals", 0) * ratio),
+                                        "macros": {
+                                            "protein": float(old_macros.get("protein", 0) * ratio),
+                                            "carbs": float(old_macros.get("carbs", 0) * ratio),
+                                            "fat": float(old_macros.get("fat", 0) * ratio),
+                                        },
+                                        "sub_macros": {
+                                            k: float(v * ratio) if isinstance(v, (int, float)) else v 
+                                            for k, v in old_sub.items()
+                                        } if old_sub else None,
+                                        "verified": bool(item.get("verified", False))
+                                    }
+                                    
+                                    # 2. Clean ALL items in the list to ensure they match the server schema
+                                    cleaned_list = []
+                                    for idx, itm in enumerate(items):
+                                        if idx == i:
+                                            cleaned_list.append(new_item)
+                                        else:
+                                            m_data = itm.get('macros') if isinstance(itm.get('macros'), dict) else {}
+                                            s_data = itm.get('sub_macros') if isinstance(itm.get('sub_macros'), dict) else {}
+                                            
+                                            cleaned_list.append({
+                                                "name": str(itm.get("name", "Unknown")),
+                                                "grams": float(itm.get("grams", 0)),
+                                                "cals": float(itm.get("cals", 0)),
+                                                "macros": {
+                                                    "protein": float(m_data.get("protein", 0)),
+                                                    "carbs": float(m_data.get("carbs", 0)),
+                                                    "fat": float(m_data.get("fat", 0)),
+                                                },
+                                                "sub_macros": s_data if s_data else None,
+                                                "verified": bool(itm.get("verified", False))
+                                            })
+                                    
+                                    api_update_meal(m['id'], cleaned_list)
+                                    fetch_summary(selected_date)
+                                    del st.session_state.editing_meal
+                                    st.rerun()
+                            else:
+                                # Edit Action
+                                if st.button("✏️", key=f"edit_{m['id']}_{i}", help="Edit item"):
+                                    st.session_state.editing_meal = {"id": m['id'], "index": i, "items": items}
+                                    st.rerun()
+                                    
+                        with r_col7: 
+                            if st.button("🗑️", key=f"del_{m['id']}_{i}", help="Delete item"):
+                                updated_items = items[:i] + items[i+1:]
+                                if updated_items:
+                                    api_update_meal(m['id'], updated_items)
+                                else:
+                                    api_delete_meal(m['id'])
+                                fetch_summary(selected_date)
+                                st.rerun()
+        
+        # Clear editing state if it persists across page changes or something
+        if st.session_state.get("current_page") == "onboarding":
+            if "editing_meal" in st.session_state:
+                del st.session_state.editing_meal
+
+    except Exception as e:
+        st.error(f"Journal Error: {e}")
+
             
         meals = response.json()
         
@@ -977,27 +1100,8 @@ def render_journal():
 # RENDER: MEMORY
 # ─────────────────────────────────────────────────────────────────────────────
 def render_memory_section():
-    st.markdown(_DIV, unsafe_allow_html=True)
-    _section_header("remember this about me")
-    
-    if not st.session_state.memory_content:
-        try:
-            st.session_state.memory_content = api_fetch_memory()
-        except Exception:
-            pass
-
-    mem_text = st.text_input("add a new fact:", placeholder="e.g. My blue bowl is 200ml", key="mem_input")
-    if st.button("remember this →", key="btn_mem_save", use_container_width=True):
-        if mem_text.strip():
-            with st.spinner("Integrating..."):
-                new_mem = st.session_state.memory_content + "\n" + mem_text.strip()
-                updated = api_save_memory(new_mem)
-                st.session_state.memory_content = updated
-                st.success("Memory updated.")
-                time.sleep(1)
-                st.rerun()
-        else:
-            st.warning("Please enter something to remember.")
+    # Deprecated: Memory is now integrated into the dashboard page as a modal
+    pass
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE: ONBOARDING
@@ -1134,6 +1238,7 @@ def render_dashboard_page():
         unsafe_allow_html=True,
     )
 
+    # Top section: HUD + Messages + Edit Goals
     render_hud()
     render_message()
     
@@ -1141,12 +1246,144 @@ def render_dashboard_page():
         st.session_state.current_page = "onboarding"
         st.rerun()
 
-    st.markdown('<div style="margin-top:12px;"></div>', unsafe_allow_html=True)
-    render_food_log()
-    render_copilot()
-    render_memory_section()
+    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+    
+    # Middle section: Food Log + Weekly Log
+    with st.container(border=True):
+        render_food_log()
+    
+    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+    
+    # Main section: Food Journal
     render_journal()
+    
+    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+    
+    # Bottom section: Weekly Log
     render_weekly()
+    
+    st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+    
+    # Bottom section: AI Tools (Copilot + Memory)
+    col_copilot, col_memory = st.columns(2)
+    with col_copilot:
+        if st.button("💬 copilot", key="btn_copilot_modal", use_container_width=True):
+            st.session_state.copilot_modal_open = True
+    with col_memory:
+        if st.button("📝 notes", key="btn_memory_modal", use_container_width=True):
+            st.session_state.memory_modal_open = True
+    
+    # --- Copilot Modal ---
+    if st.session_state.get("copilot_modal_open", False):
+        with st.container(border=True):
+            st.markdown("""
+            <p style="font-family:'Courier Prime',monospace;font-weight:bold;font-size:16px;
+            color:#2a1f10;margin:0 0 12px;">Clinical Copilot</p>
+            """, unsafe_allow_html=True)
+            
+            c, g = st.session_state.consumed, st.session_state.goals
+            remaining = {
+                "protein": max(0.0, g["protein"] - c["protein"]),
+                "carbs": max(0.0, g["carbs"] - c["carbs"]),
+                "fat": max(0.0, g["fat"] - c["fat"]),
+                "calories": max(0.0, g["calories"] - c["calories"]),
+            }
+            
+            # Display remaining macros
+            st.markdown(
+                f"<small style='color:#9a8d7c;'>Remaining: P {int(remaining['protein'])}g • "
+                f"C {int(remaining['carbs'])}g • F {int(remaining['fat'])}g</small>",
+                unsafe_allow_html=True
+            )
+            
+            # Chat history
+            if "copilot_chat" not in st.session_state:
+                st.session_state.copilot_chat = []
+            
+            # Display chat messages (scrollable)
+            with st.container(height=250, border=False):
+                for msg in st.session_state.copilot_chat:
+                    if msg["role"] == "user":
+                        st.markdown(f'<div style="text-align:right;color:#2a1f10;margin:6px 0;"><strong>You:</strong> {msg["content"]}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown(f'<div style="color:#7F77DD;margin:6px 0;"><strong>Copilot:</strong> {msg["content"]}</div>', unsafe_allow_html=True)
+            
+            # Input for new query
+            user_query = st.text_input("Your question:", placeholder="e.g. What's a good dinner?", key="copilot_query_modal", label_visibility="collapsed")
+            
+            col_ask, col_clear, col_close = st.columns([2, 1, 1])
+            with col_ask:
+                if st.button("Ask →", key="btn_ask_copilot", use_container_width=True):
+                    if user_query.strip():
+                        with st.spinner("thinking…"):
+                            try:
+                                # Pass Sovereign Memory context to Copilot
+                                memory_context = st.session_state.get("memory_content", "")
+                                suggestion = api_ask_copilot(user_query, remaining, memory_context)
+                                st.session_state.copilot_chat.append({"role": "user", "content": user_query})
+                                st.session_state.copilot_chat.append({"role": "assistant", "content": suggestion})
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error: {e}")
+            
+            with col_clear:
+                if st.button("Clear", key="btn_clear_copilot", use_container_width=True):
+                    st.session_state.copilot_chat = []
+                    st.rerun()
+            
+            with col_close:
+                if st.button("Close", key="btn_close_copilot", use_container_width=True):
+                    st.session_state.copilot_modal_open = False
+                    st.rerun()
+    
+    # --- Memory Modal ---
+    if st.session_state.get("memory_modal_open", False):
+        with st.container(border=True):
+            st.markdown("""
+            <p style="font-family:'Courier Prime',monospace;font-weight:bold;font-size:16px;
+            color:#2a1f10;margin:0 0 8px;">Personal Notes</p>
+            <p style="font-size:12px;color:#9a8d7c;margin:0 0 12px;">Max 2000 tokens</p>
+            """, unsafe_allow_html=True)
+            
+            if not st.session_state.memory_content:
+                try:
+                    st.session_state.memory_content = api_fetch_memory()
+                except Exception:
+                    st.session_state.memory_content = ""
+            
+            # Large text area for notes
+            mem_text = st.text_area(
+                "Your notes:",
+                value=st.session_state.memory_content,
+                height=200,
+                key="mem_textarea",
+                label_visibility="collapsed",
+                placeholder="e.g. I'm lactose intolerant. Blue bowl = 200ml…"
+            )
+            
+            # Token counter (approximate)
+            token_count = len(mem_text.split())
+            st.markdown(f"<small style='color:#9a8d7c;'>{token_count} tokens</small>", unsafe_allow_html=True)
+            
+            col_save, col_close = st.columns(2)
+            with col_save:
+                if st.button("Save →", key="btn_mem_save_modal", use_container_width=True):
+                    if mem_text.strip():
+                        with st.spinner("Saving…"):
+                            try:
+                                updated = api_save_memory(mem_text.strip())
+                                st.session_state.memory_content = updated
+                                st.success("Saved!")
+                                time.sleep(0.5)
+                            except Exception as e:
+                                st.error(f"Error: {e}")
+                    else:
+                        st.warning("Add some notes first.")
+            
+            with col_close:
+                if st.button("Close", key="btn_close_memory", use_container_width=True):
+                    st.session_state.memory_modal_open = False
+                    st.rerun()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

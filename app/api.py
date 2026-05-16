@@ -80,6 +80,7 @@ class MemoryRequest(BaseModel):
 class PlannerRequest(BaseModel):
     user_query: str = Field(..., max_length=5000)
     remaining_macros: dict
+    memory_context: str = Field("", max_length=10000)  # User's Sovereign Memory (up to 2000 tokens)
 
 async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str, float], meal_type: str):
     def sum_sub(key):
@@ -369,7 +370,7 @@ async def get_memory():
 
 @app.post("/planner")
 async def ask_copilot(req: PlannerRequest):
-    suggestion = await planner_service.generate_suggestion(req.user_query, req.remaining_macros)
+    suggestion = await planner_service.generate_suggestion(req.user_query, req.remaining_macros, req.memory_context)
     return {"suggestion": suggestion}
 
 if __name__ == "__main__":

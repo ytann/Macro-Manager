@@ -20,13 +20,17 @@ class PlannerService:
         with open("prompts/prompts.yaml", "r", encoding="utf-8") as f:
             self.prompts = yaml.safe_load(f).get("planner", {})
 
-    async def generate_suggestion(self, user_query: str, remaining_macros: dict) -> str:
+    async def generate_suggestion(self, user_query: str, remaining_macros: dict, memory_context: str = "") -> str:
         # STEP 0: LOAD SOVEREIGN MEMORY
-        personal_glossary = ""
-        memory_path = "app/data/personal_glossary.md"
-        if os.path.exists(memory_path):
-            with open(memory_path, "r", encoding="utf-8") as f:
-                personal_glossary = f.read()
+        # Priority: passed memory_context > file-based glossary
+        personal_glossary = memory_context
+        
+        # If no memory was passed, try to load from file
+        if not personal_glossary:
+            memory_path = "app/data/personal_glossary.md"
+            if os.path.exists(memory_path):
+                with open(memory_path, "r", encoding="utf-8") as f:
+                    personal_glossary = f.read()
 
         # STEP 1: THE HYBRID ROUTER
         # 1.1 Deterministic Guard (Hard Safety Wall)
