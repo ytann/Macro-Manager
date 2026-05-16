@@ -15,7 +15,8 @@ For every item extracted from the user's log:
     - DB verified data (`verified=1`) -> return immediately
     - **Authoritative Search**: `find_source_of_truth()` uses Tavily API search results $\rightarrow$ LLM validates against high-confidence sources $\rightarrow$ marks `verified=1` if confidence is High/Medium.
     - `search_web_for_food()` -> general web search with fallback queries
-    - `internal_estimate()` -> LLM estimate as last resort
+    - `internal_estimate()` -> LLM "Expert Estimator" using Ingredient-Based Inference as last resort.
+    - **Category Fallback**: If all above return `None` or `error`, a tiered category-based estimate (e.g., "generic grain", "generic vegetable") is applied to avoid 0-calorie silent failures.
     All methods return a uniform flat dictionary containing macros.
  
 ## 2. Verified Column Logic

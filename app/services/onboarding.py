@@ -6,6 +6,12 @@ from app.core.config import Config
 from app.core.logger import logger
 from app.schemas.food_schemas import OnboardingAttributes
 
+class OnboardingValidationError(Exception):
+    """Custom exception for onboarding validation failures."""
+    def __init__(self, errors: list):
+        self.errors = errors
+        super().__init__(f"Validation failed with {len(errors)} errors")
+
 class OnboardingService:
     def __init__(self):
         self.prompts = self._load_prompts()
@@ -27,11 +33,16 @@ class OnboardingService:
         )
         
         try:
-            raw_data = json.loads(resp.choices[0].message.content)
-            attrs = OnboardingAttributes(**raw_data)
-        except (json.JSONDecodeError, ValidationError, TypeError) as e:
+            # Pydantic v2: Use model_validate_json for direct parsing from string
+            attrs = OnboardingAttributes.model_validate_json(resp.choices[0].message.content)
+        except ValidationError as e:
             logger.error(f"Onboarding extraction failed validation: {e}")
-            raise ValueError(f"Failed to extract valid biometrics from bio: {e}")
+            # Extract a user-friendly list of errors
+            error_details = [{"field": err["loc"][0], "message": err["msg"]} for err in e.errors()]
+            raise OnboardingValidationError(error_details)
+        except Exception as e:
+            logger.error(f"Onboarding extraction unexpected error: {e}")
+            raise ValueError(f"Failed to parse biometrics: {e}")
 
         age = attrs.age
         height_cm = attrs.height_cm

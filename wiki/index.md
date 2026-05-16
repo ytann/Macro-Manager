@@ -2,6 +2,7 @@
 
 - Pydantic schemas for food logs (Macros, SubMacros, FoodItem, FoodLog) -> [[wiki/logic/FoodLogSchema.md]]
 - Project architecture, component map, data flow, database schema -> [[wiki/logic/Architecture.md]]
+- Clinical Copilot (Routing Engine, Medical Firewall, Planner Service) -> [[app/services/planner.py]]
 - Food identification flow, recipe expansion, anti-hallucination measures -> [[wiki/logic/FoodLearning.md]]
 - Offline sync queue logic, heartbeat, retry limits, verification pipeline -> [[wiki/logic/OfflineSync.md]]
 - PCOS one-shot onboarding, BMR/TDEE math, macro split logic -> [[wiki/logic/Onboarding.md]]
@@ -16,3 +17,8 @@
 - CSV ingestion script for seeding foodbank -> [[scripts/ingest_csv.py]]
 - Audit: codebase issues, fix plans, and offline sync details -> [[audit_logs.md]]
 - Implementation steps for audit fixes -> [[wiki/logic/audit_logic.md]]
+- **Gemma4:e2b PCOS Nutrition Knowledge Base** (compressed for small LLM reasoning) -> [[wiki/pcos_nutrition/INDEX.md]]
+  - PCOS IR pathophysiology (IRS-1 block, tissue profiles, ovarian paradox) -> [[wiki/pcos_nutrition/01_IR_Pathophysiology.md]]
+  - Macronutrient strategy + meal recommendations (40/35/25, VPF sequencing, daily allocation algorithm) -> [[wiki/pcos_nutrition/02_Macronutrient_Strategy.md]]
+  - Chrononutrition (diurnal IR rhythm, melatonin effects, LEO carryover, meal timing rules) -> [[wiki/pcos_nutrition/03_Chrononutrition.md]]
+  - Inflammation, dysbiosis, fiber mechanics (DOGMA loop, fiber thresholds 28-36g, omega-3 vs MUFA) -> [[wiki/pcos_nutrition/04_Inflammation_Fiber_Lipids.md]]

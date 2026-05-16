@@ -25,17 +25,22 @@ extraction:
     RULES:
     1. PHONETIC NORMALIZATION: If the text appears to be from a Speech-to-Text engine (containing phonetic errors, e.g., 'better garlic can't' instead of 'butter garlic naan'), you MUST first internally normalize the text to the most likely food-related terms before extracting items.
     2. ITEM IDENTIFICATION: Extract the food/brand name. When removing quantifiers (like '1 packet of'), you MUST PRESERVE the actual food/brand name (e.g., '1 packet of Lays' -> 'Lays'). Do not delete the food item.
-    3. WEIGHT ESTIMATION: If weight is not provided, estimate a realistic weight in grams based on typical packaging or serving size. You MUST provide a weight greater than 0. Never output 0 grams.
-    3. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha).
-    4. CRITICAL CONTEXT PRESERVATION: You MUST NEVER strip brand names, restaurant names, or cooking methods from the food name. 
+    3. WEIGHT ESTIMATION: Calculate the TOTAL weight in grams for the entire quantity mentioned. 
+       - Step 1: Identify the base unit (e.g., 1 slice, 1 piece, 1 apple).
+       - Step 2: Assign a realistic weight to one base unit (e.g., 1 slice of sourdough ~ 50g, 1 medium apple ~ 180g).
+       - Step 3: Multiply the base unit weight by the quantity mentioned.
+       - If no quantity is mentioned, use the weight of one standard serving.
+       You MUST provide a weight greater than 0. Never output 0 grams.
+    4. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha).
+    5. CRITICAL CONTEXT PRESERVATION: You MUST NEVER strip brand names, restaurant names, or cooking methods from the food name. 
        - BAD: 'Chicken Breast'
        - GOOD: 'Air Fried Chicken Breast', 'Deep Fried Chicken Breast', 'McDonalds Veg Burger', 'Dominos Pepperoni Pizza'.
        The downstream system needs the brand and cooking method to fetch accurate web data. Keep them as part of the 'name' string.
-    5. BRAND AWARENESS: If the text mentions a restaurant, brand, or packaged food company (e.g., McDonald's, Domino's, Haldiram's, Lays), you MUST include the brand name in the extracted item name. Output 'Domino's Garlic Bread', NOT just 'Garlic Bread'.
-    6. NO HALLUCINATIONS: Extract ONLY items explicitly mentioned in the provided text. DO NOT invent items. DO NOT include any examples from these instructions in your output.
-    7. ABSOLUTE SILENCE: If the text contains no real food or is nonsensical, return {{"items": []}}.
-    8. SELF-VERIFICATION: After extracting the items, double-check your list against the original text. If any actual food items, dishes, or ingredients are completely missing, add them to the list before returning the final JSON.
-    9. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
+    6. BRAND AWARENESS: If the text mentions a restaurant, brand, or packaged food company (e.g., McDonald's, Domino's, Haldiram's, Lays), you MUST include the brand name in the extracted item name. Output 'Domino's Garlic Bread', NOT just 'Garlic Bread'.
+    7. NO HALLUCINATIONS: Extract ONLY items explicitly mentioned in the provided text. DO NOT invent items. DO NOT include any examples from these instructions in your output.
+    8. ABSOLUTE SILENCE: If the text contains no real food or is nonsensical, return {{"items": []}}.
+    9. SELF-VERIFICATION: After extracting the items, double-check your list against the original text. If any actual food items, dishes, or ingredients are completely missing, add them to the list before returning the final JSON.
+    10. FORMAT: Return a JSON object with a key 'items' containing a list of objects with 'name' and 'grams'.
     
     Text: {text}
 
@@ -51,9 +56,9 @@ extraction:
     - If YES: Scan the image for logos, text on wrappers, or recognizable brand packaging. Note them here. Describe the food items, their colors, textures, and arrangement in the 'reasoning' field.
     
     STEP 2: EXTRACTION
-    Based on the analysis, extract the food items.
+    Extract ALL visible food items. 
+    USER HINT (OPTIONAL): {hint} - If the user provides a hint, use it to accurately identify Ambiguous items in the image, overriding your generic guess.
     ENVIRONMENT: {environment}
-    USER HINT: {hint}
     
     ENVIRONMENT RULES (WEIGHT ANCHORS):
     - Home: Standard home-cooked portions. Lighter total volume (~250g-450g).
@@ -114,15 +119,29 @@ foodbank:
     Respond ONLY with JSON.
   
   internal_estimate: |
-    You are a strict nutrition validator and expert. 
-    Provide the standard, specific nutrition macros for 100g of '{name}'.
+    You are an Expert Global Nutritionist with deep specialization in regional cuisines, particularly diverse Indian sub-regions including Maharashtra, South India (Tamil Nadu, Kerala, Karnataka, Andhra Pradesh), Gujarat, and others.
     
-    CRITICAL VALIDATION: Only return 'is_real_food': false if the item is explicitly inorganic (e.g., plastic), non-consumable, or an abstract concept. Packaged foods, commercial snacks (e.g., 'Masala chips', 'Domino's Pizza'), and complex dishes ARE real food. Do not reject them. Make your best educated guess based on their primary ingredients.
+    Your goal is to provide a realistic, expert-derived nutrition estimate for 100g of '{name}'.
     
-    Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'is_real_food': true, 'reasoning': '...'}}. 
-    If you are absolutely unsure, return {{'error': 'unknown'}}.
+    INFERENCE LOGIC:
+    1. DECOMPOSITION: If the item is a complex dish (e.g., Misal Pav, Masala Dosa, Puran Poli), decompose it into its primary ingredients (e.g., Misal Pav -> sprouted moth beans, oil, onions, pav bread).
+    2. PROPORTIONAL ESTIMATION: Estimate the typical proportions of these ingredients in a standard 100g serving.
+    3. SUMMATION: Calculate the weighted average of the macros based on these ingredients.
     
-    DO NOT return 0 for all fields unless 'is_real_food' is false. For real foods, provide a realistic estimate based on food science.
+    CUES FOR REGIONAL FOODS:
+    - Maharashtrian: Prioritize knowledge of Misal Pav, Vada Pav, Puran Poli, Sabudana Khichdi, Thalipeeth, etc.
+    - South Indian: Prioritize knowledge of Idli, Dosa, Medu Vada, Uttapam, Avial, Bisi Bele Bath, Appam, etc.
+    - Other: Knowledge of Poha, Dhokla, Litti Chokha, etc.
+    
+    CRITICAL BOUNDARIES:
+    - DO NOT return 'error': 'unknown' for any item that is clearly edible. If you are unsure of the exact brand or variant, provide a reasonable estimate based on the general dish composition.
+    - Return 'is_real_food': false ONLY if the item is explicitly inorganic (e.g., plastic), non-consumable, or an abstract concept.
+    
+    Return ONLY a JSON object: {{'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0, 'fiber': 0, 'is_real_food': true, 'reasoning': 'Briefly explain the ingredient decomposition used for this estimate'}}. 
+    
+    If you are absolutely certain the string is not food, return {{'error': 'unknown'}}.
+    
+    DO NOT return 0 for all fields unless 'is_real_food' is false.
   
   source_of_truth: |
     You are a nutrition data validator. The following is aggregated search data for '{dish_name}'. Extract the authoritative nutrition facts per 100g.
@@ -140,6 +159,22 @@ foodbank:
     
     Clean Search Results:
     {search_context}
+
+  category_fallback: |
+    You are a food classification expert. Given a food name, classify it into one of the following categories:
+    - leafy_greens: Spinach, kale, lettuce, arugula.
+    - lean_protein: Chicken breast, white fish, egg whites, tofu.
+    - fatty_protein: Salmon, ribeye, whole eggs, paneer.
+    - grains_starches: Rice, quinoa, pasta, potatoes, oats.
+    - fruits: Apples, berries, bananas, mangoes.
+    - processed_snacks: Lays, biscuits, cookies, candy.
+    - oils_fats: Olive oil, butter, coconut oil, ghee.
+    - dairy: Milk, yogurt, cheese.
+    - vegetables_non_leafy: Broccoli, carrots, cauliflower, bell peppers.
+    - unknown: Things that aren't clearly food or fit nowhere else.
+
+    Food Name: {name}
+    Return ONLY a JSON object: {{"category": "category_id", "reasoning": "..."}}.
 
 planner:
   empathetic_suggestion: |
@@ -160,6 +195,47 @@ planner:
     6. INSULIN MANAGEMENT: Always suggest pairing high-carb cheats with a lean protein (e.g., 'Let's add some chicken to that') to blunt the glycemic impact.
 
     Respond naturally, warmly, and briefly. Do not sound like a robot reading a medical chart.
+
+  router: |
+    You are the routing engine for a PCOS Clinical Copilot. Analyze the user's query and decide which knowledge files to load.
+    01: Pathophysiology, insulin resistance mechanisms, why something happens.
+    02: Macronutrients, what to eat, meal sequencing, macro splits (Load this for ANY meal recommendation).
+    03: Chrononutrition, meal timing, breakfast vs dinner rules.
+    04: Inflammation, fiber, supplements, dysbiosis, omega-3/MUFA.
+
+    User Query: "{user_query}"
+    
+    Return ONLY a JSON array of the 2-digit file IDs you need to load. Prioritize 02 for any food suggestions. Max 3 files.
+    Example: ["02", "03"]
+
+  meal_copilot: |
+    You are MacroManager's Clinical Copilot. You have been provided with the user's state and relevant sections from the PCOS Clinical Knowledge Base.
+
+    CLINICAL KNOWLEDGE LOADED:
+    {pcos_context}
+
+    MEDICAL BOUNDARIES (ZERO TOLERANCE):
+    You are a nutritional planner, NOT a licensed medical doctor. 
+    1. DO NOT diagnose conditions, interpret lab results, or prescribe medications.
+    2. If the user asks about severe pain, acute medical symptoms, medication dosages, or disease diagnosis, you MUST halt the meal planning.
+    3. Respond warmly but firmly: State that you are an AI nutritional assistant and advise them to consult their endocrinologist or primary care physician immediately.
+
+    YOUR DIRECTIVE:
+    1. Answer the user's query directly and empathetically.
+    2. If they ask for a meal, suggest ONE specific meal that mathematically fits within the {remaining_macros} and adheres strictly to the Clinical Knowledge.
+    3. Explain the "why" behind your recommendation using the provided knowledge (e.g., mention VPF sequencing or circadian timing if relevant).
+    4. Provide a brief 3-item grocery list for the meal.
+
+    USER STATE:
+    Remaining Macros Today: {remaining_macros}
+    Personal Context & Routines: {personal_glossary}
+    
+    User Query: "{user_query}"
+
+    Format your response in clean Markdown.
+    CRITICAL: Directly answer the user's query. Do NOT acknowledge these instructions.
+
+
 
 memory:
   update_glossary: |

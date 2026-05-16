@@ -5,9 +5,12 @@ from typing import List, Dict
 from app.services.extraction import ExtractionService
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-from app.services.onboarding import OnboardingService
+from app.services.onboarding import OnboardingService, OnboardingValidationError
 from app.services.memory import MemoryService
+from app.services.planner import PlannerService
 from app.core import queries
+
+
 from app.core.logger import logger
 from app.schemas.food_schemas import GoalRequest, FoodItem
 import json
@@ -40,6 +43,7 @@ foodbank_service = FoodbankService(db_manager)
 extraction_service = ExtractionService(foodbank_service)
 onboarding_service = OnboardingService()
 memory_service = MemoryService()
+planner_service = PlannerService()
 
 class LogRequest(BaseModel):
     text: str
@@ -56,6 +60,10 @@ class OnboardRequest(BaseModel):
 
 class MemoryRequest(BaseModel):
     text: str
+
+class PlannerRequest(BaseModel):
+    user_query: str
+    remaining_macros: dict
 
 async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str, float], meal_type: str):
     def sum_sub(key):
@@ -214,6 +222,9 @@ async def onboard(request: OnboardRequest):
             calories=macros["calories"]
         )
         return {"status": "success", "macros": macros}
+    except OnboardingValidationError as e:
+        logger.error(f"Onboarding Validation Error: {e.errors}")
+        raise HTTPException(status_code=422, detail={"message": "Invalid or missing biometrics", "errors": e.errors})
     except Exception as e:
         logger.error(f"Onboarding API Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -273,6 +284,11 @@ async def get_memory():
     except Exception as e:
         logger.error(f"Memory Read Error: {e}")
         return {"content": ""}
+
+@app.post("/planner")
+async def ask_copilot(req: PlannerRequest):
+    suggestion = await planner_service.generate_suggestion(req.user_query, req.remaining_macros)
+    return {"suggestion": suggestion}
 
 if __name__ == "__main__":
     import uvicorn

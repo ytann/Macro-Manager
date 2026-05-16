@@ -1,6 +1,9 @@
 import pytest
+import asyncio
+import json
 from unittest.mock import AsyncMock, patch
-from app.services.onboarding import OnboardingService
+from app.services.onboarding import OnboardingService, OnboardingValidationError
+
 import json
 
 @pytest.mark.asyncio
@@ -14,10 +17,11 @@ async def test_onboarding_validation_fail():
     ]
     
     with patch('litellm.acompletion', return_value=malformed_response):
-        # This should currently pass because of .get() defaults, 
-        # but it should FAIL with ValueError after the fix.
-        with pytest.raises(ValueError):
+        # This should currently pass because of .get() defaults,
+        # but it should FAIL with OnboardingValidationError after the fix.
+        with pytest.raises(OnboardingValidationError):
             await service.calculate_pcos_baseline("Some bio text")
+
 
 @pytest.mark.asyncio
 async def test_onboarding_validation_success():

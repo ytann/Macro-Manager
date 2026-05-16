@@ -145,6 +145,14 @@ class DatabaseManager:
             return cursor.fetchall()
         return cursor
 
+    def run_foodbank_batch(self, query, params_list, commit=True):
+        """Execute a query for multiple parameter sets using executemany."""
+        conn = self.get_foodbank_conn()
+        cursor = conn.executemany(query, params_list)
+        if commit:
+            conn.commit()
+        return cursor
+
     def run_macros(self, query, params=(), fetchone=False, fetchall=False, commit=False):
         """Helper to execute a query on the macros DB."""
         conn = self.get_macros_conn()

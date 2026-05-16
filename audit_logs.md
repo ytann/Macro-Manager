@@ -4,14 +4,14 @@
 
 | Issue Name | Brief Description | Criticality | Status |
 | :--- | :--- | :--- | :--- |
-| [Nutritional Resolution Silent Failures](#nutritional-resolution-silent-failures) | Items extracted but all resolution paths fail, returning 0 calories | High | [PENDING] |
-| [Fragile Internal Nutrition Estimates](#fragile-internal-nutrition-estimates) | `internal_estimate` frequently returns `unknown` for regional foods | Medium | [PENDING] |
+| [Nutritional Resolution Silent Failures](#nutritional-resolution-silent-failures) | Items extracted but all resolution paths fail, returning 0 calories | High | [FIXED] |
+| [Fragile Internal Nutrition Estimates](#fragile-internal-nutrition-estimates) | `internal_estimate` frequently returns `unknown` for regional foods | Medium | [FIXED] |
 | [Web Search Precision for Regional Foods](#web-search-precision-for-regional-foods) | Generic search results for specific regional dishes | Medium | [FIXED] |
-| [Complex and Inefficient Database Calls in FoodbankService](#complex-and-inefficient-database-calls-in-foodbankservice) | `FoodbankService` uses verbose, repetitive `asyncio.to_thread` for db calls | High | [PENDING] |
-| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure | Medium | [PENDING] |
-| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [PENDING] |
-| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [PENDING] |
-| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED | Low | [PENDING] |
+| [Complex and Inefficient Database Calls in FoodbankService](#complex-and-inefficient-database-calls-in-foodbankservice) | `FoodbankService` uses verbose, repetitive `asyncio.to_thread` for db calls | High | [FIXED] |
+| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure | Medium | [FIXED] |
+| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [FIXED] |
+| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [FIXED] |
+| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED | Low | [FIXED] |
 | [Database still drops foods table on startup](#database-still-drops-foods-table-on-startup) | `DROP TABLE IF EXISTS` regression — data wiped every restart | Critical | [FIXED] |
 | [Verification prompt `KeyError`](#verification-prompt-keyerror-on-content-placeholder) | `{content}` placeholder in prompt but not passed to `.format()` | Critical | [FIXED] |
 | [`NameError` when all items are recipes](#nameerror-in-extraction-when-all-items-are-recipes) | `results` undefined when no base ingredients | Critical | [FIXED] |
@@ -57,10 +57,14 @@
 | [Inefficient DB Seeding](#inefficient-database-seeding) | `seed_db` calls `upsert_food` in a loop instead of `executemany` | Low | [FIXED] |
 | [Hardcoded Queries](#hardcoded-sql-and-search-queries) | SQL and web search queries are hardcoded in services | Low | [FIXED] |
 | [Inconsistent Logging](#inconsistent-logging-and-error-handling) | `print()` used for debugging; inconsistent error handling | Low | [FIXED] |
-| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure instead of validation | Medium | [PENDING] |
-| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [PENDING] |
-| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [PENDING] |
-| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED in logs | Low | [PENDING] |
+| [No Pydantic validation for Onboarding output](#no-pydantic-validation-for-onboarding-llm-output) | `OnboardingService` uses defaults on LLM parse failure | Medium | [FIXED] |
+| [Wiki Architecture out of sync](#wiki-architecture-out-of-sync-phase-5) | `Architecture.md` missing Onboarding and updated FTS5 schema | Low | [FIXED] |
+| [Vision Client connection overhead](#vision-client-connection-overhead) | `vision_client.py` creates fresh connection per post | Low | [FIXED] |
+| [Audit Logic duplication](#audit-logic-historical-duplication) | `audit_logic.md` preserves steps already marked FIXED in logs | Low | [FIXED] |
+| [Medical Firewall Bypass](#medical-firewall-bypass) | Copilot may provide medical advice or ignore safety boundaries | Critical | [FIXED] |
+| [Extraction Crash on Empty Input](#extraction-crash-on-empty-input) | Calling parse with empty text causes ValueError crash | High | [FIXED] |
+| [Missing Voice Correction in Extraction](#missing-voice-correction-in-extraction) | Voice logs not normalized before extraction | Medium | [FIXED] |
+| [Planner Service Architecture](#planner-service-architecture) | Router -> Knowledge -> Copilot flow and safety fallbacks | Medium | [FIXED] |
 
 
 ---
@@ -291,9 +295,13 @@
 - **Fix Plan:** Update `NUTRITION_FACTS_QUERY` and `web_search` prompts to explicitly request "nutrition facts per 100g" and "authoritative data sources" to minimize generic noise.
 
 ### Complex and Inefficient Database Calls in FoodbankService
-- **Files:** `app/services/foodbank.py`
-- **Issue Detail:** Many functions in `FoodbankService` wrap synchronous database calls in `asyncio.to_thread`. While this correctly prevents blocking the event loop, the implementation is verbose and inefficient as each database operation opens and closes a new connection.
-- **Fix Plan:** Refactor the database interaction logic to use a more efficient connection management strategy. Instead of creating new connections for each operation, implement a connection pool or use a context manager provided by the `DatabaseManager` to manage connections. This will reduce overhead and improve performance.
+- **Files:** `app/services/foodbank.py`, `app/services/database.py`
+- **Issue Detail:** Excessive `asyncio.to_thread` calls for micro-queries created significant scheduling overhead, especially during the resolution pipeline and verification queue processing.
+- **Fix Detail:** 
+    1. Implemented `_local_resolution_sync` in `FoodbankService` to group Exact Search $\rightarrow$ Fuzzy Match $\rightarrow$ Final Match into a single thread switch.
+    2. Refactored `process_verification_queue` to batch-delete stale items and batch-increment retries using a new `run_foodbank_batch` (executemany) method in `DatabaseManager`.
+    3. Updated `seed_db` to use batch insertions.
+    4. Reduced thread-switch frequency in the resolution pipeline from 3+ to 1 per item.
 
 ### Redundant Web Searches in FoodbankService
 - **Files:** `app/services/foodbank.py`
@@ -316,9 +324,13 @@
 - **Fix Plan:** Implement a standardized logging framework using Python's `logging` module. Configure formatters and handlers to stream logs to the console or a file. Standardize error handling by creating a set of custom exception classes and a middleware or decorator to catch them and return consistent JSON error responses.
 
 ### No Pydantic validation for Onboarding LLM output
-- **Files:** `app/services/onboarding.py`
-- **Issue Detail:** The `calculate_pcos_baseline` method parses LLM JSON and uses `.get()` with default values. If the LLM returns an empty object or incorrect keys, the system silently proceeds with default biometrics (160cm, 65kg) without informing the user or raising a validation error.
-- **Fix Plan:** Define an `OnboardingAttributes` Pydantic model and validate the LLM response against it. Raise `ValueError` if validation fails.
+- **Files:** `app/services/onboarding.py`, `app/api.py`, `app/schemas/food_schemas.py`
+- **Issue Detail:** The `OnboardingService` previously used `.get()` with defaults if LLM parsing failed, leading to inaccurate baseline calculations without warning.
+- **Fix Detail:** 
+    1. Implemented `OnboardingAttributes.model_validate_json()` in `OnboardingService` to enforce a strict data contract.
+    2. Introduced `OnboardingValidationError` to capture and transport detailed Pydantic validation errors.
+    3. Updated the `/onboard` API endpoint to catch `OnboardingValidationError` and return an `HTTP 422 Unprocessable Entity` with a breakdown of missing/invalid fields.
+    4. Updated unit tests to verify both successful parsing and explicit validation failures.
 
 
 ### Nutritional Resolution Silent Failures
@@ -346,5 +358,25 @@
 - **Files:** `wiki/logic/audit_logic.md`
 - **Issue Detail:** `audit_logic.md` contains a detailed "to-do" list for fixes (Phase 1-4) that have already been implemented and marked as [FIXED] in the main `audit_logs.md`. This creates redundancy and confusion about the current state of the codebase.
 - **Fix Plan:** Archive or remove the "to-do" steps from `audit_logic.md` once they are verified in the main audit logs.
+
+### Medical Firewall Bypass
+- **Files:** `app/services/planner.py`, `prompts/prompts.yaml`
+- **Issue Detail:** The LLM was ignoring medical boundaries and acknowledging instructions instead of acting on them.
+- **Fix Detail:** Implemented system role messages in `PlannerService` and reorganized the `meal_copilot` prompt to place the User Query at the end. Verified that queries about acute pain or prescriptions now correctly trigger the medical disclaimer and halt meal planning.
+
+### Extraction Crash on Empty Input
+- **Files:** `app/services/extraction.py`
+- **Issue Detail:** Calling `parse("")` crashed with a `ValueError`.
+- **Fix Detail:** Updated `_resolve_and_build_log` to return an empty `FoodLog` instead of raising an exception.
+
+### Missing Voice Correction in Extraction
+- **Files:** `app/services/extraction.py`, `prompts/prompts.yaml`
+- **Issue Detail:** `is_voice` parameter in `extract_items` was ignored, preventing phonetic normalization.
+- **Fix Detail:** Integrated the `voice_correction` prompt when `is_voice=True`, enabling phonetic normalization (e.g., "better garlic can't" $\rightarrow$ "Butter garlic").
+
+### Planner Service Architecture
+- **Files:** `app/services/planner.py`
+- **Issue Detail:** Need to verify the Router $\rightarrow$ Knowledge Loader $\rightarrow$ Copilot flow and ensure system stability during router failures.
+- **Fix Detail:** Implemented and verified the full routing pipeline. Added safety fallbacks to ensure the system remains functional even if the router fails.
 
 

@@ -403,43 +403,65 @@ try:
                 st.toast("Goals updated! 🎯")
                 st.rerun()
 
-        with st.expander("🧠 Sovereign Memory"):
-            st.markdown("### 🧠 Sovereign Memory")
-            st.markdown("Teach MacroManager about your specific utensils, allergies, and routines.")
+        with st.expander("💾 Sovereign Memory"):
+            import os
+            memory_path = "app/data/personal_glossary.md"
+
+            # Read current memory
+            if os.path.exists(memory_path):
+                with open(memory_path, "r", encoding="utf-8") as f:
+                    current_memory = f.read()
+            else:
+                current_memory = ""
+
+            st.caption("This is your AI's long-term memory. Edit it to change how Gemma understands your routines. Limited to 1500 characters to ensure lightning-fast responses.")
+
+            # The editable text area with a hard limit (~350 tokens)
+            updated_memory = st.text_area("What should Gemma know about you?", value=current_memory, height=200, max_chars=1500)
+
+            if st.button("Update Memory"):
+                with open(memory_path, "w", encoding="utf-8") as f:
+                    f.write(updated_memory)
+                st.success("Memory updated successfully!")
+                st.rerun()
+
+        with st.expander("🧠 Clinical Copilot"):
+            st.markdown("### 🧠 PCOS Clinical Copilot")
+            st.markdown("Get personalized meal suggestions based on your remaining macros and clinical knowledge.")
             
-            memory_input = st.text_area("New memory fact", placeholder="e.g., 'My dinner plate is 25cm and usually holds 400g of food' or 'I have a severe allergy to peanuts'")
+            # Calculate Remaining Macros
+            remaining = {
+                "protein": max(0.0, goals.get("protein", 0.0) - consumed.get("protein", 0.0)),
+                "carbs": max(0.0, goals.get("carbs", 0.0) - consumed.get("carbs", 0.0)),
+                "fat": max(0.0, goals.get("fat", 0.0) - consumed.get("fat", 0.0)),
+                "calories": max(0.0, goals.get("calories", 0.0) - consumed.get("calories", 0.0)),
+            }
             
-            if st.button("Save to Memory"):
-                if memory_input:
-                    with st.spinner("Integrating into memory..."):
+            user_query = st.text_input("Ask the Copilot:", placeholder="e.g., I had 120g carbs at breakfast, what should I eat for dinner?")
+            
+            if st.button("Consult Copilot"):
+                if user_query:
+                    with st.spinner("Consulting Clinical Knowledge Base..."):
                         try:
-                            response = sync_post(f"{API_URL}/memory", {"text": memory_input})
-                            if response.status_code == 200:
-                                st.toast("Memory updated! 🧠", icon="✅")
-                                st.rerun()
+                            # Using sync_post as it's the available helper in this file
+                            resp = sync_post(f"{API_URL}/planner", {
+                                "user_query": user_query,
+                                "remaining_macros": remaining
+                            })
+                            if resp.status_code == 200:
+                                st.markdown(resp.json().get("suggestion", "Error generating response."))
                             else:
-                                st.error(f"Memory error: {response.json().get('detail', 'Failed to update memory')}")
+                                st.error(f"Copilot Error: {resp.json().get('detail', 'Unknown error')}")
                         except Exception as e:
                             st.error(f"Connection Error: {e}")
                 else:
-                    st.warning("Please enter a fact first.")
+                    st.warning("Please enter a question first.")
             
-            st.divider()
-            st.markdown("**Current Memory:**")
-            try:
-                # The MemoryService just overwrites the file. 
-                # We can fetch the current content via a new endpoint or just read it if we have access.
-                # Since the API doesn't have a GET /memory, I should add one or just use the file if I'm on same machine.
-                # But frontend is a separate process usually. I should add a GET /memory endpoint in api.py.
-                resp = sync_get(f"{API_URL}/memory")
-                if resp.status_code == 200:
-                    st.markdown(resp.json().get("content", "No memory stored yet."))
-                else:
-                    st.info("No memory stored yet.")
-            except Exception as e:
-                st.info("No memory stored yet.")
+            st.caption("⚠️ Medical Disclaimer: MacroManager is an AI-powered educational tool. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your physician or endocrinologist before making significant changes to your diet, especially if you have an underlying medical condition.")
+
     else:
         st.error("Could not fetch summary data.")
+
 except Exception as e:
     st.error(f"Connection Error: {e}")
 
@@ -542,11 +564,12 @@ if voice_text:
 with tabs[1]:
     environment = st.radio("Environment", ["Home", "Wild"], horizontal=True)
     camera_photo = st.camera_input("Take a picture of your food")
+    hint = st.text_input("Any hints? (e.g., 'This is a plate of Misal Pav', 'This is chicken curry')")
     
     if camera_photo:
         with st.spinner('Gemma 4 is estimating macros...'):
             try:
-                result = send_vision_log(camera_photo.getvalue(), environment)
+                result = send_vision_log(camera_photo.getvalue(), environment, hint)
                 if result.get("status") == "success":
                     items = result.get("items", [])
                     item_list = ", ".join([f"{i['name']} ({i['calories']} kcal)" for i in items])

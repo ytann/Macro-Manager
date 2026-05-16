@@ -14,7 +14,7 @@ The system employs a decoupled **Client-Server Architecture**:
 
 *   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It features an interactive 3D Glass HUD for macro tracking and integrated Voice-to-Log capabilities.
 *   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline.
-*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API). The backend prompts are specifically **primed with PCOS metabolic context** to move beyond generic FDA guidelines and instead provide specialized, context-aware dietary guidance.
+*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) and a **Clinical Copilot**. The system includes a **Medical Firewall** to ensure safety boundaries are maintained, prioritizing professional medical referral over AI diagnosis. Backend prompts are specifically **primed with PCOS metabolic context** to provide specialized, context-aware dietary guidance.
 *   **Persistence Layer (SQLite)**: Two specialized databases:
     *   `foodbank.db`: Static and learned food nutrition data.
     *   `macros.db`: User meal logs and goal settings.
@@ -28,6 +28,7 @@ To ensure a snappy UX, the system uses a **Job-Status model** instead of blockin
 
 **1. Input Phase**
 `User Text/Voice` $\rightarrow$ `ExtractionService.extract_items()` $\rightarrow$ **Returns `meal_id` & `items` instantly to UI**
+`User Dietary Query` $\rightarrow$ `PlannerService.plan()` $\rightarrow$ `Router` $\rightarrow$ `Knowledge Loader` $\rightarrow$ `Clinical Copilot` $\rightarrow$ **Returns tailored plan with safety disclaimer**
 
 **2. Background Resolution (Async)**
 The server triggers a background task to resolve nutrition for each item in parallel:
@@ -60,9 +61,11 @@ The Frontend polls `GET /log/status/{meal_id}` $\rightarrow$ Updates item spinne
 *   **Async Decoupling**: Separates item extraction from nutritional resolution to prevent API timeouts.
 *   **Vision Analysis**: Implements a Two-Step reasoning process (**Analysis $\rightarrow$ Extraction**). It uses environment rules (`Home` vs `Wild`) to estimate portion sizes accurately.
 
-#### D. `OnboardingService` (PCOS Calibration)
-Extracts user biometrics via LLM and applies the following deterministic logic:
-
+#### E. `PlannerService` (Clinical Copilot)
+Implements a three-stage routing pipeline to provide empathetic and safe dietary guidance:
+1. **Router**: Analyzes the user query to determine the intent (e.g., general advice, specific meal plan, or acute medical concern).
+2. **Knowledge Loader**: Fetches relevant PCOS nutrition constraints from the wiki/knowledge base.
+3. **Clinical Copilot**: Synthesizes a tailored plan using the `meal_copilot` prompt, strictly adhering to a **Medical Firewall** that refers acute symptoms or prescription requests to a physician.
 1.  **BMR (Mifflin-St Jeor)**: `(10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161` (Age default: 25).
 2.  **TDEE**: `BMR * activity_level`
     *   *Sedentary*: 1.2 | *Light*: 1.375 | *Moderate*: 1.55 | *Active*: 1.725
@@ -101,7 +104,9 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 | **Async Logging** | Instant item extraction $\rightarrow$ Background resolution | Job-Status Model + BackgroundTasks |
 | **Fuzzy Matching** | Maps "Budhani Chipss" $\rightarrow$ "Budhani Potato Chips" | `difflib` Canonicalization Layer |
 | **Vision Logging** | Image $\rightarrow$ Item + Weight extraction | Multimodal Gemma 4 + Env Rules |
-| **Regional Support** | Complex dish decomposition (e.g., Poha) | Recipe Expansion $\rightarrow$ Base Ingredients |
+| **Clinical Copilot** | AI-driven meal planning with integrated Medical Firewall | PlannerService $\rightarrow$ Router $\rightarrow$ Copilot |
+| **Medical Firewall** | Safety guardrail to prevent AI medical diagnosis | System Role Boundaries |
+| **Regional Support** | Complex dish decomposition using Expert Estimator + Category Fallback | Recipe Expansion $\rightarrow$ Ingredient-Based Inference |
 | **PCOS Calibration** | Bio-text $\rightarrow$ Calibrated macro targets | Onboarding Engine + metabolic penalty |
 | **Atwater Guardrail** | Corrects LLM calorie deviations > 20% | `Cals = P*4 + C*4 + F*9` |
 | **Interactive HUD** | 3D Glass flip-cards for macros and sub-macros | Custom CSS/HTML + Streamlit |
@@ -109,6 +114,7 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 ### 5.2 API Reference
 | Endpoint | Method | Purpose |
 | :--- | :--- | :--- |
+| `/planner` | `POST` | Clinical Copilot: Route query $\rightarrow$ Knowledge $\rightarrow$ Tailored dietary plan. |
 | `/log/start` | `POST` | Extract items from text; start background resolution. Returns `meal_id`. |
 | `/log/status/{id}` | `GET` | Poll resolution status (`processing` $\rightarrow$ `completed`). |
 | `/vision-log` | `POST` | Multimodal extraction from image $\rightarrow$ Resolve $\rightarrow$ Save. |

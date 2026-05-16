@@ -43,7 +43,7 @@ class ExtractionService:
                 return f.read()
         return ""
 
-    async def extract_from_image(self, base64_image: str, environment: str = "Home", hint: str = "") -> FoodLog:
+    async def extract_from_image(self, base64_image: str, environment: str, hint: str = "") -> FoodLog:
         prompt = self.prompts['extraction']['vision_estimate'].format(
             environment=environment, 
             hint=hint, 
@@ -126,7 +126,8 @@ class ExtractionService:
                 self.foodbank_cache[cache_key] = food_data
 
         if not food_data:
-            food_data = {'protein': 5, 'carbs': 15, 'fat': 5, 'calories': 125, 'verified': 0}
+            logger.warning(f"No nutrition data found for {name}, including as 0-macro item.")
+            food_data = {'protein': 0, 'carbs': 0, 'fat': 0, 'calories': 0, 'verified': 0}
 
         raw_p = float(food_data.get('protein') or 0)
         raw_c = float(food_data.get('carbs') or 0)
@@ -252,7 +253,12 @@ class ExtractionService:
                     parsed_items.append(item)
 
         if not parsed_items:
-            raise ValueError("No valid food items extracted.")
+            return FoodLog(
+                meal_id=meal_id, items=[],
+                total_macros=Macros(protein=0.0, carbs=0.0, fat=0.0),
+                total_sub_macros=SubMacros(),
+                total_calories=0.0, confidence_score=0.0
+            )
 
         return FoodLog(
             meal_id=meal_id, items=parsed_items,
@@ -273,8 +279,23 @@ class ExtractionService:
         """
         self.foodbank_cache.clear()
         
+        processed_text = text
+        if is_voice:
+            correction_prompt = self.prompts['extraction']['voice_correction'].format(text=text)
+            try:
+                resp = await safe_acompletion(
+                    model=self.model,
+                    messages=[{"role": "user", "content": correction_prompt}],
+                    api_base=Config.LITELLM_API_BASE,
+                    temperature=0.0
+                )
+                processed_text = resp.choices[0].message.content.strip()
+                logger.info(f"Voice correction: '{text}' -> '{processed_text}'")
+            except Exception as e:
+                logger.error(f"Voice correction failed: {e}")
+
         prompt = self.prompts['extraction']['main'].format(
-            text=text, 
+            text=processed_text, 
             user_memory=self._get_user_memory()
         )
         resp = await safe_acompletion(

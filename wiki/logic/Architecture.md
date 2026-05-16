@@ -8,8 +8,8 @@ FastAPI + Streamlit + SQLite (FTS5) + LiteLLM (ollama/gemma4:e2b) + httpx + Pyda
 
 ```
 app/
-  api.py              FastAPI: POST /log/start, GET /log/status/{id}, POST /log, POST /vision-log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear. Lifespan manages heartbeat and closes FoodbankService.
-  frontend.py         Streamlit: daily progress, static calendar week buffer, food journal, meal logging, goal settings. Uses shared httpx.AsyncClient for pooling.
+  api.py              FastAPI: POST /log/start, GET /log/status/{id}, POST /log, POST /vision-log, GET /summary (daily + weekly), /meals, /pending-count, /sync-status, POST /verify-queue, POST /goals, DELETE /clear, POST /planner. Lifespan manages heartbeat and closes FoodbankService.
+  frontend.py         Streamlit: daily progress, static calendar week buffer, food journal, meal logging, goal settings, Clinical Copilot UI. Uses shared httpx.AsyncClient for pooling.
   core/config.py      Config: LITELLM_API_BASE, LLM_MODEL, DB paths, prompts path
   core/llm.py            LLM Utility: Global concurrency control (Semaphore) for Ollama stability
   schemas/food_schemas.py  Pydantic: Macros, SubMacros, FoodItem, FoodLog, GoalRequest
@@ -21,7 +21,8 @@ app/
                         Provides `run_foodbank()` and `run_macros()` helpers for efficient thread-safe execution.
       foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements Canonicalization Layer (fuzzy matching) and L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
        extraction.py     ExtractionService: Decoupled async pipeline (Item Extraction -> Background Resolution). Unified Resolution Engine (_resolve_and_build_log) for both text and vision paths. Vision pipeline handles multimodal payload (text + image + optional hint) for Home/Wild estimation.
-      onboarding.py     OnboardingService: PCOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
+       onboarding.py     OnboardingService: PCOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
+       planner.py         PlannerService: Clinical Copilot orchestration. Implements Router -> Knowledge -> Copilot flow with a Medical Firewall to prevent AI medical diagnosis.
 
 
 
@@ -54,11 +55,19 @@ User Text -> ExtractionService.extract_items()
            - Canonicalization Layer (Fuzzy match against DB)
            - DB lookup (FTS5)
            - [OFFLINE] cached data or LLM estimate (verified=0, queued)
-           - [ONLINE] Authoritative web search -> General search -> LLM estimate
+           - [ONLINE] Authoritative web search -> General search -> LLM Expert Estimate -> Category Fallback (prevents 0-cal failures)
            - Standardized flat macro return for all paths
      b. Atwater guardrail (cal = P*4 + C*4 + F*9, correct if >20% deviation)
      c. Persist to macros.db
   4. UI polls GET /log/status/{meal_id} to update progress spinners.
+
+Clinical Copilot Flow:
+User Query -> PlannerService.plan()
+  1. Router analyzes intent (General vs. Specific vs. Medical)
+  2. Knowledge Loader fetches relevant PCOS guidelines from wiki
+  3. Clinical Copilot generates empathetic plan (meal_copilot prompt)
+  4. Medical Firewall validates output (Halt and refer if acute symptoms/prescriptions detected)
+  5. Returns tailored plan + legal disclaimer to UI
 
 
 Vision Pipeline (POST /vision-log):

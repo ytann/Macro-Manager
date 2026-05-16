@@ -72,6 +72,9 @@ MacroManager/
 | **Source of Truth** | Authoritative web search (Tavily) with LLM validation, confidence tiers |
 | **Unified Resolver** | Shared resolution engine for text and vision paths ensuring consistent macro calculation and recipe expansion |
 | **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
+| **Regional Support** | Complex dish decomposition using Expert Estimator + Category Fallback | Recipe Expansion $\rightarrow$ Ingredient-Based Inference |
+| **Clinical Copilot** | AI-driven meal planning and dietary advice with built-in Medical Firewall | PlannerService + Router + Copilot Prompts |
+| **Medical Firewall** | Strict boundaries to prevent medical diagnosis/prescriptions | System Role Guardrails in PlannerService |
 | **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
 | **FTS5 food search** | Full-text search for alias-based food lookups (case-insensitive) |
 | **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
@@ -83,6 +86,7 @@ MacroManager/
  
 ## API Endpoints
   
+- `POST /planner` — Clinical Copilot: Route query $\rightarrow$ Knowledge $\rightarrow$ Empathetic Dietary Plan
 - `POST /log/start` — Fast item extraction, returns `meal_id` for background resolution
 - `GET /log/status/{meal_id}` — Poll status of background nutrition resolution
 - `POST /log` — Backward compatibility: synchronous parse and save
