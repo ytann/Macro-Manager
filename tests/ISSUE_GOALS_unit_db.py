@@ -1,6 +1,4 @@
-import pytest
 from app.services.database import DatabaseManager
-import os
 
 def test_goals_table_exists():
     """Verify that the goals table is created in macros.db."""

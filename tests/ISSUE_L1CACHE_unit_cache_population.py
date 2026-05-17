@@ -1,7 +1,6 @@
 import pytest
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-import asyncio
 
 @pytest.mark.asyncio
 async def test_cache_population():

@@ -9,8 +9,13 @@ AI-powered nutrition tracking specialized for **PMOS (prev. PCOS)/PCOD** managem
 - **📝 Intelligent Food Journal**: 
   - **Inline Editing**: Update quantities directly in the journal; macros scale proportionally in real-time.
   - **Timezone Alignment**: Server-side `localtime` synchronization to prevent "ghost entries" and date mismatches.
-- **📷 Vision Extraction**: Multimodal food analysis with environment-aware portion estimation (`Home` vs `Wild`).
-- **🩺 Clinical Copilot**: AI-driven dietary guidance primed with PMOS metabolic context, protected by a **Medical Firewall** to ensure safety.
+- **📷 Vision Hub**: High-fidelity extraction pipeline with three modes:
+      - **Volumetric AI**: Context-aware portion estimation (`(Utensil Volume × Fill %) × Density = Mass`) with meal-type scaling (Breakfast vs Lunch vs Snack).
+      - **Label Scanner**: Direct macro extraction from OCR scans of food packaging.
+      - **QR/Barcode**: Automated data retrieval via OpenFoodFacts with LLM fallback.
+- **🩺 Clinical Copilot**: AI-driven dietary guidance primed with PMOS metabolic context.
+  - **Situational Budgeting**: dynamically balances meals (e.g., 30% Breakfast, 35% Lunch) and counter-balances daily intake to avoid insulin spikes.
+  - **Medical Firewall**: Ensures safety and prevents medical diagnoses.
 - **🔄 Sovereign Memory**: A personalized dietary glossary that remembers your specific utensil sizes and food preferences.
 - **📡 Offline-Ready**: Async sync queue with heartbeat lifecycle for seamless logging in low-connectivity areas.
 
@@ -67,6 +72,7 @@ MacroManager/
       foodbank.py             # Nutrition resolution & L1 caching
       extraction.py           # Single-pass LLM parsing & Vision pipeline
       onboarding.py           # PMOS baseline calibration
+      planner.py              # Clinical Copilot & Budgeting Logic
     schemas/
       food_schemas.py         # Pydantic models for nutrition data
   prompts/

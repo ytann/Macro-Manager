@@ -1,4 +1,3 @@
-import pytest
 from app.frontend import render_macro_hud
 
 def test_hud_empty_state():

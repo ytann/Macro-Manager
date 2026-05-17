@@ -1,10 +1,7 @@
 import pytest
-import asyncio
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
 from app.core.config import Config
-import os
-import sqlite3
 
 @pytest.fixture
 def db_manager(tmp_path):

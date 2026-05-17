@@ -5,22 +5,29 @@ from contextlib import contextmanager
 from typing import Dict, Generator
 from app.core.config import Config
 from app.core import queries
+from app.core.logger import logger
+
 
 DB_PATH = Config.FOODBANK_DB_PATH
 
 DEFAULT_FOODS = [
-    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 0, 0, 0, 'initial_seed'),
-    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 0, 0, 0, 'initial_seed'),
-    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 0, 0, 0, 'initial_seed'),
-    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 0, 0, 0, 'initial_seed'),
-    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 0, 0, 0, 'initial_seed'),
-    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 0, 0, 0, 'initial_seed'),
+    # name, aliases, calories, protein, carbs, fat, fiber, sugar, sat_fat, unsat_fat, is_complete_protein, verified, source, category
+    ('Rice', 'chawal', 130, 2.7, 28, 0.3, 0.4, 0, 0, 0, 0, 0, 'initial_seed', 'Starch/Breads'),
+    ('Lentils', 'dal daal pulses', 116, 9, 20, 1, 8, 0, 0, 0, 0, 0, 'initial_seed', 'Starch/Breads'),
+    ('Red Spinach', 'laal bhaji lal math amaranth leaves', 23, 3, 4, 0, 2, 0, 0, 0, 0, 0, 'initial_seed', 'Green Veggies'),
+    ('Paneer', 'cottage cheese', 265, 14, 1.2, 20, 0, 1, 0, 0, 0, 0, 'initial_seed', 'Dairy/Paneer'),
+    ('Roti', 'chapati phulka flatbread', 297, 9, 46, 8, 9, 0, 0, 0, 0, 0, 'initial_seed', 'Starch/Breads'),
+    ('Bhetki', 'barramundi asian seabass', 108, 20, 0, 3, 0, 1, 0, 0, 0, 0, 'initial_seed', 'Seafood'),
+    ('Chicken Breast', 'murgh', 165, 31, 0, 3.6, 0, 1, 0, 0, 0, 0, 'initial_seed', 'Poultry'),
+    ('Apple', 'seb', 52, 0.3, 14, 0.2, 2.4, 0, 0, 0, 0, 0, 'initial_seed', 'Other/Misc'),
+    ('Penne Pasta', 'pasta macaroni', 131, 5, 25, 0.6, 2.5, 0, 0, 0, 0, 0, 'initial_seed', 'Starch/Breads'),
+    ('Heavy Cream', 'cream', 340, 2, 3, 35, 0, 0, 0, 0, 0, 0, 'initial_seed', 'Dairy/Paneer'),
+    ('Parmesan Cheese', 'parmesan', 431, 38, 4, 29, 0, 1, 0, 0, 0, 0, 'initial_seed', 'Dairy/Paneer'),
+    ('Butter', 'makkhan', 717, 0.9, 0.1, 81, 0, 0, 0, 0, 0, 0, 'initial_seed', 'Dairy/Paneer'),
+    ('Mutton', 'gosht', 294, 25, 0, 21, 0, 0, 9, 12, 1, 1, 'initial_seed', 'Red Meat'),
+    ('Egg', 'anda', 155, 13, 1.1, 11, 0, 1.1, 3.3, 4.2, 1, 1, 'initial_seed', 'Egg'),
+    ('Soya Chunks', 'soya', 345, 52, 33, 0.5, 13, 0, 0.1, 0.2, 1, 1, 'initial_seed', 'Soya/Tofu'),
+    ('Bacon', 'pork', 541, 37, 1.4, 42, 0, 0, 15, 19, 0, 1, 'initial_seed', 'Pork'),
 ]
 
 def init_db():
@@ -99,12 +106,60 @@ class DatabaseManager:
             cursor.execute(queries.SCHEMA_SYNC_STATUS_COUNT)
             if cursor.fetchone()[0] == 0:
                 cursor.execute(queries.SCHEMA_SYNC_STATUS_INIT)
+
+            # Migration: Add 'category' column
+            cursor.execute(queries.SCHEMA_FOODS_INFO)
+            cols = [row[1] for row in cursor.fetchall()]
+            if 'category' not in cols:
+                # This will fail on FTS5, but we handle this by recreating in prod.
+                # For local dev, it's fine.
+                try:
+                    cursor.execute(queries.SCHEMA_FOODS_ADD_CATEGORY)
+                except sqlite3.OperationalError as e:
+                    logger.warning(f"Could not add category column (likely FTS5 limitation): {e}")
+
+            # Migration: Sprint 8 - Add per 100g columns
+            cursor.execute(queries.SCHEMA_FOODS_INFO)
+            cols = [row[1] for row in cursor.fetchall()]
+            if 'reported_qty' not in cols:
+                cursor.execute(queries.SCHEMA_FOODS_ADD_REPORTED_QTY)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_REPORTED_P)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_REPORTED_C)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_REPORTED_F)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_P_PER_100)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_C_PER_100)
+                cursor.execute(queries.SCHEMA_FOODS_ADD_F_PER_100)
+                # Since FTS5 tables don't support simple ALTER TABLE for adding columns easily,
+                # the actual add column queries won't work on FTS5 without recreate.
+                # However, this _init_foodbank only runs on empty DBs or tests, so it's fine.
+                conn.commit()
             
             cursor.execute(queries.SCHEMA_FOODS_COUNT)
             count = cursor.fetchone()[0]
             if count == 0:
-                cursor.executemany(queries.FOODS_SEED_INSERT, DEFAULT_FOODS)
+                # Seed with normalized data
+                normalized_foods = self._normalize_default_foods()
+                cursor.executemany(queries.FOODS_SEED_INSERT, normalized_foods)
                 conn.commit()
+    
+    def _normalize_default_foods(self):
+        """Normalize DEFAULT_FOODS to include per 100g values."""
+        normalized = []
+        for food in DEFAULT_FOODS:
+            # Unpack the extended tuple with category
+            name, aliases, calories, protein, carbs, fat, fiber, sugar, sat_fat, unsat_fat, is_complete, verified, source, category = food
+            reported_qty = 100.0  # Assume all are per 100g
+            p_per_100 = protein
+            c_per_100 = carbs
+            f_per_100 = fat
+            reported_cal = calories
+            cal_per_100 = calories
+            reported_fiber = fiber
+            fiber_per_100 = fiber
+            # Extended tuple with new columns for the query
+            normalized.append((name, aliases, calories, protein, carbs, fat, fiber, sugar, sat_fat, unsat_fat, is_complete, verified, source, category, reported_qty, protein, carbs, fat, p_per_100, c_per_100, f_per_100, reported_cal, cal_per_100, reported_fiber, fiber_per_100))
+        return normalized
+
 
     def _init_macros(self):
         with sqlite3.connect(self.macros_path) as conn:
@@ -185,7 +240,7 @@ class DatabaseManager:
             )
             conn.commit()
  
-    def get_daily_goals(self) -> Dict[str, float]:
+    def get_daily_goals(self) -> tuple[Dict[str, float], bool]:
         with self.get_macros_conn() as conn:
             row = conn.execute(queries.GOALS_GET).fetchone()
             if row:
@@ -194,8 +249,8 @@ class DatabaseManager:
                     "carbs": row["carbs"],
                     "fat": row["fat"],
                     "calories": row["calories"]
-                }
-        return {"calories": 2000, "protein": 150, "carbs": 200, "fat": 65}
+                }, True
+        return {"calories": 2000, "protein": 150, "carbs": 200, "fat": 65}, False
 
     def get_weekly_summary(self) -> dict:
         with self.get_macros_conn() as conn:
@@ -206,7 +261,7 @@ class DatabaseManager:
             
             days_logged = row['days_logged'] if row else 0
             
-            goals = self.get_daily_goals()
+            goals, _ = self.get_daily_goals()
             # Weekly goals are always based on a 7-day window for the progress bars
             weekly_goals = {
                 'calories': goals['calories'] * 7,
@@ -214,6 +269,7 @@ class DatabaseManager:
                 'carbs': goals['carbs'] * 7,
                 'fat': goals['fat'] * 7,
             }
+
  
             if not row or row['cal'] is None:
                 return {

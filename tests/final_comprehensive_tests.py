@@ -5,7 +5,6 @@ sys.path.append(os.getcwd())
 from app.services.extraction import ExtractionService
 from app.services.foodbank import FoodbankService
 from app.services.database import DatabaseManager
-import json
 
 test_cases = [
     {

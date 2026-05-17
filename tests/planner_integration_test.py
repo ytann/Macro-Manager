@@ -1,6 +1,4 @@
 import asyncio
-import json
-import os
 from app.services.planner import PlannerService
 
 async def test_planner_basic_flow():

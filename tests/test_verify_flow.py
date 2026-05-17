@@ -1,11 +1,9 @@
 
 import asyncio
-import os
 import pytest
 from unittest.mock import AsyncMock, patch
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-from app.core.config import Config
 
 @pytest.mark.asyncio
 async def test_verification_flow():

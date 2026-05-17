@@ -1,9 +1,6 @@
 import asyncio
-import os
-import sqlite3
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-from app.core.config import Config
 
 async def main():
     db_manager = DatabaseManager()

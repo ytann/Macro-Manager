@@ -19,8 +19,8 @@ app/
                         Defines DEFAULT_FOODS for consistent seeding.
                         Implements weekly summary aggregation (static calendar week).
                         Provides `run_foodbank()` and `run_macros()` helpers for efficient thread-safe execution.
-      foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements Canonicalization Layer (fuzzy matching) and L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
-       extraction.py     ExtractionService: Decoupled async pipeline (Item Extraction -> Background Resolution). Unified Resolution Engine (_resolve_and_build_log) for both text and vision paths. Vision pipeline handles multimodal payload (text + image + optional hint) for Home/Wild estimation.
+       foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements Normalization Engine (normalize_and_upsert) for Per 100g consistency, Canonicalization Layer (fuzzy matching) and L1 in-memory caching. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
+        extraction.py     ExtractionService: Decoupled async pipeline (Item Extraction -> Background Resolution). Unified Resolution Engine (_resolve_and_build_log). Vision Hub manages three paths: Volumetric AI (physics-based), Label OCR (package scanning), and QR/Barcode (OpenFoodFacts + LLM fallback).
        onboarding.py     OnboardingService: PMOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
        planner.py         PlannerService: Clinical Copilot orchestration. Implements Router -> Knowledge -> Copilot flow with a Medical Firewall to prevent AI medical diagnosis.
 
@@ -70,13 +70,15 @@ User Query -> PlannerService.plan()
   5. Returns tailored plan + legal disclaimer to UI
 
 
-Vision Pipeline (POST /vision-log):
-   User Image (base64 + environment + optional hint) -> ExtractionService.extract_from_image()
-      1. Multimodal payload: text (vision_estimate prompt + hint) + image (base64) $\rightarrow$ gemma4:e2b (Two-step Analysis $\rightarrow$ Extraction)
-     2. Environment rules: Home (~250-500g plates) vs. Wild (~300-600g plates)
-     3. Returns [{name, grams}] items
-     4. Pass to Unified Resolver -> build FoodLog
-     5. Persist to macros.db (meal_type="Vision")
+Vision Hub (POST /vision-log):
+    User Image (base64 + mode + optional hint) -> ExtractionService.extract_from_image()
+       1. Mode Selection:
+          a. Photo (Volumetric): Multimodal payload -> Gemma 4 (Container Geometry -> Fill % -> Volume * Density = Mass)
+          b. Label Scan: OCR extraction -> Gemma 4 (Parse Nutrition Facts Table -> Macros)
+          c. QR/Barcode: Barcode Decoder -> OpenFoodFacts API -> Verified Macros (Fallback: Gemma 4 Vision reads barcode digits -> Tavily Search)
+       2. Returns [{name, grams}] items
+       3. Pass to Unified Resolver -> build FoodLog
+       4. Persist to macros.db (meal_type="Vision")
 
 
 Heartbeat (asyncio task, lifespan-managed):
@@ -86,7 +88,7 @@ Heartbeat (asyncio task, lifespan-managed):
 ## Databases
 
 ### foodbank.db
-- `foods` (FTS5 virtual table): name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source
+- `foods` (FTS5 virtual table): name, aliases, reported_qty, reported_p, reported_c, reported_f, p_per_100, c_per_100, f_per_100, reported_cal, cal_per_100, reported_fiber, fiber_per_100, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source
 - `recipes`: dish_name (PK), recipe_json
 - `pending_verification`: name (PK), retry_count
 - `sync_status`: id (PK), last_sync

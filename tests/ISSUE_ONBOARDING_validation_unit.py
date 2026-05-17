@@ -1,10 +1,8 @@
 import pytest
-import asyncio
 import json
 from unittest.mock import AsyncMock, patch
 from app.services.onboarding import OnboardingService, OnboardingValidationError
 
-import json
 
 @pytest.mark.asyncio
 async def test_onboarding_validation_fail():

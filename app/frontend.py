@@ -5,7 +5,6 @@ Connects to FastAPI backend at API_URL (default: http://localhost:8000).
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 import requests
 import base64
 import time
@@ -443,6 +442,7 @@ def init_session():
         "consumed":         {"protein": 0.0, "carbs": 0.0, "fat": 0.0,
                              "calories": 0.0, "fiber": 0.0, "sugar": 0.0},
         "goals":            SYSTEM_GOAL_DEFAULTS.copy(),
+        "onboarded":          False,
         "weekly":           {},
         "journal_grouped":  {},
         "memory_content":   "",
@@ -466,7 +466,8 @@ def fetch_summary(date=None):
         d = r.json()
         st.session_state.consumed        = d["daily"]["consumed"]
         st.session_state.goals           = d["daily"]["goals"]
-        st.session_state.weekly          = d.get("weekly", {})
+        st.session_state.onboarded         = d["daily"].get("onboarded", False)
+        st.session_state.weekly            = d.get("weekly", {})
         st.session_state.journal_grouped = d["daily"].get("grouped", {})
         st.session_state.last_refreshed  = time.time()
     except requests.exceptions.ConnectionError:
@@ -479,7 +480,7 @@ def api_start_log(text, meal_type, environment="restaurant", is_voice=False):
     r = requests.post(
         f"{API_URL}/log/start",
         json={"text": text, "meal_type": meal_type, "environment": environment, "is_voice": is_voice},
-        timeout=15,
+         timeout=30,
     )
     r.raise_for_status()
     return r.json()["meal_id"]
@@ -491,11 +492,32 @@ def api_log_status(meal_id):
     return r.json().get("status", "processing")
 
 
-def api_vision_log(b64, environment, hint):
+# ─────────────────────────────────────────────────────────────────────────────
+# API HELPERS (UPDATED FOR VISION)
+# ─────────────────────────────────────────────────────────────────────────────
+def api_vision_log(b64, environment, hint, meal_type="General"):
     r = requests.post(
         f"{API_URL}/vision-log",
-        json={"base64_image": b64, "environment": environment, "hint": hint},
-        timeout=30,
+        json={"base64_image": b64, "environment": environment, "hint": hint, "meal_type": meal_type},
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()
+
+def api_vision_scan_label(b64, hint, meal_type="General", quantity=None):
+    r = requests.post(
+        f"{API_URL}/vision-scan-label",
+        json={"base64_image": b64, "hint": hint, "meal_type": meal_type, "quantity": quantity},
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()
+
+def api_vision_scan_qr(b64, hint, meal_type="General", quantity=None):
+    r = requests.post(
+        f"{API_URL}/vision-scan-qr",
+        json={"base64_image": b64, "hint": hint, "meal_type": meal_type, "quantity": quantity},
+        timeout=60,
     )
     r.raise_for_status()
     return r.json()
@@ -528,14 +550,15 @@ def api_fetch_memory():
     return r.json().get("content", "")
 
 
-def api_ask_copilot(query, remaining, memory_context=""):
+def api_ask_copilot(query, remaining, consumed, goals, memory_context=""):
     r = requests.post(
         f"{API_URL}/planner",
-        json={"user_query": query, "remaining_macros": remaining, "memory_context": memory_context},
+        json={"user_query": query, "remaining_macros": remaining, "consumed_macros": consumed, "goals": goals, "memory_context": memory_context},
         timeout=30,
     )
     r.raise_for_status()
     return r.json().get("suggestion", "No suggestion available.")
+
 
 
 def api_delete_meal(meal_id):
@@ -968,7 +991,7 @@ def render_food_log():
             unsafe_allow_html=True,
         )
 
-        log_clicked = st.button("log it →", key="btn_log", use_container_width=True)
+        log_clicked = st.button("log it →", key="btn_log", width='stretch')
 
         if log_clicked:
             if user_text.strip():
@@ -983,39 +1006,141 @@ def render_food_log():
             else:
                 st.warning("Describe what you ate first.")
 
-    # ── Camera ────────────────────────────────────────────
+    # ── Camera / Vision Hub ────────────────────────────────────────────
     with tab_cam:
-        env_col, hint_col = st.columns([1.5, 1.5])
-        with env_col:
-            env = st.selectbox(
-                "setting",
-                ["home", "restaurant", "street food", "packaged"],
-                key="cam_env",
+        # Global Meal Type for all vision modes
+        mt_col, empty_col = st.columns([1.5, 1.5])
+        with mt_col:
+            vision_meal_type = st.selectbox(
+                "meal type",
+                ["breakfast", "lunch", "dinner", "snack"],
+                key="mt_vision",
                 label_visibility="collapsed",
             )
-        with hint_col:
-            hint = st.text_input(
-                "hint (optional)",
-                placeholder="e.g. South Indian thali",
-                key="cam_hint",
-                label_visibility="collapsed",
-            )
-        
-        uploaded_file = st.file_uploader(
-            "Choose an image",
-            type=["jpg", "jpeg", "png"],
+            
+        # Segmented Control for Modes
+        vision_mode = st.radio(
+            "Vision Mode",
+            ["📷 Photo", "🏷️ Label Scanner", "🏁 QR/Barcode"],
+            horizontal=True,
             label_visibility="collapsed"
         )
-        if uploaded_file is not None:
-            st.image(uploaded_file, use_container_width=True, caption="Selected image")
-            if st.button("analyse photo →", key="btn_vision_gallery"):
-                b64 = base64.b64encode(uploaded_file.read()).decode()
-                st.session_state.pending_vision_log = {
-                    "b64": b64,
-                    "env": env,
-                    "hint": hint or ""
-                }
-                st.rerun()
+        
+        st.markdown('<div style="margin-top:12px;"></div>', unsafe_allow_html=True)
+
+        if vision_mode == "📷 Photo":
+            env_col, hint_col = st.columns([1.5, 1.5])
+            with env_col:
+                env = st.selectbox(
+                    "setting",
+                    ["home", "restaurant", "street food", "packaged"],
+                    key="cam_env",
+                    label_visibility="collapsed",
+                )
+            with hint_col:
+                hint = st.text_input(
+                    "hint (optional)",
+                    placeholder="e.g. South Indian thali",
+                    key="cam_hint",
+                    label_visibility="collapsed",
+                )
+            
+            uploaded_file = st.file_uploader(
+                "Choose an image",
+                type=["jpg", "jpeg", "png"],
+                label_visibility="collapsed",
+                key="cam_uploader_photo"
+            )
+            if uploaded_file is not None:
+                st.image(uploaded_file, width='stretch', caption="Selected image")
+                if st.button("analyse photo →", key="btn_vision_gallery"):
+                    b64 = base64.b64encode(uploaded_file.read()).decode()
+                    st.session_state.pending_vision_log = {
+                        "mode": "photo",
+                        "b64": b64,
+                        "env": env,
+                        "hint": hint or "",
+                        "meal_type": vision_meal_type
+                    }
+                    st.rerun()
+                    
+        elif vision_mode == "🏷️ Label Scanner":
+            st.markdown('<p style="font-size:13px;color:#9a8d7c;margin-bottom:8px;">Extract precise macros per 100g from a nutrition label.</p>', unsafe_allow_html=True)
+            hint_col, qty_col = st.columns([2, 1])
+            with hint_col:
+                hint = st.text_input(
+                    "Product Name (optional)",
+                    placeholder="e.g. Lay's Classic",
+                    key="label_hint",
+                    label_visibility="collapsed",
+                )
+            with qty_col:
+                quantity = st.number_input(
+                    "Quantity (g/ml)",
+                    min_value=0.0,
+                    step=10.0,
+                    value=None,
+                    placeholder="g/ml",
+                    key="label_qty",
+                    label_visibility="collapsed",
+                )
+            uploaded_file = st.file_uploader(
+                "Take a photo of the nutrition label",
+                type=["jpg", "jpeg", "png"],
+                label_visibility="collapsed",
+                key="cam_uploader_label"
+            )
+            if uploaded_file is not None:
+                st.image(uploaded_file, width='stretch', caption="Nutrition Label")
+                if st.button("scan label →", key="btn_vision_label"):
+                    b64 = base64.b64encode(uploaded_file.read()).decode()
+                    st.session_state.pending_vision_log = {
+                        "mode": "label",
+                        "b64": b64,
+                        "hint": hint or "",
+                        "quantity": quantity,
+                        "meal_type": vision_meal_type
+                    }
+                    st.rerun()
+                    
+        elif vision_mode == "🏁 QR/Barcode":
+            st.markdown('<p style="font-size:13px;color:#9a8d7c;margin-bottom:8px;">Scan a barcode to fetch macros instantly.</p>', unsafe_allow_html=True)
+            hint_col, qty_col = st.columns([2, 1])
+            with hint_col:
+                hint = st.text_input(
+                    "Product Name (optional hint)",
+                    placeholder="e.g. Oreo",
+                    key="qr_hint",
+                    label_visibility="collapsed",
+                )
+            with qty_col:
+                quantity = st.number_input(
+                    "Quantity (g/ml)",
+                    min_value=0.0,
+                    step=10.0,
+                    value=None,
+                    placeholder="g/ml",
+                    key="qr_qty",
+                    label_visibility="collapsed",
+                )
+            uploaded_file = st.file_uploader(
+                "Take a photo of the barcode",
+                type=["jpg", "jpeg", "png"],
+                label_visibility="collapsed",
+                key="cam_uploader_qr"
+            )
+            if uploaded_file is not None:
+                st.image(uploaded_file, width='stretch', caption="Barcode")
+                if st.button("scan barcode →", key="btn_vision_qr"):
+                    b64 = base64.b64encode(uploaded_file.read()).decode()
+                    st.session_state.pending_vision_log = {
+                        "mode": "qr",
+                        "b64": b64,
+                        "hint": hint or "",
+                        "quantity": quantity,
+                        "meal_type": vision_meal_type
+                    }
+                    st.rerun()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1032,7 +1157,7 @@ def render_journal():
     with col_type:
         selected_type = st.selectbox("meal type", ["All", "breakfast", "lunch", "dinner", "snack"], key="journal_type", label_visibility="collapsed")
     with col_clear:
-        if st.button("Clear Day", key="btn_clear_day", help="Clear all meals for the selected date", use_container_width=True):
+        if st.button("Clear Day", key="btn_clear_day", help="Clear all meals for the selected date", width='stretch'):
             try:
                 api_clear_meals(selected_date)
                 fetch_summary(selected_date)
@@ -1073,7 +1198,7 @@ def render_journal():
                 st.markdown(f"**{m_type.capitalize()}**")
                 
                 # Table Header - Sticky Wrapper (Combined into single markdown call to prevent HTML breakage)
-                st.markdown(f'''
+                st.markdown('''
                     <div style="position: sticky; top: 0; z-index: 10; background: white; padding-bottom: 10px; border-bottom: 1px solid rgba(42,31,16,0.1); display: flex; width: 100%; gap: 0px;">
                         <div style="flex: 0 0 29.17%; font-size: 12px; color: #9a8d7c; text-align: left;"><div class="wrap"><small>Name</small></div></div>
                         <div style="flex: 0 0 16.67%; font-size: 12px; color: #9a8d7c; text-align: right;"><div class="nowrap"><small>Qty</small></div></div>
@@ -1213,21 +1338,21 @@ def render_memory_section():
 def render_onboarding_page():
     st.markdown('<div style="margin-top:12px;"></div>', unsafe_allow_html=True)
     st.markdown(
-        f'<div style="'
-        f'background: linear-gradient(135deg, rgba(127, 119, 221, 0.16) 0%, rgba(239, 159, 39, 0.16) 50%, rgba(29, 158, 117, 0.16) 100%);'
-        f'border: 1.5px solid rgba(42, 31, 16, 0.12);'
-        f'border-radius: 12px;'
-        f'padding: 22px 16px;'
-        f'text-align: center;'
-        f'margin-bottom: 24px;'
-        f'box-shadow: 0 4px 24px rgba(42, 31, 16, 0.05);'
-        f'backdrop-filter: blur(12px);'
-        f'">'
-        f'<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:28px;'
-        f'color:#2a1f10;margin:0;line-height:1.1;">📓 MacroManager</p>'
-        f'<p style="font-size:14px;color:#7a6d5a;margin:6px 0 0 0;font-weight:500;letter-spacing:0.3px;">'
-        f'PMOS goals & calibration</p>'
-        f'</div>',
+        '<div style="'
+        'background: linear-gradient(135deg, rgba(127, 119, 221, 0.16) 0%, rgba(239, 159, 39, 0.16) 50%, rgba(29, 158, 117, 0.16) 100%);'
+        'border: 1.5px solid rgba(42, 31, 16, 0.12);'
+        'border-radius: 12px;'
+        'padding: 22px 16px;'
+        'text-align: center;'
+        'margin-bottom: 24px;'
+        'box-shadow: 0 4px 24px rgba(42, 31, 16, 0.05);'
+        'backdrop-filter: blur(12px);'
+        '">'
+        '<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:28px;'
+        'color:#2a1f10;margin:0;line-height:1.1;">📓 MacroManager</p>'
+        '<p style="font-size:14px;color:#7a6d5a;margin:6px 0 0 0;font-weight:500;letter-spacing:0.3px;">'
+        'PMOS goals & calibration</p>'
+        '</div>',
         unsafe_allow_html=True,
     )
 
@@ -1248,7 +1373,7 @@ def render_onboarding_page():
         key="bio_text",
         label_visibility="collapsed"
     )
-    if st.button("calculate my goals →", key="btn_onboard", use_container_width=True):
+    if st.button("calculate my goals →", key="btn_onboard", width='stretch'):
         if bio.strip():
             with st.spinner("Calculating PMOS-adjusted goals…"):
                 try:
@@ -1284,7 +1409,7 @@ def render_onboarding_page():
         new_f   = st.number_input("Fat (g)",         value=float(g["fat"]),       min_value=0.0, step=5.0,  key="g_f")
         new_cal = st.number_input("Calories (kcal)", value=float(g["calories"]),  min_value=0.0, step=50.0, key="g_cal")
     
-    if st.button("save goals →", key="btn_goals", use_container_width=True):
+    if st.button("save goals →", key="btn_goals", width='stretch'):
         try:
             api_update_goals(new_p, new_c, new_f, new_cal)
             st.success("Goals saved.")
@@ -1316,7 +1441,7 @@ def render_pending_meal_log():
         "Writing entries into food journal…",
     ]
     
-    for attempt in range(1, 16):  # Max 15 attempts (~45 seconds)
+    for attempt in range(1, 31):  # Max 30 attempts (~90 seconds)
         msg_idx = (attempt - 1) % len(status_messages)
         current_msg = status_messages[msg_idx]
         
@@ -1330,7 +1455,7 @@ def render_pending_meal_log():
                     <div class="loader-title">Logging Meal</div>
                     <div class="loader-message">{current_msg}</div>
                     <div style="margin-top:20px; font-size:12px; color:#9a8d7c; font-family:'Courier Prime',monospace;">
-                        Attempt {attempt} of 15
+                         Attempt {attempt} of 30
                     </div>
                 </div>
             </div>
@@ -1349,7 +1474,7 @@ def render_pending_meal_log():
         except Exception as e:
             logger.warning(f"Status check attempt {attempt} failed: {e}")
         
-        if attempt == 15:  # Final attempt
+        if attempt == 30:  # Final attempt
             st.session_state.pending_meal_id = None
             placeholder.empty()
             st.warning("⏱️ Processing took longer than expected. Your meal is being logged in the background.")
@@ -1365,9 +1490,23 @@ def render_pending_vision_log():
     if not log_data:
         return
     
-    b64 = log_data["b64"]
-    env = log_data["env"]
-    hint = log_data["hint"]
+    mode = log_data.get("mode", "photo")
+    b64 = log_data.get("b64")
+    hint = log_data.get("hint", "")
+    meal_type = log_data.get("meal_type", "General")
+    quantity = log_data.get("quantity")
+    
+    loader_icons = {"photo": "📸", "label": "🏷️", "qr": "🏁"}
+    loader_titles = {
+        "photo": "Analyzing Photo", 
+        "label": "Reading Label", 
+        "qr": "Scanning Barcode"
+    }
+    loader_msgs = {
+        "photo": "Our clinical vision model is analyzing your photo and estimating PMOS-calibrated macronutrients…",
+        "label": "Extracting exact nutrition data from the label and normalizing it to our 100g database standard…",
+        "qr": "Decoding barcode and searching trusted databases for verified nutrition information…"
+    }
     
     placeholder = st.empty()
     with placeholder.container():
@@ -1375,25 +1514,32 @@ def render_pending_vision_log():
         <div class="loader-container">
             <div class="loader-card">
                 <div class="notebook-spinner">
-                    <div class="loader-icon">📸</div>
+                    <div class="loader-icon">{loader_icons.get(mode, '📸')}</div>
                 </div>
-                <div class="loader-title">Analyzing Photo</div>
-                <div class="loader-message">Our clinical vision model is analyzing your photo and estimating PMOS-calibrated macronutrients…</div>
+                <div class="loader-title">{loader_titles.get(mode, 'Analyzing Photo')}</div>
+                <div class="loader-message">{loader_msgs.get(mode, 'Processing...')}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
     try:
-        api_vision_log(b64, env, hint)
+        if mode == "photo":
+            env = log_data.get("env", "home")
+            api_vision_log(b64, env, hint, meal_type)
+        elif mode == "label":
+            api_vision_scan_label(b64, hint, meal_type, quantity)
+        elif mode == "qr":
+            api_vision_scan_qr(b64, hint, meal_type, quantity)
+            
         fetch_summary()
         st.session_state.pending_vision_log = None
         placeholder.empty()
-        st.toast("✓ Photo logged and macros updated!")
+        st.toast(f"✓ Meal logged successfully via {mode}!")
         st.rerun()
     except Exception as exc:
         st.session_state.pending_vision_log = None
         placeholder.empty()
-        st.error(f"Vision log failed: {exc}")
+        st.error(f"Vision/Scan log failed: {exc}")
         time.sleep(3.0)
         st.rerun()
 
@@ -1416,7 +1562,7 @@ def render_dashboard_page():
     render_hud()
     render_message()
     
-    if st.button("edit goals", key="btn_goto_onboarding", help="Edit your PMOS goals", use_container_width=True):
+    if st.button("edit goals", key="btn_goto_onboarding", help="Edit your PMOS goals", width='stretch'):
         st.session_state.current_page = "onboarding"
         st.rerun()
 
@@ -1441,10 +1587,10 @@ def render_dashboard_page():
     # Bottom section: AI Tools (Dietician + Memory)
     col_dietician, col_memory = st.columns(2)
     with col_dietician:
-        if st.button("💬 dietician", key="btn_copilot_modal", use_container_width=True):
+        if st.button("💬 dietician", key="btn_copilot_modal", width='stretch'):
             st.session_state.copilot_modal_open = True
     with col_memory:
-        if st.button("📝 remember this!", key="btn_memory_modal", use_container_width=True):
+        if st.button("📝 remember this!", key="btn_memory_modal", width='stretch'):
             st.session_state.memory_modal_open = True
     
     # --- Dietician Modal ---
@@ -1495,10 +1641,14 @@ def render_dashboard_page():
             
             # Background processor for copilot query
             if st.session_state.get("copilot_pending_query"):
-                query = st.session_state.copilot_pending_query
+                pending = st.session_state.copilot_pending_query
+                query = pending["query"]
+                remaining = pending["remaining"]
+                consumed = pending["consumed"]
+                goals = pending["goals"]
                 try:
                     memory_context = st.session_state.get("memory_content", "")
-                    suggestion = api_ask_copilot(query, remaining, memory_context)
+                    suggestion = api_ask_copilot(query, remaining, consumed, goals, memory_context)
                     st.session_state.copilot_chat.append({"role": "assistant", "content": suggestion})
                 except Exception as e:
                     st.error(f"Error: {e}")
@@ -1506,25 +1656,32 @@ def render_dashboard_page():
                     st.session_state.copilot_pending_query = None
                     st.session_state.copilot_query_modal = ""
                     st.rerun()
+
             
             # Input for new query
             user_query = st.text_input("Your question:", placeholder="e.g. What's a good dinner?", key="copilot_query_modal", label_visibility="collapsed")
             
             col_ask, col_clear, col_close = st.columns([2, 1, 1])
             with col_ask:
-                if st.button("Ask →", key="btn_ask_copilot", use_container_width=True):
+                if st.button("Ask →", key="btn_ask_copilot", width='stretch'):
                     if user_query.strip():
                         st.session_state.copilot_chat.append({"role": "user", "content": user_query})
-                        st.session_state.copilot_pending_query = user_query
+                        st.session_state.copilot_pending_query = {
+                            "query": user_query,
+                            "remaining": remaining,
+                            "consumed": c,
+                            "goals": g
+                        }
                         st.rerun()
+
             
             with col_clear:
-                if st.button("Clear", key="btn_clear_copilot", use_container_width=True):
+                if st.button("Clear", key="btn_clear_copilot", width='stretch'):
                     st.session_state.copilot_chat = []
                     st.rerun()
             
             with col_close:
-                if st.button("Close", key="btn_close_copilot", use_container_width=True):
+                if st.button("Close", key="btn_close_copilot", width='stretch'):
                     st.session_state.copilot_modal_open = False
                     st.rerun()
     
@@ -1559,7 +1716,7 @@ def render_dashboard_page():
             
             col_save, col_close = st.columns(2)
             with col_save:
-                if st.button("Save →", key="btn_mem_save_modal", use_container_width=True):
+                if st.button("Save →", key="btn_mem_save_modal", width='stretch'):
                     if mem_text.strip():
                         with st.spinner("Saving…"):
                             try:
@@ -1573,7 +1730,7 @@ def render_dashboard_page():
                         st.warning("Add some notes first.")
             
             with col_close:
-                if st.button("Close", key="btn_close_memory", use_container_width=True):
+                if st.button("Close", key="btn_close_memory", width='stretch'):
                     st.session_state.memory_modal_open = False
                     st.rerun()
 
@@ -1597,9 +1754,9 @@ def main():
             fetch_summary(today_str)
     
     # --- SMART ROUTING ---
-    # If page is not explicitly set (first load), determine based on goals
+    # If page is not explicitly set (first load), determine based on onboarding status
     if st.session_state.current_page is None:
-        if st.session_state.goals == SYSTEM_GOAL_DEFAULTS:
+        if not st.session_state.onboarded:
             st.session_state.current_page = "onboarding"
         else:
             st.session_state.current_page = "dashboard"

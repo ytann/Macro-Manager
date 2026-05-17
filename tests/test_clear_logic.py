@@ -1,6 +1,5 @@
 
 import os
-import sqlite3
 import datetime
 from app.services.database import DatabaseManager
 from app.core import queries

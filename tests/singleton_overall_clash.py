@@ -1,6 +1,5 @@
 import sys
 import os
-import sqlite3
 sys.path.append(os.getcwd())
 from app.services.database import DatabaseManager
 

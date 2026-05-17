@@ -1,8 +1,6 @@
 import asyncio
 import json
 from app.services.extraction import parse_food_log
-from app.services.foodbank import FoodbankService
-from app.services.database import DatabaseManager
 
 async def run_test(text):
     print(f"\nTesting: '{text}'")

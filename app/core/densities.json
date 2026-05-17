@@ -1,0 +1,38 @@
+{
+  "categories": {
+    "leafy_greens": 0.2,
+    "cruciferous_vegetables": 0.5,
+    "dense_vegetables": 0.8,
+    "grains_cooked": 0.7,
+    "legumes_cooked": 1.1,
+    "lean_proteins": 1.05,
+    "fats_oils": 0.91,
+    "fruits_dense": 0.9,
+    "fruits_watery": 0.6,
+    "dairy_thick": 1.03
+  },
+  "specific": {
+    "cooked_rice": 0.75,
+    "quinoa_cooked": 0.72,
+    "dal_thick": 1.1,
+    "dal_thin": 1.0,
+    "chicken_breast": 1.06,
+    "fish_fillet": 1.04,
+    "tofu": 1.1,
+    "avocado": 0.95,
+    "broccoli": 0.45,
+    "spinach_cooked": 0.9,
+    "spinach_raw": 0.15,
+    "egg_boiled": 1.03,
+    "paneer": 1.08,
+    "almonds": 0.6,
+    "walnuts": 0.55,
+    "olive_oil": 0.91,
+    "greek_yogurt": 1.05,
+    "cauliflower": 0.4,
+    "zucchini": 0.6
+  },
+  "fallbacks": {
+    "default_density": 0.8
+  }
+}

@@ -1,9 +1,7 @@
 import pytest
 import asyncio
-import json
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
-from app.core.config import Config
 
 REGIONAL_FOODS = [
     "Misal Pav", "Puran Poli", "Sabudana Khichdi", "Thalipeeth", "Vada Pav",

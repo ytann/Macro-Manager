@@ -1,7 +1,6 @@
 import pytest
 from streamlit.testing.v1 import AppTest
-from unittest.mock import patch, MagicMock
-from app.utils.vision_client import send_vision_log
+from unittest.mock import patch
 
 def test_vision_ui_integration():
     """

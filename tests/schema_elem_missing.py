@@ -2,7 +2,6 @@ import sys
 import os
 import sqlite3
 sys.path.append(os.getcwd())
-from scripts.ingest_csv import ingest_csv # Assuming this function exists in the script
 
 def test_ingest_csv_schema_missing():
     # Setup a temp db for ingestion

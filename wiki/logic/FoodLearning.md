@@ -6,9 +6,10 @@ Resolved by `app/services/foodbank.py` and `app/services/extraction.py`.
  
 For every item extracted from the user's log:
  
-1. **L1 Cache Lookup**: Immediate check of in-memory cache for normalized name.
-2. **Canonicalization Layer**: If no exact hit, perform fuzzy matching (Levenshtein) against the database to map typos/variations to existing entries.
-3. **DB Lookup**: Search `foodbank.db` via FTS5. If item is found and `verified=1`, return immediately.
+1. **Normalization Engine**: All incoming data (from scans, reported quantities, or web searches) is passed through `FoodbankService.normalize_and_upsert()`. This forces the data into a "Per 100g" standard, ensuring that nutritional calculations remain mathematically consistent regardless of the original input unit.
+2. **L1 Cache Lookup**: Immediate check of in-memory cache for normalized name.
+3. **Canonicalization Layer**: If no exact hit, perform fuzzy matching (Levenshtein) against the database to map typos/variations to existing entries.
+4. **DB Lookup**: Search `foodbank.db` via FTS5. If item is found and `verified=1`, return immediately.
 3. **Network Check**: `_is_network_available()` (HEAD to `https://1.1.1.1`) determines online/offline path.
 4. **Offline Path**: Return DB-cached data if available. Queue unverified items (`verified=0`) for future verification. If no cache, use `internal_estimate` (LLM guess), persist with `verified=0`.
 5. **Online Path (Source of Truth Flow)**: 

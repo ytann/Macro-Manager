@@ -14,7 +14,10 @@ The system employs a decoupled **Client-Server Architecture**:
 *   **Persistence Layer (SQLite)**: 
     *   `foodbank.db`: Static and learned food nutrition data.
     *   `macros.db`: User meal logs and goal settings.
-*   **Vision Pipeline**: A multimodal module extracting food items from images with environment-aware portion size estimation (`Home` vs `Wild`).
+*   **Vision Hub**: A multimodal extraction center providing three distinct ingestion paths:
+        1.  **Volumetric Analysis**: Physics-based estimation using container geometry and food density constants.
+        2.  **Label Scanning**: OCR-based extraction of nutrition facts from physical packaging.
+        3.  **QR/Barcode Scanning**: Direct integration with OpenFoodFacts for verified product data, with a vision-based LLM fallback for unreadable codes.
 *   **Sovereign Memory**: A personalized dietary glossary (`personal_glossary.md`) that stores user-specific facts (e.g., utensil sizes, frequent meal variations) to enhance extraction accuracy.
 *   **Offline Sync Queue**: A background mechanism that captures unverified data while offline and synchronizes with authoritative sources via a heartbeat lifecycle.
 *   **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PMOS-calibrated macro calculation.
@@ -38,6 +41,7 @@ To ensure a snappy UX, the system uses a **Job-Status model**:
 *   **Temporal Aggregation**: Calculates weekly summaries based on the static calendar week (Monday-Sunday).
 
 #### B. `FoodbankService`
+*   **Normalization Engine**: Implements `normalize_and_upsert()` to convert all incoming data (reported or scanned) into a standardized "Per 100g" format, ensuring mathematical consistency across the database.
 *   **Canonicalization Layer**: Uses Levenshtein-based fuzzy matching to resolve typos or name variations, bypassing slow web searches.
 *   **L1 In-Memory Cache**: High-speed dictionary cache for frequent items to eliminate redundant DB/Network roundtrips.
 
@@ -79,7 +83,7 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core:
 | :--- | :--- | :--- |
 | **Async Logging** | Instant extraction $\rightarrow$ Background resolution | Job-Status Model + BackgroundTasks |
 | **Fuzzy Matching** | Maps typos $\rightarrow$ canonical food entries | `difflib` Canonicalization Layer |
-| **Vision Logging** | Image $\rightarrow$ Item + Weight extraction | Multimodal Gemma 4 + Env Rules |
+| **Vision Hub** | Volumetric AI / Label OCR / QR-Barcode scan | Multimodal Gemma 4 + OpenFoodFacts |
 | **Clinical Copilot** | AI-driven meal planning + Medical Firewall | PlannerService $\rightarrow$ Router $\rightarrow$ Copilot |
 | **PMOS Calibration** | Bio-text $\rightarrow$ Calibrated macro targets | Onboarding Engine + metabolic penalty |
 | **Inline Editing** | Ratio-based quantity scaling in the journal | `PATCH /meals/{id}` + proportionally scaled macros |
@@ -119,3 +123,10 @@ The system transitioned from a prototype to a "clinical notebook" experience:
 - **High-Fidelity Journal**: Implemented a sticky-header tabular view for the daily log.
 - **Inline Quantity Scaling**: Changing the weight of a food item automatically scales its protein, carbs, and fat proportionally on the server.
 - **Schema Hardening**: Strict Pydantic validation in the update pipeline to ensure data integrity during manual edits.
+
+### Phase 5: Volumetric Vision & High-Fidelity Extraction (Sprints 7-8)
+- **Volumetric AI**: Transitioned from LLM guessing to a physics-based model using utensil volumes and food density constants (`(Vol * Fill%) * Density = Mass`).
+- **The Vision Hub**: Integrated a unified UI for Photo, Label Scanning, and QR/Barcode ingestion.
+- **OpenFoodFacts Integration**: Enabled automated fetching of verified nutrition data via product barcodes.
+- **Database Normalization**: Migrated the `foods` table to a dual-structure (Reported vs. Per 100g), implementing a normalization engine to ensure all data is stored against a 100g baseline.
+- **PMOS Global Alignment**: Full migration of clinical terminology from PCOS to PMOS across the entire ecosystem.

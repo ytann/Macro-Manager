@@ -3,7 +3,6 @@ import sqlite3
 import asyncio
 from unittest.mock import MagicMock, patch
 from app.services.foodbank import FoodbankService
-from app.services.database import DatabaseManager
 
 @pytest.mark.asyncio
 async def test_seeding_works():

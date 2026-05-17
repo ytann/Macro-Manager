@@ -22,22 +22,38 @@ extraction:
 
     You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
     
-    UNIT CONVERSION REFERENCE (Critical for Indian & Global Foods):
-    - Indian Breads: 1 roti/chapati/phulka = 50g, 1 naan = 90g, 1 puri = 40g, 1 paratha = 80g, 1 dosa = 150g, 1 idli = 45g
-    - Rice: 1 cup cooked rice = 150g, 1 bowl = 150g
-    - Pieces/Servings: 1 slice = 50g, 1 piece = 100g, 1 serving = 150g, 1 bowl = 200g, 1 plate = 300g
-    - Proteins: 1 egg = 50g, 1 chicken breast = 100g, 1 paneer piece = 30g
-    - Fruits: 1 apple = 180g, 1 banana = 120g, 1 mango = 200g
-    - Vegetables: 1 potato = 150g, 1 carrot = 80g, 1 cup spinach = 30g
-    
+    CONTEXTUAL VOLUMETRIC SCALING (Critical for accuracy):
+    The weight of ambiguous terms (plate, bowl, portion) MUST be adjusted based on the MEAL TYPE: {meal_type}
+    GUARDRAIL: Average total solid food intake per day is 1-1.5kg. Estimates must be conservative.
+
+    1. SCALE BY MEAL TYPE:
+       - BREAKFAST: Plates/Portions are typically 120g-180g (e.g., Poha, Upma). Bowls are ~120g-180g.
+       - LUNCH/DINNER: Plates/Portions are typically 150g-250g (e.g., Dal, Sabzi). Bowls are ~150g-250g.
+       - SNACK: Plates/Portions are typically 80g-120g (e.g., Sev Puri, Chaat). Bowls are ~80g-120g.
+
+    2. ITEM-SPECIFIC WEIGHTS:
+       - Breads: Wheat Roti/Chapati = 20-30g, Bhakri/Bajra Roti = 40-50g, Naan = 90g, Puri = 40g, Paratha = 80g, Dosa = 150g, Idli = 45g.
+       - "1 Piece": 
+         - Snacks/Finger Foods (e.g., Pakora, Samosa, Nugget) = 15-20g.
+         - Desserts (e.g., Gulab Jamun, Rasgulla) = 50g.
+         - Proteins (e.g., Paneer cube, Chicken piece) = 30g.
+       - Volume Terms:
+         - Handful: ~30g.
+         - Cup: ~150g.
+         - Glass (Milk/Juice): ~350ml.
+         - Bowl: Use Meal Type Scale (80g Snack / 120g Breakfast / 150-250g Main).
+         - Plate: Use Meal Type Scale (80g Snack / 120g Breakfast / 150-250g Main).
+         - Large Bowl: ~300g-400g.
+         - Slice: 50g.
+
     RULES:
     1. PHONETIC NORMALIZATION: If the text appears to be from a Speech-to-Text engine (containing phonetic errors, e.g., 'better garlic can't' instead of 'butter garlic naan'), you MUST first internally normalize the text to the most likely food-related terms before extracting items.
     2. ITEM IDENTIFICATION: Extract the food/brand name. When removing quantifiers (like '1 packet of'), you MUST PRESERVE the actual food/brand name (e.g., '1 packet of Lays' -> 'Lays'). Do not delete the food item.
     3. WEIGHT ESTIMATION: Calculate the TOTAL weight in grams for the entire quantity mentioned. 
-       - Step 1: Identify the base unit (e.g., 1 slice, 1 piece, 1 apple).
-       - Step 2: Look up the base unit weight from the reference above OR assign a realistic weight (e.g., 1 slice of sourdough ~ 50g, 1 medium apple ~ 180g).
-       - Step 3: Multiply the base unit weight by the quantity mentioned. EXAMPLE: "2 rotis with bhindi sabzi" = 2 × 50g = 100g for roti, plus sabzi serving.
-       - If no quantity is mentioned, use the weight of one standard serving.
+       - Step 1: Identify the base unit (e.g., 1 slice, 1 piece, 1 handful).
+       - Step 2: Look up the weight using the SCALE BY MEAL TYPE and ITEM-SPECIFIC WEIGHTS rules.
+       - Step 3: Multiply the base unit weight by the quantity mentioned. EXAMPLE: "2 rotis" = 2 × 30g = 60g.
+       - If no quantity is mentioned, use the weight of one standard serving based on the meal context.
        You MUST provide a weight greater than 0. Never output 0 grams.
     4. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha, Misal Pav, Masala Dosa).
     5. CRITICAL CONTEXT PRESERVATION: You MUST NEVER strip brand names, restaurant names, or cooking methods from the food name. 
@@ -56,31 +72,76 @@ extraction:
     USER'S PERSONAL MEMORY (CRITICAL CONTEXT):
     {user_memory}
 
-    You are a precise food vision extraction engine. 
-    
+    You are a precise food vision extraction engine. Your goal is to analyze the volume of food relative to its container.
+
     STEP 1: ANALYSIS
     Analyze the image. Does it contain edible food? 
     - If NO: Return {{"items": [], "reasoning": "No edible food detected"}}.
-    - If YES: Scan the image for logos, text on wrappers, or recognizable brand packaging. Note them here. Describe the food items, their colors, textures, and arrangement in the 'reasoning' field.
-    
-    STEP 2: EXTRACTION
-    Extract ALL visible food items. 
-    USER HINT (OPTIONAL): {hint} - If the user provides a hint, use it to accurately identify Ambiguous items in the image, overriding your generic guess.
+    - If YES: Scan the image for logos, text on wrappers, or recognizable brand packaging. Describe the food items, their colors, textures, and arrangement in the 'reasoning' field. Identify the primary container (e.g., 'medium bowl', 'small plate', 'glass').
+
+    STEP 2: VOLUMETRIC EXTRACTION
+    Extract ALL visible food items and determine their volume as a percentage of the container.
+    USER HINT (OPTIONAL): {hint} - Use this to accurately identify items, overriding generic guesses.
     ENVIRONMENT: {environment}
+
+    VOLUMETRIC RULES:
+    1. IDENTIFICATION: Be specific. Include brand names if visible. IMPORTANT: If the ENVIRONMENT is "street food", "restaurant", or "packaged", you MUST append this to the item name (e.g., "Street Food Pad Thai", "Restaurant Burger") so the downstream search engine knows to look for the high-oil/high-calorie version.
+    2. UTENSIL ANCHORING: Identify the utensil used. Check the USER'S PERSONAL MEMORY for specific dimensions.
+    3. FILL PERCENTAGE: Instead of grams, estimate what % of the container's total volume is occupied by each item.
+    4. STACKED ITEMS GUARDRAIL: For thin, stacked items (e.g., rotis, naan, parathas, tortillas, slices of bread/cheese), you MUST estimate the 'unit_count' (the number of pieces) instead of relying on fill_percentage, as stacking creates misleading volume.
+    5. SUM-TO-100% CONSTRAINT: The sum of all 'fill_percentage' values MUST be <= 100%. If the container is full, the total should be exactly 100%. 
+    6. CHAIN OF VOLUME: In your reasoning, explicitly state: [Container] -> [Item A % or Count] -> [Item B % or Count] -> [Total %].
+    7. NO PLACEHOLDERS: Identify it or return [].
     
-    ENVIRONMENT RULES (WEIGHT ANCHORS):
-    - Home: Standard home-cooked portions. Lighter total volume (~250g-450g).
-    - Wild: Restaurant/fast-food portions. Heavier total volume (~400g-800g).
-    
-    RULES:
-    1. IDENTIFICATION: Be specific. Use the USER HINT. If unsure, provide a best estimate based on visual cues.
-    2. WEIGHT: Provide realistic grams based on size and Environment Rules.
-    3. NO PLACEHOLDERS: No "unidentified food" or "unknown item". Identify it or return [].
-    4. CRITICAL CONTEXT PRESERVATION: If the USER HINT specifies a brand (e.g., 'Dominos') or a cooking method (e.g., 'Fried', 'Grilled'), you MUST include it in the extracted 'name' field.
-    5. BRAND & OCR AWARENESS: If you detected a brand logo or read text on a package (e.g., a McDonald's wrapper or a 'Doritos' bag), prefix the item name with the brand. Do not give generic names if the brand is visible.
-    6. FORMAT: Return ONLY a JSON object with 'reasoning' (your analysis) and 'items' (list of {{"name": "...", "grams": 0}}).
-    
-    Respond ONLY with JSON. Do not include markdown formatting. 
+    FORMAT: Return ONLY a JSON object with:
+    - 'reasoning': Your CoT analysis (Container -> Fill% / Count -> Total%).
+    - 'utensil': The identified utensil name (e.g., 'medium_bowl').
+    - 'items': A list of {{"name": "...", "fill_percentage": 0.0, "unit_count": null}} (where 0.0 to 100.0, and unit_count is an integer or null).
+
+
+    Respond ONLY with JSON. Do not include markdown formatting.
+
+  label_extraction: |
+    You are a Nutrition Label OCR Specialist. Your task is to extract nutrition facts from a packaged food label image with HIGH PRECISION.
+
+    STEP 1: VALIDATION
+    Examine the image. Is it a clear, readable nutrition label?
+    - If NO: Return {{"error": "not_readable", "message": "Image is not a clear nutrition label"}}.
+    - If YES: Proceed to extraction.
+
+    STEP 2: CRITICAL FIELDS EXTRACTION
+    Extract the following (in priority order):
+    1. **Serving Size / Reported Quantity** (e.g., "per 100g", "per serving: 250g", "per cup")
+    2. **Calories / Energy** (kcal for the reported quantity)
+    3. **Protein** (in grams for the reported quantity)
+    4. **Carbohydrates** (in grams for the reported quantity)
+    5. **Total Fat** (in grams for the reported quantity)
+    6. **Dietary Fiber** (in grams for the reported quantity)
+    7. **Product Name** (from the label if visible)
+    8. **Confidence Level** (1-100: how confident you are in the extraction)
+
+    STEP 3: CONFIDENCE & GUARDRAILS
+    - If any of the three macros (protein, carbs, fat) is missing or illegible, set confidence to LOW.
+    - If the reported quantity is ambiguous, flag it in 'notes'.
+    - If the label seems duplicated or confusing (e.g., nutrition per serving AND per 100g), extract per 100g ONLY.
+
+    STEP 4: FALLBACK OCR HINT
+    If available in the image context, use EasyOCR output for additional clarity.
+
+    FORMAT: Return ONLY a JSON object with:
+    - 'product_name': string (e.g., "Lay's Classic Chips")
+    - 'reported_qty': number (e.g., 100 or 250)
+    - 'reported_qty_unit': string (e.g., "grams", "ml", "serving")
+    - 'calories': number (kcal for the reported quantity)
+    - 'protein': number (grams for the reported quantity)
+    - 'carbs': number (grams for the reported quantity)
+    - 'fat': number (grams for the reported quantity)
+    - 'fiber': number (grams for the reported quantity, optional)
+    - 'confidence': number (1-100)
+    - 'notes': string (any caveats or ambiguities)
+
+    CRITICAL: Do NOT normalize to per 100g. Return the raw values as shown on the label. The backend will normalize.
+    Respond ONLY with JSON. Do not include markdown formatting.
 
   verification: |
     Original Text: "{text}"
@@ -180,9 +241,26 @@ foodbank:
     - dairy: Milk, yogurt, cheese.
     - vegetables_non_leafy: Broccoli, carrots, cauliflower, bell peppers.
     - unknown: Things that aren't clearly food or fit nowhere else.
-
+    
     Food Name: {name}
     Return ONLY a JSON object: {{"category": "category_id", "reasoning": "..."}}.
+  
+  fuzzy_verification: |
+    You are a food item verification expert. Given a user's food query and a list of potential matches from a database, your task is to determine if any of the matches are actually the same food item.
+    
+    USER QUERY: "{query}"
+    CANDIDATES: {candidates}
+    
+    CRITICAL RULES:
+    1. Semantic matching ONLY. Do not match based on shared words if the items are different.
+    2. Example: "Saag Chicken" and "Palak ka Saag" are DIFFERENT. One is a meat dish, one is a leafy green dish.
+    3. Example: "Paneer Tikka" and "Paneer Tikka (Dry)" are the SAME.
+    4. If a true match exists, return the exact name of the item from the candidates list.
+    5. If no true match exists, or if you are unsure, or if the match is only partial/generic (e.g., both contain 'Saag' but differ in main ingredient), return "none".
+    6. Be strictly conservative. False positives are worse than false negatives.
+    
+    Return ONLY the name or "none". No explanations.
+
 
 planner:
   empathetic_suggestion: |
@@ -240,30 +318,45 @@ planner:
 
   meal_copilot: |
     You are MacroManager's Clinical Copilot. You have been provided with the user's state and relevant sections from the PMOS Clinical Knowledge Base.
-
-    CLINICAL KNOWLEDGE LOADED:
-    {pmos_context}
-
+    
+    USER STATE:
+    - Total Daily Goals: {goals}
+    - Already Consumed Today: {consumed_macros}
+    - Remaining Allowance: {remaining_macros}
+    - Personal Context & Routines: {personal_glossary}
+    
+    SITUATIONAL BUDGETING HEURISTICS (Critical for meal suggestions):
+    When a user asks "What should I get for [Meal Type]?", you MUST not simply use the remaining macros. Instead, balance the daily budget using this distribution:
+    - Breakfast: 25-30% of total daily allowance.
+    - Lunch: 30-35% of total daily allowance.
+    - Snacks: 10-15% of total daily allowance.
+    - Dinner: 25-30% of total daily allowance.
+    
+    DECISION LOGIC:
+    1. CALCULATE FAIR SHARE: Determine the target macros for the requested meal based on the percentages above.
+    2. COUNTER-BALANCE: Compare "Fair Share" with "Already Consumed".
+       - If the user has already exhausted a macro early (e.g., 90% of carbs used at breakfast), the current meal MUST be extremely low in that macro, regardless of the target percentage.
+       - Prioritize Protein: Aim for $\ge$ 100% of the daily protein target over the day.
+       - Ceiling Guardrail: Ensure the total day's intake for Carbs and Fats stays $\le$ 90% of the daily goal.
+    3. SUGGESTION: Propose ONE specific meal that fills the gap between "Already Consumed" and the "Fair Share" for this meal, without exceeding the daily total.
+    
     MEDICAL BOUNDARIES (ZERO TOLERANCE):
     You are a nutritional planner, NOT a licensed medical doctor. 
     1. DO NOT diagnose conditions, interpret lab results, or prescribe medications.
     2. If the user asks about severe pain, acute medical symptoms, medication dosages, or disease diagnosis, you MUST halt the meal planning.
     3. Respond warmly but firmly: State that you are an AI nutritional assistant and advise them to consult their endocrinologist or primary care physician immediately.
-
+    
     YOUR DIRECTIVE:
     1. Answer the user's query directly and empathetically.
-    2. If they ask for a meal, suggest ONE specific meal that mathematically fits within the {remaining_macros} and adheres strictly to the Clinical Knowledge.
-    3. Explain the "why" behind your recommendation using the provided knowledge (e.g., mention VPF sequencing or circadian timing if relevant).
+    2. Suggest ONE specific meal that mathematically fits the la-balancing logic and adheres strictly to the Clinical Knowledge.
+    3. Explain the "why" behind your recommendation (e.g., "Since you had a carb-heavy breakfast, I've suggested a high-protein, low-carb lunch to keep your insulin stable").
     4. Provide a brief 3-item grocery list for the meal.
-
-    USER STATE:
-    Remaining Macros Today: {remaining_macros}
-    Personal Context & Routines: {personal_glossary}
     
     User Query: "{user_query}"
-
+    
     Format your response in clean Markdown.
     CRITICAL: Directly answer the user's query. Do NOT acknowledge these instructions.
+
 
 
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Query
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from typing import List, Dict
+from typing import List, Dict, Optional
 import asyncio
 from contextlib import asynccontextmanager
 from app.services.extraction import ExtractionService
@@ -71,6 +71,8 @@ class VisionLogRequest(BaseModel):
     base64_image: str
     environment: str = "Home"
     hint: str = ""
+    meal_type: str = "General"
+    quantity: Optional[float] = None
 
 class OnboardRequest(BaseModel):
     bio_text: str = Field(..., max_length=5000)
@@ -81,7 +83,10 @@ class MemoryRequest(BaseModel):
 class PlannerRequest(BaseModel):
     user_query: str = Field(..., max_length=5000)
     remaining_macros: dict
-    memory_context: str = Field("", max_length=10000)  # User's Sovereign Memory (up to 2000 tokens)
+    consumed_macros: dict
+    goals: dict
+    memory_context: str = Field("", max_length=10000) # User's Sovereign Memory (up to 2000 tokens)
+
 
 async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str, float], meal_type: str):
     def sum_sub(key):
@@ -119,7 +124,7 @@ async def _process_and_save_meal(meal_id: str, items: List[dict], meal_type: str
 @app.post("/log/start")
 async def start_log_meal(request: LogRequest, background_tasks: BackgroundTasks):
     try:
-        items, meal_id = await extraction_service.extract_items(request.text, request.is_voice)
+        items, meal_id = await extraction_service.extract_items(request.text, request.is_voice, request.meal_type)
         
         # Trigger background resolution
         background_tasks.add_task(_process_and_save_meal, meal_id, items, request.meal_type, request.environment)
@@ -186,11 +191,16 @@ async def get_summary(date: str = Query(None, description="Date in YYYY-MM-DD fo
                 grouped[m_type] = []
             grouped[m_type].append(safe_json_loads(row['items_json']))
             
-        daily_data = {
-            "consumed": consumed, 
-            "goals": db_manager.get_daily_goals(), 
-            "grouped": grouped
-        }
+    # Check onboarding status
+    goals, onboarded = db_manager.get_daily_goals()
+
+    daily_data = {
+        "consumed": consumed, 
+        "goals": goals, 
+        "grouped": grouped,
+        "onboarded": onboarded
+    }
+
         
     weekly_data = db_manager.get_weekly_summary()
     return {
@@ -332,7 +342,7 @@ async def clear_data():
 async def log_vision_meal(request: VisionLogRequest):
     try:
         meal_data = await extraction_service.extract_from_image(
-            request.base64_image, request.environment, request.hint
+            request.base64_image, request.environment, request.hint, request.meal_type
         )
 
         totals = {
@@ -342,11 +352,51 @@ async def log_vision_meal(request: VisionLogRequest):
             'cal': meal_data.total_calories
         }
 
-        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, "Vision")
+        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, request.meal_type)
 
         return {"status": "success", "message": f"Vision meal {meal_data.meal_id} logged successfully"}
     except Exception as e:
         logger.error(f"Vision API Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/vision-scan-label")
+async def scan_label(request: VisionLogRequest):
+    try:
+        meal_data = await extraction_service.extract_from_label(
+            request.base64_image, request.hint, request.meal_type, request.quantity
+        )
+        totals = {
+            'p': meal_data.total_macros.protein,
+            'c': meal_data.total_macros.carbs,
+            'f': meal_data.total_macros.fat,
+            'cal': meal_data.total_calories
+        }
+        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, request.meal_type)
+        return {"status": "success", "message": f"Label meal {meal_data.meal_id} logged successfully"}
+    except Exception as e:
+        logger.error(f"Label Scan API Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/vision-scan-qr")
+async def scan_qr(request: VisionLogRequest):
+    try:
+        meal_data = await extraction_service.extract_from_qr(
+            request.base64_image, request.hint, request.meal_type, request.quantity
+        )
+        totals = {
+            'p': meal_data.total_macros.protein,
+            'c': meal_data.total_macros.carbs,
+            'f': meal_data.total_macros.fat,
+            'cal': meal_data.total_calories
+        }
+        await _save_meal_to_db(meal_data.meal_id, meal_data.items, totals, request.meal_type)
+        return {"status": "success", "message": f"QR meal {meal_data.meal_id} logged successfully"}
+    except Exception as e:
+        logger.error(f"QR Scan API Error: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
@@ -372,8 +422,15 @@ async def get_memory():
 
 @app.post("/planner")
 async def ask_copilot(req: PlannerRequest):
-    suggestion = await planner_service.generate_suggestion(req.user_query, req.remaining_macros, req.memory_context)
+    suggestion = await planner_service.generate_suggestion(
+        req.user_query, 
+        req.remaining_macros, 
+        req.consumed_macros, 
+        req.goals, 
+        req.memory_context
+    )
     return {"suggestion": suggestion}
+
 
 if __name__ == "__main__":
     import uvicorn

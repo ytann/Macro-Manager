@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 import time
 from app.services.database import DatabaseManager
 from app.services.foodbank import FoodbankService
@@ -31,7 +30,7 @@ async def test_latency_gap():
     await service.get_nutrition_data(new_food)
     t4_new = time.perf_counter() - start_t4
     
-    print(f"\n--- L1 Cache Performance Report ---")
+    print("\n--- L1 Cache Performance Report ---")
     print(f"Verified Item ({verified_food}):")
     print(f"  First call (DB): {t1_verified:.6f}s")
     print(f"  Second call (L1): {t2_verified:.6f}s")
@@ -41,7 +40,7 @@ async def test_latency_gap():
     print(f"  First call (Web/LLM): {t3_new:.6f}s")
     print(f"  Second call (L1): {t4_new:.6f}s")
     print(f"  Gap: {t3_new - t4_new:.6f}s")
-    print(f"----------------------------------\n")
+    print("----------------------------------\n")
     
     assert t2_verified < t1_verified
     assert t4_new < t3_new

@@ -1,6 +1,5 @@
 import sys
 import os
-import ast
 sys.path.append(os.getcwd())
 
 def test_ingest_insert_logic():

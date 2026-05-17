@@ -1,10 +1,6 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from app.utils.vision_client import send_vision_log
 
-import pytest
-from unittest.mock import patch, MagicMock
-from app.utils.vision_client import send_vision_log
 
 @patch('app.utils.vision_client._client')
 def test_send_vision_log_success(mock_client):

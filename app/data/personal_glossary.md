@@ -1,6 +1,6 @@
 ## Dietary Preferences
 *   Loves blueberries
-*   Likes 500g chicken thighs pan fried
+*   Likes chicken thighs pan fried
 
 ## Utensils Description
 *   Small bowl; 150ml

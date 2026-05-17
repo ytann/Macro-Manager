@@ -1,5 +1,4 @@
 import asyncio
-import json
 from app.services.planner import PlannerService
 
 async def test_medical_firewall():

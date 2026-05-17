@@ -1,8 +1,5 @@
 import asyncio
 import httpx
-import json
-import os
-from typing import List, Tuple
 
 API_URL = "http://localhost:8000"
 
@@ -104,11 +101,11 @@ async def test_router_leak():
                 )
                 
                 if expected == "clinical" and not is_clinical_response:
-                    print(f"🚨 LEAK! Clinical query handled by Fast-Path.")
+                    print("🚨 LEAK! Clinical query handled by Fast-Path.")
                     leaks += 1
                     failed += 1
                 elif expected == "fast" and is_clinical_response:
-                    print(f"⚠️ Over-engineered! Fast query handled by Clinical-Path.")
+                    print("⚠️ Over-engineered! Fast query handled by Clinical-Path.")
                     # This is a latency hit, but not a safety failure.
                     passed += 1 
                 else:

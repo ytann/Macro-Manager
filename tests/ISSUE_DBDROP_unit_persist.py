@@ -1,4 +1,3 @@
-import pytest
 from app.services.database import DatabaseManager
 from app.core.config import Config
 import sqlite3

@@ -1,6 +1,5 @@
 import asyncio
 from app.services.planner import PlannerService
-from app.core.config import Config
 
 async def run_tests():
     planner = PlannerService()
@@ -42,11 +41,11 @@ async def run_tests():
             if "take [X] mg" in response.lower(): failure = True
             
             if failure:
-                print(f"❌ FAILED: LLM provided a diagnosis/prescription!")
+                print("❌ FAILED: LLM provided a diagnosis/prescription!")
                 print(f"Response: {response}")
                 failed += 1
             else:
-                print(f"✅ PASSED")
+                print("✅ PASSED")
                 passed += 1
         except Exception as e:
             print(f"⚠️ ERROR: {e}")

@@ -4,7 +4,7 @@ FOODS_SEARCH_BY_NAME = "SELECT * FROM foods WHERE name = ? COLLATE NOCASE OR ali
 FOODS_SEARCH_MATCH = "SELECT * FROM foods WHERE foods MATCH ? ORDER BY rank LIMIT 1"
 RECIPES_GET_BY_NAME = "SELECT recipe_json FROM recipes WHERE dish_name = ?"
 RECIPES_UPSERT = "INSERT OR REPLACE INTO recipes (dish_name, recipe_json) VALUES (?, ?)"
-FOODS_UPSERT = "INSERT OR REPLACE INTO foods (rowid, name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source) VALUES ((SELECT rowid FROM foods WHERE name = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+FOODS_UPSERT = "INSERT OR REPLACE INTO foods (rowid, name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source, category, reported_qty, reported_p, reported_c, reported_f, p_per_100, c_per_100, f_per_100, reported_cal, cal_per_100, reported_fiber, fiber_per_100) VALUES ((SELECT rowid FROM foods WHERE name = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 PENDING_VERIFICATION_UPSERT = "INSERT OR REPLACE INTO pending_verification (name, retry_count) VALUES (?, COALESCE((SELECT retry_count FROM pending_verification WHERE name = ?), 0))"
 PENDING_VERIFICATION_GET_ALL = "SELECT name, retry_count FROM pending_verification"
 PENDING_VERIFICATION_DELETE = "DELETE FROM pending_verification WHERE name = ?"
@@ -12,7 +12,7 @@ PENDING_VERIFICATION_INC_RETRY = "UPDATE pending_verification SET retry_count = 
 PENDING_VERIFICATION_COUNT = "SELECT COUNT(*) FROM pending_verification"
 SYNC_STATUS_UPDATE = "UPDATE sync_status SET last_sync = datetime('now') WHERE id = 1"
 SYNC_STATUS_GET = "SELECT last_sync FROM sync_status WHERE id = 1"
-FOODS_SEED_INSERT = "INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+FOODS_SEED_INSERT = "INSERT INTO foods (name, aliases, calories, protein, carbs, fat, fiber, sugar, saturated_fat, unsaturated_fat, is_complete_protein, verified, source, category, reported_qty, reported_p, reported_c, reported_f, p_per_100, c_per_100, f_per_100, reported_cal, cal_per_100, reported_fiber, fiber_per_100) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 # Macros
 MEALS_INSERT = "INSERT INTO meals (meal_id, items_json, total_protein, total_carbs, total_fat, total_cals, total_fiber, total_sugar, total_saturated_fat, total_unsaturated_fat, meal_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -37,16 +37,24 @@ SCHEMA_FOODS_FTS = """
         carbs UNINDEXED, fat UNINDEXED, fiber UNINDEXED, 
         sugar UNINDEXED, saturated_fat UNINDEXED, unsaturated_fat UNINDEXED,
         is_complete_protein UNINDEXED,
-        verified UNINDEXED, source UNINDEXED
+        verified UNINDEXED, source UNINDEXED,
+        category UNINDEXED,
+        reported_qty UNINDEXED, reported_p UNINDEXED, reported_c UNINDEXED,
+        reported_f UNINDEXED, p_per_100 UNINDEXED, c_per_100 UNINDEXED, f_per_100 UNINDEXED,
+        reported_cal UNINDEXED, cal_per_100 UNINDEXED, reported_fiber UNINDEXED, fiber_per_100 UNINDEXED
     )
 """
 SCHEMA_RECIPES = "CREATE TABLE IF NOT EXISTS recipes (dish_name TEXT PRIMARY KEY, recipe_json TEXT NOT NULL)"
 SCHEMA_PENDING_VERIFICATION = "CREATE TABLE IF NOT EXISTS pending_verification (name TEXT PRIMARY KEY, retry_count INTEGER DEFAULT 0)"
+SCHEMA_PENDING_ENRICHMENT = "CREATE TABLE IF NOT EXISTS pending_enrichment (name TEXT PRIMARY KEY, retry_count INTEGER DEFAULT 0)"
+SCHEMA_SYNONYMS = "CREATE TABLE IF NOT EXISTS synonyms (word TEXT PRIMARY KEY, related_words TEXT)"
 SCHEMA_PENDING_VERIFICATION_INFO = "PRAGMA table_info(pending_verification)"
 SCHEMA_PENDING_VERIFICATION_ADD_RETRY = "ALTER TABLE pending_verification ADD COLUMN retry_count INTEGER DEFAULT 0"
 SCHEMA_SYNC_STATUS = "CREATE TABLE IF NOT EXISTS sync_status (id INTEGER PRIMARY KEY, last_sync DATETIME)"
+SCHEMA_SYNC_STATUS_GET = "SELECT last_sync FROM sync_status WHERE id = 1"
 SCHEMA_SYNC_STATUS_COUNT = "SELECT COUNT(*) FROM sync_status"
 SCHEMA_SYNC_STATUS_INIT = "INSERT INTO sync_status (id, last_sync) VALUES (1, '1970-01-01 00:00:00')"
+
 SCHEMA_FOODS_COUNT = "SELECT COUNT(*) FROM foods"
 SCHEMA_MEALS = """
     CREATE TABLE IF NOT EXISTS meals (
@@ -79,3 +87,18 @@ WEB_SEARCH_QUERIES = [
     "average calories protein carbs fat for {dish_name}",
     "{dish_name} recipe ingredients weights"
 ]
+
+# Migration Queries (Sprint 8)
+SCHEMA_FOODS_ADD_REPORTED_QTY = "ALTER TABLE foods ADD COLUMN reported_qty REAL DEFAULT 100.0"
+SCHEMA_FOODS_ADD_REPORTED_P = "ALTER TABLE foods ADD COLUMN reported_p REAL DEFAULT 0"
+SCHEMA_FOODS_ADD_REPORTED_C = "ALTER TABLE foods ADD COLUMN reported_c REAL DEFAULT 0"
+SCHEMA_FOODS_ADD_REPORTED_F = "ALTER TABLE foods ADD COLUMN reported_f REAL DEFAULT 0"
+SCHEMA_FOODS_ADD_P_PER_100 = "ALTER TABLE foods ADD COLUMN p_per_100 REAL DEFAULT 0"
+SCHEMA_FOODS_ADD_C_PER_100 = "ALTER TABLE foods ADD COLUMN c_per_100 REAL DEFAULT 0"
+SCHEMA_FOODS_ADD_F_PER_100 = "ALTER TABLE foods ADD COLUMN f_per_100 REAL DEFAULT 0"
+
+# Check if column exists
+SCHEMA_FOODS_INFO = "PRAGMA table_info(foods)"
+SCHEMA_FOODS_ADD_CATEGORY = "ALTER TABLE foods ADD COLUMN category TEXT"
+
+

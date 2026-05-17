@@ -1,0 +1,720 @@
+name,aliases,calories,protein,carbs,fat,fiber,sugar,saturated_fat,unsaturated_fat,is_complete_protein,verified,source,reported_qty,reported_p,reported_c,reported_f,p_per_100,c_per_100,f_per_100,reported_cal,cal_per_100,reported_fiber,fiber_per_100
+"Patta Gobi Matar (Cabbage Peas)","patta gobi matar (cabbage peas)",63.33,2.67,8.0,2.67,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,12.0,4.0,2.67,8.0,2.67,95.0,63.33,5.0,3.33
+"Aloo Gobi (Potato Cauliflower)","aloo gobi (potato cauliflower)",140.0,2.0,14.67,9.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,22.0,14.0,2.0,14.67,9.33,210.0,140.0,3.0,2.0
+"Lauki Chana Dal (Bottle Gourd)","lauki chana dal (bottle gourd)",80.0,4.0,11.0,2.5,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,22.0,5.0,4.0,11.0,2.5,160.0,80.0,7.0,3.5
+"Karela Pyaz (Bitter Gourd)","karela pyaz (bitter gourd)",110.0,2.0,10.0,7.0,5.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,10.0,7.0,2.0,10.0,7.0,110.0,110.0,5.0,5.0
+"Green Beans Poriyal","green beans poriyal",80.0,2.0,8.0,4.0,4.0,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,12.0,6.0,2.0,8.0,4.0,120.0,80.0,6.0,4.0
+"Mix Veg Curry","mix veg curry",140.0,2.0,11.0,11.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,22.0,22.0,2.0,11.0,11.0,280.0,140.0,4.0,2.0
+"Soya Chunks Masala","soya chunks masala",120.0,11.0,9.0,5.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,18.0,10.0,11.0,9.0,5.0,240.0,120.0,8.0,4.0
+"Mushroom Do Pyaza","mushroom do pyaza",160.0,2.67,8.0,13.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,12.0,20.0,2.67,8.0,13.33,240.0,160.0,2.0,1.33
+"Tori Sabzi (Ridge Gourd)","tori sabzi (ridge gourd)",53.33,1.33,5.33,2.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,8.0,4.0,1.33,5.33,2.67,80.0,53.33,3.0,2.0
+"Kundru Sabzi (Ivy Gourd)","kundru sabzi (ivy gourd)",73.33,1.33,8.0,4.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,12.0,6.0,1.33,8.0,4.0,110.0,73.33,4.0,2.67
+"Tinda Sabzi (Apple Gourd)","tinda sabzi (apple gourd)",60.0,1.33,6.67,3.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,10.0,5.0,1.33,6.67,3.33,90.0,60.0,3.0,2.0
+"Capsicum Besan (Zunka)","capsicum besan (zunka)",126.67,5.33,12.0,6.67,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,18.0,10.0,5.33,12.0,6.67,190.0,126.67,5.0,3.33
+"Matar Paneer","matar paneer",225.0,5.0,10.0,19.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,20.0,38.0,5.0,10.0,19.0,450.0,225.0,4.0,2.0
+"Toor Dal (Plain Yellow Dal)","toor dal (plain yellow dal)",80.0,4.5,12.0,2.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,9.0,24.0,4.0,4.5,12.0,2.0,160.0,80.0,7.0,3.5
+"Masoor Dal (Red Lentil)","masoor dal (red lentil)",75.0,5.0,11.0,1.5,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,22.0,3.0,5.0,11.0,1.5,150.0,75.0,6.0,3.0
+"Urad Dal (Black Gram)","urad dal (black gram)",140.0,5.0,14.0,7.5,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,28.0,15.0,5.0,14.0,7.5,280.0,140.0,6.0,3.0
+"Panchmel Dal","panchmel dal",90.0,5.5,12.5,2.5,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,11.0,25.0,5.0,5.5,12.5,2.5,180.0,90.0,8.0,4.0
+"Chana Masala (Dry)","chana masala (dry)",146.67,6.67,20.0,5.33,6.0,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,30.0,8.0,6.67,20.0,5.33,220.0,146.67,9.0,6.0
+"Lobia Curry (Black-eyed Peas)","lobia curry (black-eyed peas)",105.0,6.0,16.0,2.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,32.0,4.0,6.0,16.0,2.0,210.0,105.0,8.0,4.0
+"Boiled Eggs (2 Large)","boiled eggs (2 large)",140.0,12.0,1.0,10.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,12.0,1.0,10.0,12.0,1.0,10.0,140.0,140.0,0.0,0.0
+"Masala Omelette (2 Eggs)","masala omelette (2 eggs)",216.67,9.17,3.33,18.33,0.0,0.0,0.0,0.0,0,1,desk_research,120.0,11.0,4.0,22.0,9.17,3.33,18.33,260.0,216.67,0.0,0.0
+"Jeera Rice","jeera rice",186.67,2.0,28.0,8.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,42.0,12.0,2.0,28.0,8.0,280.0,186.67,1.0,0.67
+"Brown Rice","brown rice",113.33,2.67,23.33,1.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,35.0,1.5,2.67,23.33,1.0,170.0,113.33,4.0,2.67
+"Roti (Jowar)","roti (jowar)",320.0,10.0,68.0,2.0,10.0,0.0,0.0,0.0,0,1,desk_research,50.0,5.0,34.0,1.0,10.0,68.0,2.0,160.0,320.0,5.0,10.0
+"Paratha (Plain)","paratha (plain)",400.0,5.0,40.0,25.0,2.5,0.0,0.0,0.0,0,1,desk_research,80.0,4.0,32.0,20.0,5.0,40.0,25.0,320.0,400.0,2.0,2.5
+"Chicken Curry (Home Style)","chicken curry (home style)",128.0,10.0,4.0,7.2,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,25.0,10.0,18.0,10.0,4.0,7.2,320.0,128.0,2.0,0.8
+"Mutton Curry (Home Style)","mutton curry (home style)",152.0,11.2,4.0,9.6,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,10.0,24.0,11.2,4.0,9.6,380.0,152.0,2.0,0.8
+"Fish Curry (Rohu/Katla)","fish curry (rohu/katla)",120.0,10.0,4.0,7.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,20.0,8.0,14.0,10.0,4.0,7.0,240.0,120.0,1.0,0.5
+"Aloo Jeera","aloo jeera",120.0,2.0,18.67,4.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,28.0,7.0,2.0,18.67,4.67,180.0,120.0,3.0,2.0
+"Aloo Matar","aloo matar",105.0,2.5,15.0,4.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,30.0,8.0,2.5,15.0,4.0,210.0,105.0,5.0,2.5
+"Cabbage Poriyal","cabbage poriyal",73.33,2.0,6.67,4.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,10.0,6.0,2.0,6.67,4.0,110.0,73.33,4.0,2.67
+"Pumpkin Sabzi (Kaddu)","pumpkin sabzi (kaddu)",63.33,1.33,10.0,2.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,15.0,4.0,1.33,10.0,2.67,95.0,63.33,3.0,2.0
+"Medu Vada","medu vada",350.0,5.0,30.0,24.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,30.0,24.0,5.0,30.0,24.0,350.0,350.0,3.0,3.0
+"Ven Pongal","ven pongal",225.0,3.5,22.5,14.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,7.0,45.0,28.0,3.5,22.5,14.0,450.0,225.0,2.0,1.0
+"Puri Sabzi","puri sabzi",232.0,2.8,24.0,14.0,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,7.0,60.0,35.0,2.8,24.0,14.0,580.0,232.0,5.0,2.0
+Appam,appam,140.0,3.0,30.0,1.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,30.0,1.0,3.0,30.0,1.0,140.0,140.0,2.0,2.0
+"Kerala Mutton Stew","kerala mutton stew",210.0,8.0,6.0,16.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,12.0,32.0,8.0,6.0,16.0,420.0,210.0,1.0,0.5
+"Methi Thepla","methi thepla",320.0,8.0,42.0,14.0,5.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,42.0,14.0,8.0,42.0,14.0,320.0,320.0,5.0,5.0
+Handvo,handvo,253.33,8.0,30.0,10.67,4.67,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,45.0,16.0,8.0,30.0,10.67,380.0,253.33,7.0,4.67
+"Bhel Puri","bhel puri",166.67,3.33,30.0,4.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,45.0,6.0,3.33,30.0,4.0,250.0,166.67,4.0,2.67
+"Pani Puri (6 pieces)","pani puri (6 pieces)",150.0,3.33,26.67,3.33,2.5,0.0,0.0,0.0,0,1,desk_research,120.0,4.0,32.0,4.0,3.33,26.67,3.33,180.0,150.0,3.0,2.5
+"Sev Puri (6 pieces)","sev puri (6 pieces)",213.33,3.33,26.67,10.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,40.0,15.0,3.33,26.67,10.0,320.0,213.33,4.0,2.67
+"Pav Bhaji","pav bhaji",200.0,3.33,21.67,11.67,2.0,0.0,0.0,0.0,0,1,desk_research,300.0,10.0,65.0,35.0,3.33,21.67,11.67,600.0,200.0,6.0,2.0
+"Litti Chokha","litti chokha",260.0,5.6,28.0,14.0,4.0,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,70.0,35.0,5.6,28.0,14.0,650.0,260.0,10.0,4.0
+"Fish Molee","fish molee",155.0,9.0,4.0,11.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,8.0,22.0,9.0,4.0,11.0,310.0,155.0,1.0,0.5
+"Goan Fish Curry","goan fish curry",190.0,8.0,6.0,14.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,12.0,28.0,8.0,6.0,14.0,380.0,190.0,1.0,0.5
+"Prawn Masala","prawn masala",213.33,12.0,6.67,14.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,18.0,10.0,22.0,12.0,6.67,14.67,320.0,213.33,1.0,0.67
+"Chicken Shawarma Roll","chicken shawarma roll",225.0,12.5,22.5,10.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,25.0,45.0,20.0,12.5,22.5,10.0,450.0,225.0,3.0,1.5
+"Egg Kathi Roll","egg kathi roll",194.44,7.78,19.44,10.0,1.11,0.0,0.0,0.0,0,1,desk_research,180.0,14.0,35.0,18.0,7.78,19.44,10.0,350.0,194.44,2.0,1.11
+"Chicken Kathi Roll","chicken kathi roll",240.0,11.0,20.0,12.5,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,40.0,25.0,11.0,20.0,12.5,480.0,240.0,3.0,1.5
+"Mughlai Paratha","mughlai paratha",275.0,9.0,22.5,16.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,45.0,32.0,9.0,22.5,16.0,550.0,275.0,3.0,1.5
+"Keema Pav","keema pav",248.0,8.8,18.0,15.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,45.0,38.0,8.8,18.0,15.2,620.0,248.0,3.0,1.2
+"Moong Dal Khichdi","moong dal khichdi",152.0,3.6,18.0,7.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,9.0,45.0,18.0,3.6,18.0,7.2,380.0,152.0,4.0,1.6
+"Dal Makhani","dal makhani",210.0,4.5,14.0,15.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,9.0,28.0,30.0,4.5,14.0,15.0,420.0,210.0,6.0,3.0
+"Chicken Thukpa","chicken thukpa",140.0,6.0,16.67,5.0,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,18.0,50.0,15.0,6.0,16.67,5.0,420.0,140.0,3.0,1.0
+"Steamed Chicken Momos (6 pieces)","steamed chicken momos (6 pieces)",146.67,10.0,20.0,2.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,15.0,30.0,4.0,10.0,20.0,2.67,220.0,146.67,2.0,1.33
+"Fried Chicken Momos (6 pieces)","fried chicken momos (6 pieces)",253.33,9.33,23.33,13.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,35.0,20.0,9.33,23.33,13.33,380.0,253.33,2.0,1.33
+"Steamed Veg Momos (6 pieces)","steamed veg momos (6 pieces)",120.0,3.33,23.33,1.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,35.0,2.0,3.33,23.33,1.33,180.0,120.0,4.0,2.67
+"Fried Veg Momos (6 pieces)","fried veg momos (6 pieces)",213.33,2.67,26.67,10.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,40.0,16.0,2.67,26.67,10.67,320.0,213.33,3.0,2.0
+"Sarson Ka Saag","sarson ka saag",90.0,4.0,7.5,5.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,15.0,10.0,4.0,7.5,5.0,180.0,90.0,8.0,4.0
+"Makki Ki Roti","makki ki roti",420.0,5.0,45.0,25.0,5.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,45.0,25.0,5.0,45.0,25.0,420.0,420.0,5.0,5.0
+"Fish Tikka","fish tikka",173.33,13.33,2.67,12.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,20.0,4.0,18.0,13.33,2.67,12.0,260.0,173.33,1.0,0.67
+"Cold Coffee (with sugar)","cold coffee (with sugar)",88.0,2.4,14.0,2.4,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,35.0,6.0,2.4,14.0,2.4,220.0,88.0,0.0,0.0
+"Nimbu Pani (with sugar)","nimbu pani (with sugar)",40.0,0.0,10.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,20.0,0.0,0.0,10.0,0.0,80.0,40.0,0.0,0.0
+"Coconut Water","coconut water",18.0,0.4,4.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,10.0,0.0,0.4,4.0,0.0,45.0,18.0,0.0,0.0
+"Ragi Mudde","ragi mudde",125.0,3.0,27.5,0.5,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,55.0,1.0,3.0,27.5,0.5,250.0,125.0,8.0,4.0
+"Pesarattu (Moong Dal Dosa)","pesarattu (moong dal dosa)",193.33,4.67,21.33,10.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,7.0,32.0,15.0,4.67,21.33,10.0,290.0,193.33,3.0,2.0
+"Bisi Bele Bath","bisi bele bath",208.0,3.2,24.0,11.2,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,60.0,28.0,3.2,24.0,11.2,520.0,208.0,5.0,2.0
+"Neer Dosa","neer dosa",120.0,2.0,23.33,2.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,35.0,3.0,2.0,23.33,2.0,180.0,120.0,2.0,1.33
+"Chettinad Chicken Curry","chettinad chicken curry",255.0,10.0,7.5,20.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,20.0,15.0,40.0,10.0,7.5,20.0,510.0,255.0,2.0,1.0
+Thalipeeth,thalipeeth,233.33,6.67,33.33,8.33,5.83,0.0,0.0,0.0,0,1,desk_research,120.0,8.0,40.0,10.0,6.67,33.33,8.33,280.0,233.33,7.0,5.83
+"Vangyache Bharit (Mashed Eggplant)","vangyache bharit (mashed eggplant)",93.33,2.0,10.0,5.33,4.0,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,15.0,8.0,2.0,10.0,5.33,140.0,93.33,6.0,4.0
+"Kothimbir Vadi","kothimbir vadi",310.0,5.0,28.0,20.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,28.0,20.0,5.0,28.0,20.0,310.0,310.0,2.0,2.0
+Dabeli,dabeli,213.33,4.0,32.0,8.0,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,48.0,12.0,4.0,32.0,8.0,320.0,213.33,5.0,3.33
+Fafda,fafda,450.0,8.0,45.0,28.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,45.0,28.0,8.0,45.0,28.0,450.0,450.0,4.0,4.0
+Undhiyu,undhiyu,210.0,2.5,17.5,15.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,35.0,30.0,2.5,17.5,15.0,420.0,210.0,6.0,3.0
+"Khatta Dhokla","khatta dhokla",160.0,5.0,24.0,4.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,24.0,4.0,5.0,24.0,4.0,160.0,160.0,2.0,2.0
+"Bajra Roti","bajra roti",275.0,7.5,56.25,2.5,10.0,0.0,0.0,0.0,0,1,desk_research,80.0,6.0,45.0,2.0,7.5,56.25,2.5,220.0,275.0,8.0,10.0
+"Gatte Ki Sabzi","gatte ki sabzi",225.0,4.5,14.0,17.5,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,9.0,28.0,35.0,4.5,14.0,17.5,450.0,225.0,3.0,1.5
+"Dal Baati Churma","dal baati churma",283.33,4.0,26.67,18.33,2.67,0.0,0.0,0.0,0,1,desk_research,300.0,12.0,80.0,55.0,4.0,26.67,18.33,850.0,283.33,8.0,2.67
+"Kadhi Pakora","kadhi pakora",180.0,4.0,12.8,12.8,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,32.0,32.0,4.0,12.8,12.8,450.0,180.0,2.0,0.8
+"Luchi (Puri)","luchi (puri)",450.0,3.0,45.0,28.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,45.0,28.0,3.0,45.0,28.0,450.0,450.0,1.0,1.0
+"Chholar Dal","chholar dal",120.0,5.0,17.5,3.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,35.0,6.0,5.0,17.5,3.0,240.0,120.0,6.0,3.0
+"Macher Matha Diye Moong Dal","macher matha diye moong dal",145.0,9.0,15.0,5.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,30.0,10.0,9.0,15.0,5.0,290.0,145.0,5.0,2.5
+"Kosha Mangsho (Mutton Curry)","kosha mangsho (mutton curry)",300.0,10.0,7.2,26.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,25.0,18.0,65.0,10.0,7.2,26.0,750.0,300.0,2.0,0.8
+"Shorshe Ilish (Mustard Hilsa)","shorshe ilish (mustard hilsa)",225.0,10.0,4.0,19.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,20.0,8.0,38.0,10.0,4.0,19.0,450.0,225.0,2.0,1.0
+"Assamese Papaya Khar","assamese papaya khar",60.0,1.33,10.0,1.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,15.0,2.0,1.33,10.0,1.33,90.0,60.0,4.0,2.67
+"Pork with Bamboo Shoot","pork with bamboo shoot",240.0,11.0,3.0,21.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,6.0,42.0,11.0,3.0,21.0,480.0,240.0,3.0,1.5
+"Ema Datshi (Cheese Chili)","ema datshi (cheese chili)",186.67,8.0,10.0,13.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,15.0,20.0,8.0,10.0,13.33,280.0,186.67,2.0,1.33
+"Aloo Tikki","aloo tikki",213.33,2.67,30.0,9.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,45.0,14.0,2.67,30.0,9.33,320.0,213.33,4.0,2.67
+"Aloo Tikki Chaat","aloo tikki chaat",168.0,3.2,24.0,6.4,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,60.0,16.0,3.2,24.0,6.4,420.0,168.0,6.0,2.4
+"Ram Ladoo","ram ladoo",186.67,6.67,23.33,8.0,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,35.0,12.0,6.67,23.33,8.0,280.0,186.67,5.0,3.33
+"Mirchi Bajji","mirchi bajji",250.0,4.0,25.0,15.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,25.0,15.0,4.0,25.0,15.0,250.0,250.0,3.0,3.0
+"Pazham Pori (Banana Fritter)","pazham pori (banana fritter)",220.0,2.0,35.0,8.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,35.0,8.0,2.0,35.0,8.0,220.0,220.0,3.0,3.0
+"Chicken 65","chicken 65",233.33,14.67,10.0,14.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,22.0,15.0,22.0,14.67,10.0,14.67,350.0,233.33,1.0,0.67
+"Gobi Manchurian (Dry)","gobi manchurian (dry)",186.67,2.67,23.33,9.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,35.0,14.0,2.67,23.33,9.33,280.0,186.67,4.0,2.67
+"Paneer Chilli (Dry)","paneer chilli (dry)",233.33,8.0,13.33,16.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,20.0,25.0,8.0,13.33,16.67,350.0,233.33,2.0,1.33
+Jaljeera,jaljeera,15.0,0.0,4.0,0.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,8.0,0.0,0.0,4.0,0.0,30.0,15.0,1.0,0.5
+"Aam Panna (with sugar)","aam panna (with sugar)",60.0,0.0,15.0,0.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,30.0,0.0,0.0,15.0,0.0,120.0,60.0,1.0,0.5
+"Sol Kadhi","sol kadhi",53.33,0.67,4.0,3.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,6.0,5.0,0.67,4.0,3.33,80.0,53.33,1.0,0.67
+"Masala Oats","masala oats",173.33,3.33,21.33,8.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,32.0,12.0,3.33,21.33,8.0,260.0,173.33,4.0,2.67
+"Overnight Oats (with Milk & Fruit)","overnight oats (with milk & fruit)",168.0,3.6,22.0,6.4,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,9.0,55.0,16.0,3.6,22.0,6.4,420.0,168.0,6.0,2.4
+"Chia Seed Pudding","chia seed pudding",175.0,3.5,14.0,11.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,7.0,28.0,22.0,3.5,14.0,11.0,350.0,175.0,8.0,4.0
+"Quinoa Pulao","quinoa pulao",160.0,3.5,21.0,7.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,7.0,42.0,14.0,3.5,21.0,7.0,320.0,160.0,5.0,2.5
+"Grilled Chicken Salad","grilled chicken salad",150.0,9.33,5.0,10.0,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,28.0,15.0,30.0,9.33,5.0,10.0,450.0,150.0,4.0,1.33
+"Paneer Tikka Salad","paneer tikka salad",168.0,6.4,6.0,12.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,16.0,15.0,32.0,6.4,6.0,12.8,420.0,168.0,4.0,1.6
+"Kala Chana Chaat (Black Chickpea Salad)","kala chana chaat (black chickpea salad)",110.0,6.0,17.5,2.0,5.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,35.0,4.0,6.0,17.5,2.0,220.0,110.0,10.0,5.0
+"Sprouts Salad (Moong)","sprouts salad (moong)",110.0,4.5,13.0,4.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,9.0,26.0,8.0,4.5,13.0,4.0,220.0,110.0,7.0,3.5
+"Multigrain Paneer Sandwich","multigrain paneer sandwich",240.0,7.0,22.5,13.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,14.0,45.0,26.0,7.0,22.5,13.0,480.0,240.0,5.0,2.5
+"Grilled Chicken Wrap (Whole Wheat)","grilled chicken wrap (whole wheat)",140.0,11.2,16.0,4.0,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,40.0,10.0,11.2,16.0,4.0,350.0,140.0,5.0,2.0
+"Grilled Chicken Wrap (Refined Flour)","grilled chicken wrap (refined flour)",208.0,10.0,20.0,9.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,25.0,50.0,24.0,10.0,20.0,9.6,520.0,208.0,3.0,1.2
+"Tofu Scramble (Bhurji)","tofu scramble (bhurji)",173.33,9.33,5.33,12.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,8.0,18.0,9.33,5.33,12.0,260.0,173.33,2.0,1.33
+"Egg White Omelette (3 Eggs)","egg white omelette (3 eggs)",133.33,10.0,2.5,10.0,0.0,0.0,0.0,0.0,0,1,desk_research,120.0,12.0,3.0,12.0,10.0,2.5,10.0,160.0,133.33,0.0,0.0
+"Cauliflower Rice","cauliflower rice",40.0,2.0,5.33,1.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,8.0,2.0,2.0,5.33,1.33,60.0,40.0,4.0,2.67
+"Zucchini Noodles (Aglio Olio)","zucchini noodles (aglio olio)",120.0,1.0,4.0,11.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,2.0,8.0,22.0,1.0,4.0,11.0,240.0,120.0,2.0,1.0
+"Millet Pancakes (Jowar/Ragi)","millet pancakes (jowar/ragi)",253.33,4.67,32.0,12.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,7.0,48.0,18.0,4.67,32.0,12.0,380.0,253.33,4.0,2.67
+"Hummus with Whole Wheat Pita","hummus with whole wheat pita",160.0,6.0,20.0,6.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,40.0,12.0,6.0,20.0,6.0,320.0,160.0,8.0,4.0
+"Hummus with Refined Pita","hummus with refined pita",225.0,5.0,24.0,11.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,48.0,22.0,5.0,24.0,11.0,450.0,225.0,5.0,2.5
+"Whey Protein Shake (with Water)","whey protein shake (with water)",34.29,6.86,0.86,0.29,0.0,0.0,0.0,0.0,0,1,desk_research,350.0,24.0,3.0,1.0,6.86,0.86,0.29,120.0,34.29,0.0,0.0
+"Peanut Butter Banana Smoothie","peanut butter banana smoothie",183.33,3.33,20.0,9.33,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,10.0,60.0,28.0,3.33,20.0,9.33,550.0,183.33,5.0,1.67
+"Green Smoothie (Spinach & Apple)","green smoothie (spinach & apple)",72.0,0.4,14.0,1.6,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,35.0,4.0,0.4,14.0,1.6,180.0,72.0,4.0,1.6
+"Makhana (Fox Nuts) Roasted","makhana (fox nuts) roasted",520.0,8.0,60.0,28.0,4.0,0.0,0.0,0.0,0,1,desk_research,50.0,4.0,30.0,14.0,8.0,60.0,28.0,260.0,520.0,2.0,4.0
+"Avocado Toast (Sourdough)","avocado toast (sourdough)",253.33,3.33,18.67,17.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,28.0,26.0,3.33,18.67,17.33,380.0,253.33,5.0,3.33
+"Sweet Potato Chaat","sweet potato chaat",120.0,1.33,25.33,1.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,38.0,2.0,1.33,25.33,1.33,180.0,120.0,5.0,3.33
+"Soya Chunk Salad","soya chunk salad",105.0,10.0,9.0,3.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,20.0,18.0,6.0,10.0,9.0,3.0,210.0,105.0,7.0,3.5
+"Keto Almond Flour Roti","keto almond flour roti",380.0,12.0,16.0,30.0,8.0,0.0,0.0,0.0,0,1,desk_research,50.0,6.0,8.0,15.0,12.0,16.0,30.0,190.0,380.0,4.0,8.0
+"Gulab Jamun (2 pieces)","gulab jamun (2 pieces)",380.0,3.0,50.0,18.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,50.0,18.0,3.0,50.0,18.0,380.0,380.0,0.0,0.0
+"Rasgulla (2 pieces)","rasgulla (2 pieces)",250.0,5.0,50.0,2.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,50.0,2.0,5.0,50.0,2.0,250.0,250.0,0.0,0.0
+"Rice Kheer (Payasam)","rice kheer (payasam)",160.0,2.5,22.5,6.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,45.0,12.0,2.5,22.5,6.0,320.0,160.0,0.0,0.0
+"Gajar Ka Halwa","gajar ka halwa",280.0,3.33,33.33,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,50.0,22.0,3.33,33.33,14.67,420.0,280.0,3.0,2.0
+Jalebi,jalebi,450.0,2.0,70.0,18.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,70.0,18.0,2.0,70.0,18.0,450.0,450.0,0.0,0.0
+"Kaju Katli","kaju katli",440.0,10.0,44.0,28.0,2.0,0.0,0.0,0.0,0,1,desk_research,50.0,5.0,22.0,14.0,10.0,44.0,28.0,220.0,440.0,1.0,2.0
+"Besan Ladoo (2 pieces)","besan ladoo (2 pieces)",480.0,6.0,50.0,28.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,50.0,28.0,6.0,50.0,28.0,480.0,480.0,2.0,2.0
+"Moong Dal Halwa","moong dal halwa",346.67,4.67,36.67,20.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,7.0,55.0,30.0,4.67,36.67,20.0,520.0,346.67,2.0,1.33
+Shrikhand,shrikhand,253.33,4.0,33.33,12.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,50.0,18.0,4.0,33.33,12.0,380.0,253.33,0.0,0.0
+"Mysore Pak","mysore pak",600.0,3.0,60.0,40.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,60.0,40.0,3.0,60.0,40.0,600.0,600.0,0.0,0.0
+"Rasmalai (2 pieces)","rasmalai (2 pieces)",233.33,5.33,26.67,12.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,40.0,18.0,5.33,26.67,12.0,350.0,233.33,0.0,0.0
+"Peda (2 pieces)","peda (2 pieces)",440.0,8.0,56.0,20.0,0.0,0.0,0.0,0.0,0,1,desk_research,50.0,4.0,28.0,10.0,8.0,56.0,20.0,220.0,440.0,0.0,0.0
+"Modak (Ukadiche/Steamed - 2 pcs)","modak (ukadiche/steamed - 2 pcs)",220.0,3.0,38.0,6.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,38.0,6.0,3.0,38.0,6.0,220.0,220.0,2.0,2.0
+"Modak (Fried - 2 pcs)","modak (fried - 2 pcs)",400.0,2.0,45.0,22.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,45.0,22.0,2.0,45.0,22.0,400.0,400.0,1.0,1.0
+"Puran Poli","puran poli",300.0,4.67,43.33,12.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,7.0,65.0,18.0,4.67,43.33,12.0,450.0,300.0,4.0,2.67
+"Sandesh (2 pieces)","sandesh (2 pieces)",210.0,10.0,28.0,6.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,10.0,28.0,6.0,10.0,28.0,6.0,210.0,210.0,0.0,0.0
+"Sheera (Suji Halwa)","sheera (suji halwa)",320.0,2.0,36.67,18.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,55.0,28.0,2.0,36.67,18.67,480.0,320.0,1.0,0.67
+"Basic Ice Cream (Vanilla/Choc)","basic ice cream (vanilla/choc)",210.0,4.0,24.0,11.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,24.0,11.0,4.0,24.0,11.0,210.0,210.0,0.0,0.0
+Kulfi,kulfi,250.0,6.0,26.0,14.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,26.0,14.0,6.0,26.0,14.0,250.0,250.0,0.0,0.0
+"Peanut Chikki","peanut chikki",520.0,10.0,56.0,30.0,2.0,0.0,0.0,0.0,0,1,desk_research,50.0,5.0,28.0,15.0,10.0,56.0,30.0,260.0,520.0,1.0,2.0
+Rabri,rabri,280.0,5.33,23.33,18.67,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,35.0,28.0,5.33,23.33,18.67,420.0,280.0,0.0,0.0
+Ghevar,ghevar,450.0,4.0,55.0,24.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,55.0,24.0,4.0,55.0,24.0,450.0,450.0,1.0,1.0
+"Khari Biscuit","khari biscuit",560.0,6.0,50.0,36.0,2.0,0.0,0.0,0.0,0,1,desk_research,50.0,3.0,25.0,18.0,6.0,50.0,36.0,280.0,560.0,1.0,2.0
+"Rusk (Toast)","rusk (toast)",440.0,8.0,80.0,10.0,4.0,0.0,0.0,0.0,0,1,desk_research,50.0,4.0,40.0,5.0,8.0,80.0,10.0,220.0,440.0,2.0,4.0
+"Veg Puff (Aloo Patties)","veg puff (aloo patties)",300.0,4.0,30.0,17.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,45.0,26.0,4.0,30.0,17.33,450.0,300.0,4.0,2.67
+"Nankhatai (2 pieces)","nankhatai (2 pieces)",580.0,4.0,60.0,36.0,0.0,0.0,0.0,0.0,0,1,desk_research,50.0,2.0,30.0,18.0,4.0,60.0,36.0,290.0,580.0,0.0,0.0
+"Osmania Biscuit (3 pieces)","osmania biscuit (3 pieces)",500.0,6.0,56.0,28.0,2.0,0.0,0.0,0.0,0,1,desk_research,50.0,3.0,28.0,14.0,6.0,56.0,28.0,250.0,500.0,1.0,2.0
+Bakarwadi,bakarwadi,480.0,8.0,45.0,28.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,45.0,28.0,8.0,45.0,28.0,480.0,480.0,4.0,4.0
+"Chakli (Murukku)","chakli (murukku)",520.0,6.0,60.0,28.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,60.0,28.0,6.0,60.0,28.0,520.0,520.0,2.0,2.0
+"Murmura Chivda (Puffed Rice)","murmura chivda (puffed rice)",380.0,5.0,55.0,16.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,5.0,55.0,16.0,5.0,55.0,16.0,380.0,380.0,3.0,3.0
+"Poha Chivda (Roasted)","poha chivda (roasted)",350.0,7.0,60.0,10.0,5.0,0.0,0.0,0.0,0,1,desk_research,100.0,7.0,60.0,10.0,7.0,60.0,10.0,350.0,350.0,5.0,5.0
+"Poha Chivda (Deep Fried)","poha chivda (deep fried)",550.0,6.0,55.0,32.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,55.0,32.0,6.0,55.0,32.0,550.0,550.0,3.0,3.0
+"Besan Sev / Bhujia (Loose)","besan sev / bhujia (loose)",580.0,10.0,40.0,42.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,10.0,40.0,42.0,10.0,40.0,42.0,580.0,580.0,4.0,4.0
+"Mathri (Baked)","mathri (baked)",350.0,8.0,55.0,10.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,55.0,10.0,8.0,55.0,10.0,350.0,350.0,4.0,4.0
+"Mathri (Fried)","mathri (fried)",520.0,7.0,50.0,32.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,7.0,50.0,32.0,7.0,50.0,32.0,520.0,520.0,3.0,3.0
+"Namakpara / Shakarpara","namakpara / shakarpara",550.0,6.0,52.0,34.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,52.0,34.0,6.0,52.0,34.0,550.0,550.0,2.0,2.0
+"Roasted Peanuts (Khari Sing)","roasted peanuts (khari sing)",560.0,25.0,16.0,48.0,8.0,0.0,0.0,0.0,0,1,desk_research,100.0,25.0,16.0,48.0,25.0,16.0,48.0,560.0,560.0,8.0,8.0
+"Chana Chor Garam","chana chor garam",320.0,18.0,48.0,6.0,12.0,0.0,0.0,0.0,0,1,desk_research,100.0,18.0,48.0,6.0,18.0,48.0,6.0,320.0,320.0,12.0,12.0
+"Banana Chips (Fried)","banana chips (fried)",520.0,2.0,60.0,32.0,6.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,60.0,32.0,2.0,60.0,32.0,520.0,520.0,6.0,6.0
+"Tapioca Chips","tapioca chips",480.0,1.0,65.0,24.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,1.0,65.0,24.0,1.0,65.0,24.0,480.0,480.0,4.0,4.0
+"Roasted Chana (Bhuna Chana)","roasted chana (bhuna chana)",380.0,18.0,58.0,6.0,16.0,0.0,0.0,0.0,0,1,desk_research,100.0,18.0,58.0,6.0,18.0,58.0,6.0,380.0,380.0,16.0,16.0
+"Moong Dal (Fried Snack Loose)","moong dal (fried snack loose)",450.0,22.0,50.0,18.0,6.0,0.0,0.0,0.0,0,1,desk_research,100.0,22.0,50.0,18.0,22.0,50.0,18.0,450.0,450.0,6.0,6.0
+"Ganthia / Papdi","ganthia / papdi",520.0,12.0,45.0,32.0,6.0,0.0,0.0,0.0,0,1,desk_research,100.0,12.0,45.0,32.0,12.0,45.0,32.0,520.0,520.0,6.0,6.0
+"Diet Chivda (Cornflakes Roasted)","diet chivda (cornflakes roasted)",380.0,6.0,75.0,6.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,75.0,6.0,6.0,75.0,6.0,380.0,380.0,3.0,3.0
+"Nippattu / Thattai","nippattu / thattai",560.0,6.0,58.0,34.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,58.0,34.0,6.0,58.0,34.0,560.0,560.0,3.0,3.0
+"Dry Kachori (Mini)","dry kachori (mini)",510.0,8.0,48.0,32.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,48.0,32.0,8.0,48.0,32.0,510.0,510.0,4.0,4.0
+"Kachri / Fryums (Fried)","kachri / fryums (fried)",520.0,2.0,76.0,24.0,2.0,0.0,0.0,0.0,0,1,desk_research,50.0,1.0,38.0,12.0,2.0,76.0,24.0,260.0,520.0,1.0,2.0
+"Pani Puri Puri (Only Puri - 10 pcs)","pani puri puri (only puri - 10 pcs)",466.67,6.67,60.0,20.0,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,2.0,18.0,6.0,6.67,60.0,20.0,140.0,466.67,1.0,3.33
+"Khakhra (Plain)","khakhra (plain)",400.0,12.0,70.0,8.0,8.0,0.0,0.0,0.0,0,1,desk_research,50.0,6.0,35.0,4.0,12.0,70.0,8.0,200.0,400.0,4.0,8.0
+"Khakhra (Masala/Ghee)","khakhra (masala/ghee)",520.0,10.0,66.0,24.0,6.0,0.0,0.0,0.0,0,1,desk_research,50.0,5.0,33.0,12.0,10.0,66.0,24.0,260.0,520.0,3.0,6.0
+"White Bread Slice (1 slice)","white bread slice (1 slice)",266.67,6.67,50.0,3.33,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,2.0,15.0,1.0,6.67,50.0,3.33,80.0,266.67,1.0,3.33
+"Whole Wheat Bread Slice (1 slice)","whole wheat bread slice (1 slice)",250.0,10.0,43.33,3.33,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,3.0,13.0,1.0,10.0,43.33,3.33,75.0,250.0,2.0,6.67
+"Sourdough Bread Slice (1 slice)","sourdough bread slice (1 slice)",262.5,10.0,50.0,2.5,5.0,0.0,0.0,0.0,0,1,desk_research,40.0,4.0,20.0,1.0,10.0,50.0,2.5,105.0,262.5,2.0,5.0
+"Paneer Paratha","paneer paratha",300.0,6.67,25.33,18.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,38.0,28.0,6.67,25.33,18.67,450.0,300.0,3.0,2.0
+"Gobi Paratha (Cauliflower)","gobi paratha (cauliflower)",253.33,3.33,28.0,14.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,42.0,22.0,3.33,28.0,14.67,380.0,253.33,4.0,2.67
+"Sattu Paratha","sattu paratha",300.0,8.0,34.67,16.0,4.0,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,52.0,24.0,8.0,34.67,16.0,450.0,300.0,6.0,4.0
+"Mooli Paratha (Radish)","mooli paratha (radish)",160.0,3.33,25.33,5.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,38.0,8.0,3.33,25.33,5.33,240.0,160.0,5.0,3.33
+"Missi Roti","missi roti",325.0,8.75,37.5,15.0,5.0,0.0,0.0,0.0,0,1,desk_research,80.0,7.0,30.0,12.0,8.75,37.5,15.0,260.0,325.0,4.0,5.0
+"Tandoori Roti (Plain)","tandoori roti (plain)",271.43,8.57,54.29,2.86,5.71,0.0,0.0,0.0,0,1,desk_research,70.0,6.0,38.0,2.0,8.57,54.29,2.86,190.0,271.43,4.0,5.71
+"Roomali Roti","roomali roti",310.0,8.0,55.0,5.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,55.0,5.0,8.0,55.0,5.0,310.0,310.0,3.0,3.0
+"Bhatura (1 piece)","bhatura (1 piece)",320.0,6.0,45.0,12.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,45.0,12.0,6.0,45.0,12.0,320.0,320.0,2.0,2.0
+"Amritsari Kulcha (Stuffed)","amritsari kulcha (stuffed)",280.0,5.33,36.67,12.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,55.0,18.0,5.33,36.67,12.0,420.0,280.0,4.0,2.67
+"Plain Kulcha","plain kulcha",280.0,6.0,48.0,6.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,48.0,6.0,6.0,48.0,6.0,280.0,280.0,2.0,2.0
+"Plain Naan","plain naan",310.0,8.0,52.0,6.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,52.0,6.0,8.0,52.0,6.0,310.0,310.0,3.0,3.0
+"Butter Naan","butter naan",380.0,7.0,52.0,15.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,7.0,52.0,15.0,7.0,52.0,15.0,380.0,380.0,2.0,2.0
+"Rava Dosa","rava dosa",300.0,3.33,32.0,17.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,48.0,26.0,3.33,32.0,17.33,450.0,300.0,1.0,0.67
+"Set Dosa (3 pieces)","set dosa (3 pieces)",260.0,3.5,32.5,12.5,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,7.0,65.0,25.0,3.5,32.5,12.5,520.0,260.0,3.0,1.5
+"Onion Uthappam","onion uthappam",225.0,3.0,25.0,12.5,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,50.0,25.0,3.0,25.0,12.5,450.0,225.0,4.0,2.0
+"Adai Dosa (Mixed Lentil)","adai dosa (mixed lentil)",253.33,6.67,25.33,13.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,38.0,20.0,6.67,25.33,13.33,380.0,253.33,5.0,3.33
+"Idiyappam (String Hoppers)","idiyappam (string hoppers)",126.67,2.67,28.0,0.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,42.0,1.0,2.67,28.0,0.67,190.0,126.67,2.0,1.33
+"Pathiri (Rice Bread)","pathiri (rice bread)",160.0,3.0,35.0,1.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,35.0,1.0,3.0,35.0,1.0,160.0,160.0,1.0,1.0
+"Jowar Bhakri","jowar bhakri",275.0,7.5,56.25,2.5,7.5,0.0,0.0,0.0,0,1,desk_research,80.0,6.0,45.0,2.0,7.5,56.25,2.5,220.0,275.0,6.0,7.5
+"Bajra Bhakri","bajra bhakri",300.0,8.75,60.0,3.75,8.75,0.0,0.0,0.0,0,1,desk_research,80.0,7.0,48.0,3.0,8.75,60.0,3.75,240.0,300.0,7.0,8.75
+"Puri (1 piece)","puri (1 piece)",400.0,5.0,37.5,25.0,2.5,0.0,0.0,0.0,0,1,desk_research,40.0,2.0,15.0,10.0,5.0,37.5,25.0,160.0,400.0,1.0,2.5
+"Sugarcane Juice (Ganne Ka Ras)","sugarcane juice (ganne ka ras)",72.0,0.4,18.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,45.0,0.0,0.4,18.0,0.0,180.0,72.0,0.0,0.0
+"Watermelon Juice (Fresh)","watermelon juice (fresh)",32.0,0.4,8.0,0.0,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,20.0,0.0,0.4,8.0,0.0,80.0,32.0,1.0,0.4
+"Watermelon Juice (Added Syrup)","watermelon juice (added syrup)",56.0,0.4,13.6,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,34.0,0.0,0.4,13.6,0.0,140.0,56.0,0.0,0.0
+"Mango Shake (Fresh Mango + Milk)","mango shake (fresh mango + milk)",80.0,2.67,13.33,2.0,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,8.0,40.0,6.0,2.67,13.33,2.0,240.0,80.0,3.0,1.0
+"Mango Shake (With Ice Cream & Syrup)","mango shake (with ice cream & syrup)",140.0,2.33,21.67,5.33,0.33,0.0,0.0,0.0,0,1,desk_research,300.0,7.0,65.0,16.0,2.33,21.67,5.33,420.0,140.0,1.0,0.33
+"Banana Shake (Home Style)","banana shake (home style)",93.33,2.67,16.67,1.67,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,8.0,50.0,5.0,2.67,16.67,1.67,280.0,93.33,4.0,1.33
+"Banana Shake (Commercial)","banana shake (commercial)",150.0,2.33,23.33,4.67,0.67,0.0,0.0,0.0,0,1,desk_research,300.0,7.0,70.0,14.0,2.33,23.33,4.67,450.0,150.0,2.0,0.67
+"Chikoo Shake (Sapota)","chikoo shake (sapota)",106.67,2.67,18.33,2.0,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,8.0,55.0,6.0,2.67,18.33,2.0,320.0,106.67,5.0,1.67
+"Falooda (Traditional)","falooda (traditional)",150.0,2.67,25.0,4.67,0.67,0.0,0.0,0.0,0,1,desk_research,300.0,8.0,75.0,14.0,2.67,25.0,4.67,450.0,150.0,2.0,0.67
+Thandai,thandai,152.0,2.0,20.0,7.2,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,5.0,50.0,18.0,2.0,20.0,7.2,380.0,152.0,1.0,0.4
+"Sattu Sharbat (Savory/Namkeen)","sattu sharbat (savory/namkeen)",48.0,2.4,8.0,0.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,20.0,2.0,2.4,8.0,0.8,120.0,48.0,4.0,1.6
+"Sattu Sharbat (Sweetened)","sattu sharbat (sweetened)",80.0,2.4,16.0,0.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,40.0,2.0,2.4,16.0,0.8,200.0,80.0,4.0,1.6
+"Kokum Sharbat","kokum sharbat",40.0,0.0,10.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,20.0,0.0,0.0,10.0,0.0,80.0,40.0,0.0,0.0
+"Kokum Sharbat (Commercial Syrup)","kokum sharbat (commercial syrup)",75.0,0.0,19.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,38.0,0.0,0.0,19.0,0.0,150.0,75.0,0.0,0.0
+"Rose Milk (Rooh Afza)","rose milk (rooh afza)",128.0,2.4,24.0,3.2,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,60.0,8.0,2.4,24.0,3.2,320.0,128.0,0.0,0.0
+"Badam Milk (Almond Milk Traditional)","badam milk (almond milk traditional)",104.0,3.2,12.0,4.8,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,30.0,12.0,3.2,12.0,4.8,260.0,104.0,2.0,0.8
+"Badam Milk (Commercial Bottle)","badam milk (commercial bottle)",136.0,2.4,22.0,4.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,55.0,10.0,2.4,22.0,4.0,340.0,136.0,0.0,0.0
+Piyush,piyush,190.0,4.0,27.5,7.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,55.0,14.0,4.0,27.5,7.0,380.0,190.0,0.0,0.0
+"Kala Khatta (Ice Gola Juice)","kala khatta (ice gola juice)",60.0,0.0,15.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,30.0,0.0,0.0,15.0,0.0,120.0,60.0,0.0,0.0
+"Fresh Lime Soda (Sweet & Salt)","fresh lime soda (sweet & salt)",48.0,0.0,12.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,0.0,30.0,0.0,0.0,12.0,0.0,120.0,48.0,0.0,0.0
+"Papaya Shake","papaya shake",70.0,2.67,11.67,1.67,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,8.0,35.0,5.0,2.67,11.67,1.67,210.0,70.0,4.0,1.33
+"Pineapple Juice (Fresh)","pineapple juice (fresh)",52.0,0.4,12.8,0.0,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,32.0,0.0,0.4,12.8,0.0,130.0,52.0,1.0,0.4
+"Mixed Fruit Juice (Commercial Packaged Style)","mixed fruit juice (commercial packaged style)",56.0,0.4,13.6,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,34.0,0.0,0.4,13.6,0.0,140.0,56.0,0.0,0.0
+"Kashmiri Kahwa (Sweetened)","kashmiri kahwa (sweetened)",53.33,0.67,10.0,1.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,15.0,2.0,0.67,10.0,1.33,80.0,53.33,0.0,0.0
+"Tulsi Green Tea (Unsweetened)","tulsi green tea (unsweetened)",3.33,0.0,0.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,1.0,0.0,0.0,0.67,0.0,5.0,3.33,0.0,0.0
+"Desi Ghee (Clarified Butter)","desi ghee (clarified butter)",900.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,0,1,desk_research,10.0,0.0,0.0,10.0,0.0,0.0,100.0,90.0,900.0,0.0,0.0
+"Salted Butter (Amul/Commercial)","salted butter (amul/commercial)",750.0,0.0,0.0,80.0,0.0,0.0,0.0,0.0,0,1,desk_research,10.0,0.0,0.0,8.0,0.0,0.0,80.0,75.0,750.0,0.0,0.0
+"White Butter (Safed Makhan)","white butter (safed makhan)",800.0,0.0,0.0,90.0,0.0,0.0,0.0,0.0,0,1,desk_research,10.0,0.0,0.0,9.0,0.0,0.0,90.0,80.0,800.0,0.0,0.0
+"Plain Curd (Dahi - Whole Milk)","plain curd (dahi - whole milk)",60.0,3.0,4.0,4.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,4.0,4.0,3.0,4.0,4.0,60.0,60.0,0.0,0.0
+"Boondi Raita","boondi raita",120.0,4.0,12.0,6.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,12.0,6.0,4.0,12.0,6.0,120.0,120.0,1.0,1.0
+"Cucumber Raita","cucumber raita",65.0,3.0,6.0,3.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,6.0,3.0,3.0,6.0,3.0,65.0,65.0,1.0,1.0
+"Onion Tomato Raita","onion tomato raita",70.0,3.0,7.0,3.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,7.0,3.0,3.0,7.0,3.0,70.0,70.0,1.0,1.0
+"Coconut Chutney (Fresh)","coconut chutney (fresh)",233.33,3.33,10.0,20.0,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,3.0,6.0,3.33,10.0,20.0,70.0,233.33,2.0,6.67
+"Coconut Chutney (Tempered/Oily)","coconut chutney (tempered/oily)",366.67,3.33,13.33,33.33,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,4.0,10.0,3.33,13.33,33.33,110.0,366.67,1.0,3.33
+"Tomato Chutney (South Indian)","tomato chutney (south indian)",133.33,3.33,16.67,6.67,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,5.0,2.0,3.33,16.67,6.67,40.0,133.33,1.0,3.33
+"Tomato Chutney (Tempered/Oily)","tomato chutney (tempered/oily)",250.0,3.33,16.67,20.0,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,5.0,6.0,3.33,16.67,20.0,75.0,250.0,1.0,3.33
+"Peanut Chutney","peanut chutney",433.33,10.0,16.67,36.67,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,3.0,5.0,11.0,10.0,16.67,36.67,130.0,433.33,1.0,3.33
+"Mint Coriander Chutney (Green Chutney)","mint coriander chutney (green chutney)",66.67,3.33,10.0,1.67,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,3.0,0.5,3.33,10.0,1.67,20.0,66.67,1.0,3.33
+"Mint Coriander Chutney (Commercial/Mayo added)","mint coriander chutney (commercial/mayo added)",266.67,3.33,13.33,23.33,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,4.0,7.0,3.33,13.33,23.33,80.0,266.67,0.0,0.0
+"Tamarind Date Chutney (Meethi Chutney)","tamarind date chutney (meethi chutney)",200.0,0.0,50.0,0.0,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,15.0,0.0,0.0,50.0,0.0,60.0,200.0,1.0,3.33
+"Tamarind Date Chutney (Commercial Syrup)","tamarind date chutney (commercial syrup)",300.0,0.0,73.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,22.0,0.0,0.0,73.33,0.0,90.0,300.0,0.0,0.0
+"Garlic Chutney (Wet / Lahsun)","garlic chutney (wet / lahsun)",300.0,3.33,20.0,23.33,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,1.0,6.0,7.0,3.33,20.0,23.33,90.0,300.0,0.0,0.0
+"Dry Garlic Chutney (Vada Pav Style)","dry garlic chutney (vada pav style)",433.33,13.33,33.33,26.67,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,2.0,5.0,4.0,13.33,33.33,26.67,65.0,433.33,1.0,6.67
+"Idli Podi (Gunpowder - Dry)","idli podi (gunpowder - dry)",366.67,13.33,40.0,13.33,13.33,0.0,0.0,0.0,0,1,desk_research,15.0,2.0,6.0,2.0,13.33,40.0,13.33,55.0,366.67,2.0,13.33
+"Idli Podi (Gunpowder - Mixed with Oil)","idli podi (gunpowder - mixed with oil)",600.0,6.67,20.0,53.33,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,2.0,6.0,16.0,6.67,20.0,53.33,180.0,600.0,2.0,6.67
+"Flaxseed Podi (Jawasi)","flaxseed podi (jawasi)",466.67,20.0,26.67,33.33,26.67,0.0,0.0,0.0,0,1,desk_research,15.0,3.0,4.0,5.0,20.0,26.67,33.33,70.0,466.67,4.0,26.67
+"Curry Leaf Podi (Karuveppilai)","curry leaf podi (karuveppilai)",333.33,13.33,33.33,13.33,20.0,0.0,0.0,0.0,0,1,desk_research,15.0,2.0,5.0,2.0,13.33,33.33,13.33,50.0,333.33,3.0,20.0
+"Peanut Dry Chutney (Shengdana)","peanut dry chutney (shengdana)",533.33,26.67,20.0,40.0,13.33,0.0,0.0,0.0,0,1,desk_research,15.0,4.0,3.0,6.0,26.67,20.0,40.0,80.0,533.33,2.0,13.33
+"Mango Pickle (Aam Ka Achar)","mango pickle (aam ka achar)",266.67,0.0,20.0,20.0,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,3.0,3.0,0.0,20.0,20.0,40.0,266.67,1.0,6.67
+"Mango Pickle (Commercial/High Oil)","mango pickle (commercial/high oil)",500.0,0.0,26.67,46.67,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,4.0,7.0,0.0,26.67,46.67,75.0,500.0,0.0,0.0
+"Lemon Pickle (Nimbu - Sweet & Sour)","lemon pickle (nimbu - sweet & sour)",233.33,0.0,53.33,0.0,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,8.0,0.0,0.0,53.33,0.0,35.0,233.33,1.0,6.67
+"Lemon Pickle (Commercial)","lemon pickle (commercial)",333.33,0.0,80.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,12.0,0.0,0.0,80.0,0.0,50.0,333.33,0.0,0.0
+"Mixed Veg Pickle","mixed veg pickle",300.0,0.0,20.0,26.67,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,3.0,4.0,0.0,20.0,26.67,45.0,300.0,1.0,6.67
+"Mixed Veg Pickle (Commercial)","mixed veg pickle (commercial)",533.33,0.0,26.67,53.33,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,4.0,8.0,0.0,26.67,53.33,80.0,533.33,0.0,0.0
+"Garlic Pickle (Lahsun)","garlic pickle (lahsun)",400.0,6.67,26.67,33.33,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,1.0,4.0,5.0,6.67,26.67,33.33,60.0,400.0,1.0,6.67
+"Green Chilli Pickle (Hari Mirch)","green chilli pickle (hari mirch)",300.0,0.0,13.33,26.67,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,2.0,4.0,0.0,13.33,26.67,45.0,300.0,1.0,6.67
+"Andhra Tomato Pachadi","andhra tomato pachadi",333.33,6.67,20.0,26.67,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,1.0,3.0,4.0,6.67,20.0,26.67,50.0,333.33,1.0,6.67
+"Gongura Pickle","gongura pickle",433.33,6.67,26.67,33.33,13.33,0.0,0.0,0.0,0,1,desk_research,15.0,1.0,4.0,5.0,6.67,26.67,33.33,65.0,433.33,2.0,13.33
+"Chicken Pickle (Andhra Style)","chicken pickle (andhra style)",533.33,26.67,13.33,40.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,4.0,2.0,6.0,26.67,13.33,40.0,80.0,533.33,0.0,0.0
+"Prawn Pickle","prawn pickle",566.67,26.67,13.33,46.67,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,4.0,2.0,7.0,26.67,13.33,46.67,85.0,566.67,0.0,0.0
+"Tomato Ketchup","tomato ketchup",133.33,0.0,33.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,5.0,0.0,0.0,33.33,0.0,20.0,133.33,0.0,0.0
+"Eggless Mayonnaise","eggless mayonnaise",600.0,0.0,6.67,66.67,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,1.0,10.0,0.0,6.67,66.67,90.0,600.0,0.0,0.0
+"Tandoori Mayonnaise","tandoori mayonnaise",566.67,0.0,13.33,60.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,2.0,9.0,0.0,13.33,60.0,85.0,566.67,0.0,0.0
+"Schezwan Chutney","schezwan chutney",300.0,0.0,20.0,26.67,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,3.0,4.0,0.0,20.0,26.67,45.0,300.0,0.0,0.0
+"Green Chilli Sauce","green chilli sauce",33.33,0.0,6.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,0.0,1.0,0.0,0.0,6.67,0.0,5.0,33.33,0.0,0.0
+"Dark Soy Sauce","dark soy sauce",66.67,6.67,13.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,1.0,2.0,0.0,6.67,13.33,0.0,10.0,66.67,0.0,0.0
+"Sirka Pyaz (Vinegar Onions)","sirka pyaz (vinegar onions)",33.33,0.0,6.67,0.0,3.33,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,2.0,0.0,0.0,6.67,0.0,10.0,33.33,1.0,3.33
+"Fried Green Chillies (Salted)","fried green chillies (salted)",350.0,0.0,10.0,40.0,10.0,0.0,0.0,0.0,0,1,desk_research,10.0,0.0,1.0,4.0,0.0,10.0,40.0,35.0,350.0,1.0,10.0
+"Roasted Papad (Urad Dal - 1 Medium)","roasted papad (urad dal - 1 medium)",300.0,20.0,53.33,0.0,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,3.0,8.0,0.0,20.0,53.33,0.0,45.0,300.0,1.0,6.67
+"Fried Papad (Urad Dal - 1 Medium)","fried papad (urad dal - 1 medium)",566.67,20.0,53.33,33.33,6.67,0.0,0.0,0.0,0,1,desk_research,15.0,3.0,8.0,5.0,20.0,53.33,33.33,85.0,566.67,1.0,6.67
+"Masala Papad (Roasted with Veggies)","masala papad (roasted with veggies)",200.0,10.0,33.33,1.67,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,3.0,10.0,0.5,10.0,33.33,1.67,60.0,200.0,2.0,6.67
+"Fryums (Deep Fried - Small Portion)","fryums (deep fried - small portion)",550.0,5.0,70.0,30.0,0.0,0.0,0.0,0.0,0,1,desk_research,20.0,1.0,14.0,6.0,5.0,70.0,30.0,110.0,550.0,0.0,0.0
+"Kasundi (Mustard Sauce)","kasundi (mustard sauce)",133.33,6.67,13.33,6.67,0.0,0.0,0.0,0.0,0,1,desk_research,15.0,1.0,2.0,1.0,6.67,13.33,6.67,20.0,133.33,0.0,0.0
+"Hummus (Classic)","hummus (classic)",250.0,6.67,13.33,20.0,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,2.0,4.0,6.0,6.67,13.33,20.0,75.0,250.0,2.0,6.67
+"Ghee Roast Dosa Podi (Pre-mixed)","ghee roast dosa podi (pre-mixed)",650.0,10.0,40.0,50.0,10.0,0.0,0.0,0.0,0,1,desk_research,20.0,2.0,8.0,10.0,10.0,40.0,50.0,130.0,650.0,2.0,10.0
+"Sabudana Khichdi","sabudana khichdi",240.0,1.5,30.0,12.5,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,60.0,25.0,1.5,30.0,12.5,480.0,240.0,1.0,0.5
+"Sabudana Vada (2 pieces)","sabudana vada (2 pieces)",450.0,2.0,45.0,28.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,45.0,28.0,2.0,45.0,28.0,450.0,450.0,1.0,1.0
+"Kuttu Ki Puri (Buckwheat - 2 pieces)","kuttu ki puri (buckwheat - 2 pieces)",325.0,5.0,37.5,17.5,3.75,0.0,0.0,0.0,0,1,desk_research,80.0,4.0,30.0,14.0,5.0,37.5,17.5,260.0,325.0,3.0,3.75
+"Sama Ke Chawal (Barnyard Millet)","sama ke chawal (barnyard millet)",106.67,2.67,21.33,0.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,32.0,1.0,2.67,21.33,0.67,160.0,106.67,4.0,2.67
+"Makhana Kheer","makhana kheer",146.67,4.0,18.67,5.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,28.0,8.0,4.0,18.67,5.33,220.0,146.67,1.0,0.67
+"Curd Rice (Thayir Sadam)","curd rice (thayir sadam)",120.0,3.0,17.5,4.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,35.0,8.0,3.0,17.5,4.0,240.0,120.0,1.0,0.5
+"Curd Rice (Temple Style/Rich Tempering)","curd rice (temple style/rich tempering)",160.0,2.5,19.0,8.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,38.0,16.0,2.5,19.0,8.0,320.0,160.0,1.0,0.5
+"Dal Pakwan (1 Pakwan + Dal)","dal pakwan (1 pakwan + dal)",325.0,5.0,30.0,20.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,60.0,40.0,5.0,30.0,20.0,650.0,325.0,4.0,2.0
+"Chura Matar (Poha with Peas)","chura matar (poha with peas)",146.67,4.0,25.33,3.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,38.0,5.0,4.0,25.33,3.33,220.0,146.67,4.0,2.67
+"Kashmiri Dum Aloo","kashmiri dum aloo",210.0,1.5,17.5,15.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,35.0,30.0,1.5,17.5,15.0,420.0,210.0,3.0,1.5
+"Gujarati Kadhi (Sweet & Sour)","gujarati kadhi (sweet & sour)",80.0,2.0,10.0,3.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,20.0,6.0,2.0,10.0,3.0,160.0,80.0,1.0,0.5
+"Sindhi Kadhi","sindhi kadhi",90.0,3.0,11.0,4.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,22.0,8.0,3.0,11.0,4.0,180.0,90.0,4.0,2.0
+"Pork Vindaloo / Xacuti","pork vindaloo / xacuti",225.0,11.0,4.0,18.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,8.0,36.0,11.0,4.0,18.0,450.0,225.0,2.0,1.0
+"Rasam (Clear Tomato/Lentil Water)","rasam (clear tomato/lentil water)",40.0,1.33,5.33,1.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,8.0,2.0,1.33,5.33,1.33,60.0,40.0,2.0,1.33
+"Mutton Paya (Bone Broth/Soup)","mutton paya (bone broth/soup)",88.0,7.2,1.6,5.6,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,18.0,4.0,14.0,7.2,1.6,5.6,220.0,88.0,0.0,0.0
+"Mutton Paya (Commercial/Thickened)","mutton paya (commercial/thickened)",152.0,6.4,4.8,11.2,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,16.0,12.0,28.0,6.4,4.8,11.2,380.0,152.0,0.0,0.0
+"Veg Clear Soup","veg clear soup",25.0,1.0,4.0,0.5,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,2.0,8.0,1.0,1.0,4.0,0.5,50.0,25.0,2.0,1.0
+"Veg Sweet Corn Soup","veg sweet corn soup",60.0,1.5,10.0,1.5,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,20.0,3.0,1.5,10.0,1.5,120.0,60.0,2.0,1.0
+"Veg Manchow Soup (With Fried Noodles)","veg manchow soup (with fried noodles)",120.0,2.0,15.0,6.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,30.0,12.0,2.0,15.0,6.0,240.0,120.0,3.0,1.5
+"Veg Hakka Noodles","veg hakka noodles",208.0,2.4,24.0,11.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,60.0,28.0,2.4,24.0,11.2,520.0,208.0,4.0,1.6
+"Veg Fried Rice","veg fried rice",192.0,2.0,22.0,10.4,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,5.0,55.0,26.0,2.0,22.0,10.4,480.0,192.0,3.0,1.2
+"Gobi Manchurian (Gravy)","gobi manchurian (gravy)",130.0,2.0,17.5,6.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,35.0,12.0,2.0,17.5,6.0,260.0,130.0,4.0,2.0
+"Chicken Chilli (Gravy)","chicken chilli (gravy)",240.0,9.0,11.0,17.5,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,22.0,35.0,9.0,11.0,17.5,480.0,240.0,1.0,0.5
+"Veg Burger (Aloo Tikki Base)","veg burger (aloo tikki base)",225.0,4.0,27.5,11.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,55.0,22.0,4.0,27.5,11.0,450.0,225.0,5.0,2.5
+"Paneer Tikka Pizza (Personal Size)","paneer tikka pizza (personal size)",272.0,9.6,26.0,14.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,24.0,65.0,35.0,9.6,26.0,14.0,680.0,272.0,4.0,1.6
+"Masala Maggi (1 Pack)","masala maggi (1 pack)",206.67,4.0,30.0,8.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,45.0,12.0,4.0,30.0,8.0,310.0,206.67,3.0,2.0
+"Masala Maggi (With Cheese & Butter)","masala maggi (with cheese & butter)",366.67,6.67,33.33,21.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,50.0,32.0,6.67,33.33,21.33,550.0,366.67,2.0,1.33
+"Penne Arrabbiata (Red Sauce)","penne arrabbiata (red sauce)",152.0,4.0,22.0,5.6,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,55.0,14.0,4.0,22.0,5.6,380.0,152.0,5.0,2.0
+"Penne Alfredo (White Sauce)","penne alfredo (white sauce)",220.0,4.8,19.2,14.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,48.0,35.0,4.8,19.2,14.0,550.0,220.0,2.0,0.8
+"Spaghetti Aglio e Olio","spaghetti aglio e olio",210.0,4.0,22.5,11.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,45.0,22.0,4.0,22.5,11.0,420.0,210.0,3.0,1.5
+"Margherita Pizza (Thin Crust - 2 Slices)","margherita pizza (thin crust - 2 slices)",225.0,9.0,25.0,9.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,50.0,18.0,9.0,25.0,9.0,450.0,225.0,3.0,1.5
+"Cheese Burst Pizza (2 Slices)","cheese burst pizza (2 slices)",300.0,10.0,26.0,16.8,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,25.0,65.0,42.0,10.0,26.0,16.8,750.0,300.0,3.0,1.2
+"Garlic Bread with Cheese (2 pieces)","garlic bread with cheese (2 pieces)",350.0,10.0,35.0,18.75,1.25,0.0,0.0,0.0,0,1,desk_research,80.0,8.0,28.0,15.0,10.0,35.0,18.75,280.0,350.0,1.0,1.25
+"Classic Caesar Salad (Heavy Dressing)","classic caesar salad (heavy dressing)",168.0,4.8,6.0,14.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,15.0,35.0,4.8,6.0,14.0,420.0,168.0,4.0,1.6
+"French Fries (Salted)","french fries (salted)",300.0,2.67,36.67,16.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,55.0,24.0,2.67,36.67,16.0,450.0,300.0,4.0,2.67
+"Loaded Nachos (Cheese Sauce & Beans)","loaded nachos (cheese sauce & beans)",260.0,5.6,26.0,15.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,65.0,38.0,5.6,26.0,15.2,650.0,260.0,6.0,2.4
+"Falafel Wrap (Refined Pita)","falafel wrap (refined pita)",192.0,5.6,22.0,8.8,3.2,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,55.0,22.0,5.6,22.0,8.8,480.0,192.0,8.0,3.2
+"Hummus & Pita Platter","hummus & pita platter",168.0,4.8,20.0,7.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,50.0,18.0,4.8,20.0,7.2,420.0,168.0,6.0,2.4
+"Chicken Shawarma (Plated - No Bread)","chicken shawarma (plated - no bread)",175.0,14.0,5.0,11.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,10.0,22.0,14.0,5.0,11.0,350.0,175.0,2.0,1.0
+"Shakshuka (2 Eggs in Tomato Sauce)","shakshuka (2 eggs in tomato sauce)",112.0,6.4,6.0,7.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,16.0,15.0,18.0,6.4,6.0,7.2,280.0,112.0,4.0,1.6
+"Sushi Maki Roll (Veg/Avocado - 6 pieces)","sushi maki roll (veg/avocado - 6 pieces)",146.67,2.67,26.67,3.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,40.0,5.0,2.67,26.67,3.33,220.0,146.67,2.0,1.33
+"Taiwanese Soup Dumplings (Xiaolongbao - 4 pcs)","taiwanese soup dumplings (xiaolongbao - 4 pcs)",213.33,9.33,23.33,9.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,35.0,14.0,9.33,23.33,9.33,320.0,213.33,2.0,1.33
+"Boba / Bubble Tea (Brown Sugar & Pearls)","boba / bubble tea (brown sugar & pearls)",128.57,0.57,24.29,2.86,0.0,0.0,0.0,0.0,0,1,desk_research,350.0,2.0,85.0,10.0,0.57,24.29,2.86,450.0,128.57,0.0,0.0
+"Authentic Pad Thai (Street Style)","authentic pad thai (street style)",183.33,6.0,21.67,8.0,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,18.0,65.0,24.0,6.0,21.67,8.0,550.0,183.33,4.0,1.33
+"Veg Crystal Dumplings (Dim Sum - 4 pcs)","veg crystal dumplings (dim sum - 4 pcs)",120.0,2.67,23.33,1.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,35.0,2.0,2.67,23.33,1.33,180.0,120.0,3.0,2.0
+"Chicken Dim Sum (Steamed - 4 pcs)","chicken dim sum (steamed - 4 pcs)",146.67,9.33,20.0,2.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,30.0,4.0,9.33,20.0,2.67,220.0,146.67,2.0,1.33
+"Chilli Garlic Noodles","chilli garlic noodles",192.0,3.2,26.0,8.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,65.0,20.0,3.2,26.0,8.0,480.0,192.0,4.0,1.6
+"Bao Buns (Stuffed Veg/Chicken - 2 pcs)","bao buns (stuffed veg/chicken - 2 pcs)",210.0,6.0,30.0,7.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,60.0,14.0,6.0,30.0,7.0,420.0,210.0,3.0,1.5
+"Thai Green Curry (Veg/Chicken)","thai green curry (veg/chicken)",152.0,6.0,8.0,11.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,15.0,20.0,28.0,6.0,8.0,11.2,380.0,152.0,4.0,1.6
+"Grilled Fish with Lemon Butter Sauce","grilled fish with lemon butter sauce",160.0,12.5,2.5,11.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,25.0,5.0,22.0,12.5,2.5,11.0,320.0,160.0,1.0,0.5
+"Mushroom Risotto","mushroom risotto",208.0,4.0,22.0,11.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,55.0,28.0,4.0,22.0,11.2,520.0,208.0,3.0,1.2
+"Avocado & Cream Cheese Bagel","avocado & cream cheese bagel",240.0,6.0,27.5,12.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,55.0,24.0,6.0,27.5,12.0,480.0,240.0,5.0,2.5
+"Tacos (Hard Shell - Veg/Chicken - 2 pcs)","tacos (hard shell - veg/chicken - 2 pcs)",233.33,9.33,23.33,12.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,35.0,18.0,9.33,23.33,12.0,350.0,233.33,4.0,2.67
+"Chocolate Lava Cake (Choco Lava)","chocolate lava cake (choco lava)",375.0,5.0,41.67,21.67,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,6.0,50.0,26.0,5.0,41.67,21.67,450.0,375.0,2.0,1.67
+"Cheesecake (Classic Slice)","cheesecake (classic slice)",346.67,5.33,28.0,23.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,42.0,35.0,5.33,28.0,23.33,520.0,346.67,0.0,0.0
+"Vodka / Gin / White Rum (Straight - 1 Peg)","vodka / gin / white rum (straight - 1 peg)",216.67,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,0.0,0.0,0.0,0.0,0.0,65.0,216.67,0.0,0.0
+"Whiskey / Scotch / Dark Rum (Straight - 1 Peg)","whiskey / scotch / dark rum (straight - 1 peg)",233.33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,0.0,0.0,0.0,0.0,0.0,70.0,233.33,0.0,0.0
+"Craft Wheat Beer / Stout (Pint)","craft wheat beer / stout (pint)",51.52,0.61,4.55,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,330.0,2.0,15.0,0.0,0.61,4.55,0.0,170.0,51.52,0.0,0.0
+"Red Wine (1 Glass)","red wine (1 glass)",83.33,0.0,2.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,4.0,0.0,0.0,2.67,0.0,125.0,83.33,0.0,0.0
+"White Wine (Sweet/Fruity - 1 Glass)","white wine (sweet/fruity - 1 glass)",80.0,0.0,5.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,8.0,0.0,0.0,5.33,0.0,120.0,80.0,0.0,0.0
+"Rum & Coke (30ml Rum + 150ml Coke)","rum & coke (30ml rum + 150ml coke)",75.0,0.0,8.89,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,0.0,16.0,0.0,0.0,8.89,0.0,135.0,75.0,0.0,0.0
+"Gin & Tonic (30ml Gin + 150ml Tonic Water)","gin & tonic (30ml gin + 150ml tonic water)",69.44,0.0,7.78,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,0.0,14.0,0.0,0.0,7.78,0.0,125.0,69.44,0.0,0.0
+"Vodka Soda (30ml Vodka + Soda Water)","vodka soda (30ml vodka + soda water)",36.11,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,0.0,0.0,0.0,0.0,0.0,0.0,65.0,36.11,0.0,0.0
+"Classic Mojito (With Sugar Syrup)","classic mojito (with sugar syrup)",80.0,0.0,12.5,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,25.0,0.0,0.0,12.5,0.0,160.0,80.0,0.0,0.0
+"Margarita (Classic Salt Rim)","margarita (classic salt rim)",113.33,0.0,12.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,18.0,0.0,0.0,12.0,0.0,170.0,113.33,0.0,0.0
+"Long Island Iced Tea (LIIT)","long island iced tea (liit)",112.0,0.0,12.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,0.0,30.0,0.0,0.0,12.0,0.0,280.0,112.0,0.0,0.0
+"Whiskey Sour (With Egg White)","whiskey sour (with egg white)",106.67,0.67,9.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,14.0,0.0,0.67,9.33,0.0,160.0,106.67,0.0,0.0
+"Old Fashioned","old fashioned",250.0,0.0,8.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,60.0,0.0,5.0,0.0,0.0,8.33,0.0,150.0,250.0,0.0,0.0
+"Sangria (Red Wine + Fruits + Syrup)","sangria (red wine + fruits + syrup)",90.0,0.0,10.0,0.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,20.0,0.0,0.0,10.0,0.0,180.0,90.0,1.0,0.5
+"Baileys Irish Cream (Straight)","baileys irish cream (straight)",325.0,3.33,25.0,15.0,0.0,0.0,0.0,0.0,0,1,desk_research,60.0,2.0,15.0,9.0,3.33,25.0,15.0,195.0,325.0,0.0,0.0
+"Jagerbomb (Jägermeister + Energy Drink)","jagerbomb (jägermeister + energy drink)",100.0,0.0,12.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,18.0,0.0,0.0,12.0,0.0,150.0,100.0,0.0,0.0
+"Breezer / Bacardi Plus (1 Bottle)","breezer / bacardi plus (1 bottle)",65.45,0.0,9.09,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,275.0,0.0,25.0,0.0,0.0,9.09,0.0,180.0,65.45,0.0,0.0
+"Mulled Wine (Spiced with Sugar)","mulled wine (spiced with sugar)",106.67,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,12.0,0.0,0.0,8.0,0.0,160.0,106.67,0.0,0.0
+"Tequila Shot","tequila shot",216.67,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,0.0,0.0,0.0,0.0,0.0,65.0,216.67,0.0,0.0
+"Piña Colada (With Coconut Cream)","piña colada (with coconut cream)",168.0,0.4,20.0,6.4,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,50.0,16.0,0.4,20.0,6.4,420.0,168.0,1.0,0.4
+Cosmopolitan,cosmopolitan,106.67,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,12.0,0.0,0.0,8.0,0.0,160.0,106.67,0.0,0.0
+"Espresso Martini","espresso martini",120.0,0.0,10.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,16.0,0.0,0.0,10.67,0.0,180.0,120.0,0.0,0.0
+"Bloody Mary (Tomato Base)","bloody mary (tomato base)",56.0,0.4,4.0,0.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,10.0,0.0,0.4,4.0,0.0,140.0,56.0,2.0,0.8
+"Moscow Mule (With Ginger Beer)","moscow mule (with ginger beer)",90.0,0.0,11.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,22.0,0.0,0.0,11.0,0.0,180.0,90.0,0.0,0.0
+Negroni,negroni,190.0,0.0,15.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,0.0,15.0,0.0,0.0,15.0,0.0,190.0,190.0,0.0,0.0
+"Aperol Spritz","aperol spritz",80.0,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,16.0,0.0,0.0,8.0,0.0,160.0,80.0,0.0,0.0
+"White Russian (With Heavy Cream)","white russian (with heavy cream)",173.33,0.67,12.0,8.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,18.0,12.0,0.67,12.0,8.0,260.0,173.33,0.0,0.0
+"Daiquiri (Classic - Shaken)","daiquiri (classic - shaken)",125.0,0.0,10.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,120.0,0.0,12.0,0.0,0.0,10.0,0.0,150.0,125.0,0.0,0.0
+"Strawberry Daiquiri (Frozen/Blended)","strawberry daiquiri (frozen/blended)",112.0,0.0,18.0,0.0,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,0.0,45.0,0.0,0.0,18.0,0.0,280.0,112.0,1.0,0.4
+"Mai Tai","mai tai",160.0,0.0,14.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,22.0,0.0,0.0,14.67,0.0,240.0,160.0,0.0,0.0
+"Tequila Sunrise (Tequila + Orange + Grenadine)","tequila sunrise (tequila + orange + grenadine)",105.0,0.0,12.5,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,25.0,0.0,0.0,12.5,0.0,210.0,105.0,0.0,0.0
+"Manhattan (With Sweet Vermouth)","manhattan (with sweet vermouth)",160.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,0.0,4.0,0.0,0.0,4.0,0.0,160.0,160.0,0.0,0.0
+"Martini (Classic Dry)","martini (classic dry)",130.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,0.0,1.0,0.0,0.0,1.0,0.0,130.0,130.0,0.0,0.0
+"Mimosa (Champagne + Orange Juice)","mimosa (champagne + orange juice)",80.0,0.0,6.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,10.0,0.0,0.0,6.67,0.0,120.0,80.0,0.0,0.0
+"Bellini (Prosecco + Peach Purée)","bellini (prosecco + peach purée)",86.67,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,0.0,12.0,0.0,0.0,8.0,0.0,130.0,86.67,0.0,0.0
+"Blue Lagoon (Vodka + Blue Curacao + Lemonade)","blue lagoon (vodka + blue curacao + lemonade)",95.0,0.0,12.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,24.0,0.0,0.0,12.0,0.0,190.0,95.0,0.0,0.0
+"Sex on the Beach","sex on the beach",110.0,0.0,14.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,28.0,0.0,0.0,14.0,0.0,220.0,110.0,0.0,0.0
+"Amaretto Sour","amaretto sour",120.0,0.67,13.33,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,20.0,0.0,0.67,13.33,0.0,180.0,120.0,0.0,0.0
+"Pornstar Martini (With Prosecco Shot)","pornstar martini (with prosecco shot)",133.33,0.0,16.67,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,0.0,30.0,0.0,0.0,16.67,0.0,240.0,133.33,0.0,0.0
+"Whiskey Highball (Whiskey + Soda)","whiskey highball (whiskey + soda)",41.67,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,0.0,0.0,0.0,0.0,0.0,0.0,75.0,41.67,0.0,0.0
+"Campari Spritz","campari spritz",85.0,0.0,9.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,18.0,0.0,0.0,9.0,0.0,170.0,85.0,0.0,0.0
+"Irish Coffee (Whiskey + Coffee + Cream)","irish coffee (whiskey + coffee + cream)",115.0,0.5,7.5,4.5,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,1.0,15.0,9.0,0.5,7.5,4.5,230.0,115.0,0.0,0.0
+"Tom Collins","tom collins",80.0,0.0,7.0,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,0.0,14.0,0.0,0.0,7.0,0.0,160.0,80.0,0.0,0.0
+"Tandoori Chicken (Half / 4 pcs)","tandoori chicken (half / 4 pcs)",148.57,13.71,2.29,8.57,0.57,0.0,0.0,0.0,0,1,desk_research,350.0,48.0,8.0,30.0,13.71,2.29,8.57,520.0,148.57,2.0,0.57
+"Mutton Seekh Kebab (4 pcs)","mutton seekh kebab (4 pcs)",225.0,14.0,5.0,16.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,10.0,32.0,14.0,5.0,16.0,450.0,225.0,2.0,1.0
+"Chicken Seekh Kebab (4 pcs)","chicken seekh kebab (4 pcs)",190.0,16.0,4.0,12.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,32.0,8.0,24.0,16.0,4.0,12.0,380.0,190.0,2.0,1.0
+"Chicken Reshmi Kebab","chicken reshmi kebab",205.0,15.0,6.0,13.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,30.0,12.0,26.0,15.0,6.0,13.0,410.0,205.0,1.0,0.5
+"Mutton Galouti Kebab (4 pcs)","mutton galouti kebab (4 pcs)",320.0,16.0,10.0,24.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,15.0,36.0,16.0,10.0,24.0,480.0,320.0,2.0,1.33
+"Tandoori Soya Chaap (Dry)","tandoori soya chaap (dry)",190.0,9.0,17.5,9.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,35.0,18.0,9.0,17.5,9.0,380.0,190.0,6.0,3.0
+"Malai Soya Chaap","malai soya chaap",240.0,8.0,19.0,14.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,38.0,28.0,8.0,19.0,14.0,480.0,240.0,5.0,2.5
+"Tandoori Mushroom","tandoori mushroom",146.67,4.0,8.0,10.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,12.0,16.0,4.0,8.0,10.67,220.0,146.67,3.0,2.0
+"Malai Paneer Tikka","malai paneer tikka",225.0,7.5,7.0,17.5,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,15.0,14.0,35.0,7.5,7.0,17.5,450.0,225.0,2.0,1.0
+"Hariyali Chicken Kebab","hariyali chicken kebab",170.0,15.0,4.0,10.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,30.0,8.0,20.0,15.0,4.0,10.0,340.0,170.0,2.0,1.0
+"Paneer Lababdar","paneer lababdar",192.0,5.6,8.8,15.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,22.0,38.0,5.6,8.8,15.2,480.0,192.0,4.0,1.6
+"Shahi Paneer (Sweet Cashew Gravy)","shahi paneer (sweet cashew gravy)",208.0,4.8,11.2,16.0,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,28.0,40.0,4.8,11.2,16.0,520.0,208.0,3.0,1.2
+"Kadai Paneer","kadai paneer",164.0,5.6,8.0,12.0,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,20.0,30.0,5.6,8.0,12.0,410.0,164.0,5.0,2.0
+"Malai Kofta (2 Koftas in Gravy)","malai kofta (2 koftas in gravy)",232.0,4.0,18.0,16.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,45.0,40.0,4.0,18.0,16.0,580.0,232.0,4.0,1.6
+"Navratan Korma (Sweet Veg Gravy)","navratan korma (sweet veg gravy)",180.0,3.2,14.0,12.8,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,35.0,32.0,3.2,14.0,12.8,450.0,180.0,5.0,2.0
+"Veg Kolhapuri (Spicy)","veg kolhapuri (spicy)",152.0,2.4,10.0,11.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,25.0,28.0,2.4,10.0,11.2,380.0,152.0,6.0,2.4
+"Mushroom Masala","mushroom masala",160.0,3.0,7.5,13.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,15.0,26.0,3.0,7.5,13.0,320.0,160.0,4.0,2.0
+"Punjabi Dum Aloo (Stuffed)","punjabi dum aloo (stuffed)",164.0,2.4,18.0,9.6,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,45.0,24.0,2.4,18.0,9.6,410.0,164.0,5.0,2.0
+"Methi Matar Malai","methi matar malai",192.0,3.2,11.2,15.2,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,28.0,38.0,3.2,11.2,15.2,480.0,192.0,5.0,2.0
+"Paneer Pasanda","paneer pasanda",220.0,4.8,12.0,16.8,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,30.0,42.0,4.8,12.0,16.8,550.0,220.0,3.0,1.2
+"Chicken Tikka Masala","chicken tikka masala",192.0,10.4,7.2,13.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,26.0,18.0,34.0,10.4,7.2,13.6,480.0,192.0,3.0,1.2
+"Kadai Chicken","kadai chicken",168.0,11.2,6.0,11.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,15.0,28.0,11.2,6.0,11.2,420.0,168.0,3.0,1.2
+"Chicken Do Pyaza","chicken do pyaza",180.0,10.4,7.2,12.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,26.0,18.0,30.0,10.4,7.2,12.0,450.0,180.0,4.0,1.6
+"Mutton Nalli Nihari","mutton nalli nihari",216.67,11.67,4.0,16.67,0.67,0.0,0.0,0.0,0,1,desk_research,300.0,35.0,12.0,50.0,11.67,4.0,16.67,650.0,216.67,2.0,0.67
+"Bhuna Gosht (Dry Mutton Curry)","bhuna gosht (dry mutton curry)",232.0,12.8,6.0,17.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,32.0,15.0,44.0,12.8,6.0,17.6,580.0,232.0,3.0,1.2
+"Mutton Keema Matar","mutton keema matar",208.0,11.2,8.0,14.4,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,20.0,36.0,11.2,8.0,14.4,520.0,208.0,4.0,1.6
+"Saag Gosht (Mutton in Spinach)","saag gosht (mutton in spinach)",192.0,12.0,4.8,13.6,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,30.0,12.0,34.0,12.0,4.8,13.6,480.0,192.0,5.0,2.0
+"Rara Chicken (Chicken + Keema)","rara chicken (chicken + keema)",220.0,14.0,6.0,15.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,35.0,15.0,38.0,14.0,6.0,15.2,550.0,220.0,3.0,1.2
+"Murgh Musallam (Rich Gravy)","murgh musallam (rich gravy)",226.67,13.33,6.0,16.0,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,40.0,18.0,48.0,13.33,6.0,16.0,680.0,226.67,3.0,1.0
+"Dal Bukhara (Slow Cooked Black Dal)","dal bukhara (slow cooked black dal)",190.0,6.0,15.0,12.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,30.0,24.0,6.0,15.0,12.0,380.0,190.0,8.0,4.0
+"Veg Pulao","veg pulao",128.0,2.4,22.0,3.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,55.0,8.0,2.4,22.0,3.2,320.0,128.0,4.0,1.6
+"Kashmiri Pulao (With Fruits & Nuts)","kashmiri pulao (with fruits & nuts)",168.0,2.8,26.0,5.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,7.0,65.0,14.0,2.8,26.0,5.6,420.0,168.0,3.0,1.2
+"Hyderabadi Mutton Biryani","hyderabadi mutton biryani",214.29,9.14,18.57,10.86,1.14,0.0,0.0,0.0,0,1,desk_research,350.0,32.0,65.0,38.0,9.14,18.57,10.86,750.0,214.29,4.0,1.14
+"Egg Biryani (2 Eggs)","egg biryani (2 eggs)",173.33,6.0,19.33,7.33,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,18.0,58.0,22.0,6.0,19.33,7.33,520.0,173.33,3.0,1.0
+"Cheese Garlic Naan","cheese garlic naan",350.0,8.33,40.0,16.67,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,10.0,48.0,20.0,8.33,40.0,16.67,420.0,350.0,2.0,1.67
+"Chur Chur Naan (Stuffed/Crushed)","chur chur naan (stuffed/crushed)",340.0,5.33,36.67,18.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,55.0,28.0,5.33,36.67,18.67,510.0,340.0,3.0,2.0
+"Pudina Paratha (Lachha)","pudina paratha (lachha)",320.0,6.0,42.0,14.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,42.0,14.0,6.0,42.0,14.0,320.0,320.0,4.0,4.0
+"Khasta Roti","khasta roti",350.0,6.25,43.75,15.0,3.75,0.0,0.0,0.0,0,1,desk_research,80.0,5.0,35.0,12.0,6.25,43.75,15.0,280.0,350.0,3.0,3.75
+"Chicken Manchow Soup","chicken manchow soup",140.0,6.0,12.5,7.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,25.0,14.0,6.0,12.5,7.0,280.0,140.0,2.0,1.0
+"Hot & Sour Veg Soup","hot & sour veg soup",90.0,2.0,11.0,4.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,22.0,8.0,2.0,11.0,4.0,180.0,90.0,3.0,1.5
+"Chicken Hot & Sour Soup","chicken hot & sour soup",120.0,6.0,11.0,5.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,22.0,10.0,6.0,11.0,5.0,240.0,120.0,2.0,1.0
+"Paneer 65 (Deep Fried)","paneer 65 (deep fried)",225.0,7.0,14.0,16.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,14.0,28.0,32.0,7.0,14.0,16.0,450.0,225.0,3.0,1.5
+"Crispy Corn (Salt & Pepper)","crispy corn (salt & pepper)",253.33,4.0,36.67,10.67,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,55.0,16.0,4.0,36.67,10.67,380.0,253.33,5.0,3.33
+"Honey Chilli Potato","honey chilli potato",240.0,2.0,35.0,9.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,70.0,18.0,2.0,35.0,9.0,480.0,240.0,4.0,2.0
+"Veg Spring Roll (2 pcs)","veg spring roll (2 pcs)",226.67,4.0,28.0,10.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,42.0,16.0,4.0,28.0,10.67,340.0,226.67,3.0,2.0
+"Chicken Spring Roll (2 pcs)","chicken spring roll (2 pcs)",273.33,8.0,26.67,14.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,40.0,22.0,8.0,26.67,14.67,410.0,273.33,2.0,1.33
+"Veg Manchurian (Dry)","veg manchurian (dry)",190.0,3.0,22.5,10.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,45.0,20.0,3.0,22.5,10.0,380.0,190.0,4.0,2.0
+"Chicken Lollipop (Fried - 4 pcs)","chicken lollipop (fried - 4 pcs)",260.0,12.0,12.5,17.5,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,24.0,25.0,35.0,12.0,12.5,17.5,520.0,260.0,1.0,0.5
+"Dragon Chicken","dragon chicken",240.0,11.0,15.0,15.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,30.0,30.0,11.0,15.0,15.0,480.0,240.0,2.0,1.0
+"Sizzling Brownie with Vanilla Ice Cream","sizzling brownie with vanilla ice cream",325.0,4.0,42.5,16.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,85.0,32.0,4.0,42.5,16.0,650.0,325.0,3.0,1.5
+"Aloo Tikki Burger (Standard QSR)","aloo tikki burger (standard qsr)",253.33,4.0,34.67,10.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,52.0,16.0,4.0,34.67,10.67,380.0,253.33,4.0,2.67
+"Fried Chicken Burger (Zinger Style)","fried chicken burger (zinger style)",240.0,9.0,25.0,11.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,50.0,22.0,9.0,25.0,11.0,480.0,240.0,3.0,1.5
+"Paneer Premium Burger (QSR)","paneer premium burger (qsr)",250.0,7.27,25.0,13.64,1.82,0.0,0.0,0.0,0,1,desk_research,220.0,16.0,55.0,30.0,7.27,25.0,13.64,550.0,250.0,4.0,1.82
+"Chicken Nuggets (6 pcs)","chicken nuggets (6 pcs)",280.0,14.0,16.0,18.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,14.0,16.0,18.0,14.0,16.0,18.0,280.0,280.0,1.0,1.0
+"Veg Submarine Sandwich (6-inch Multigrain)","veg submarine sandwich (6-inch multigrain)",139.13,5.22,19.57,4.35,2.61,0.0,0.0,0.0,0,1,desk_research,230.0,12.0,45.0,10.0,5.22,19.57,4.35,320.0,139.13,6.0,2.61
+"Chicken Teriyaki Sub (6-inch White Bread)","chicken teriyaki sub (6-inch white bread)",152.0,9.6,20.8,3.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,24.0,52.0,8.0,9.6,20.8,3.2,380.0,152.0,3.0,1.2
+"Tuna Mayo Sub (6-inch)","tuna mayo sub (6-inch)",180.0,8.8,18.4,8.0,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,46.0,20.0,8.8,18.4,8.0,450.0,180.0,3.0,1.2
+"Fried Chicken Wings (Hot Wings - 6 pcs)","fried chicken wings (hot wings - 6 pcs)",290.0,15.0,11.0,21.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,30.0,22.0,42.0,15.0,11.0,21.0,580.0,290.0,1.0,0.5
+"Fried Chicken Bucket (2 Large Pieces)","fried chicken bucket (2 large pieces)",240.0,14.0,9.33,16.67,0.67,0.0,0.0,0.0,0,1,desk_research,300.0,42.0,28.0,50.0,14.0,9.33,16.67,720.0,240.0,2.0,0.67
+"Peri Peri French Fries (Medium)","peri peri french fries (medium)",280.0,2.67,36.67,13.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,55.0,20.0,2.67,36.67,13.33,420.0,280.0,4.0,2.67
+"Potato Wedges (Fried)","potato wedges (fried)",233.33,2.67,30.0,10.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,45.0,16.0,2.67,30.0,10.67,350.0,233.33,4.0,2.67
+"Chicken Quesadilla (Restaurant Style)","chicken quesadilla (restaurant style)",240.0,11.0,19.0,13.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,38.0,26.0,11.0,19.0,13.0,480.0,240.0,4.0,2.0
+"Glazed Donut (1 pc)","glazed donut (1 pc)",371.43,4.29,45.71,20.0,1.43,0.0,0.0,0.0,0,1,desk_research,70.0,3.0,32.0,14.0,4.29,45.71,20.0,260.0,371.43,1.0,1.43
+"Soft Serve Ice Cream (Cone)","soft serve ice cream (cone)",180.0,4.0,28.0,6.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,28.0,6.0,4.0,28.0,6.0,180.0,180.0,0.0,0.0
+"Fish and Chips (Beer Battered)","fish and chips (beer battered)",214.29,8.0,20.0,11.43,1.43,0.0,0.0,0.0,0,1,desk_research,350.0,28.0,70.0,40.0,8.0,20.0,11.43,750.0,214.29,5.0,1.43
+"Tartar Sauce (Side Portion)","tartar sauce (side portion)",466.67,0.0,6.67,50.0,0.0,0.0,0.0,0.0,0,1,desk_research,30.0,0.0,2.0,15.0,0.0,6.67,50.0,140.0,466.67,0.0,0.0
+"Grilled Chicken Sizzler (With Mash & Veggies)","grilled chicken sizzler (with mash & veggies)",144.44,10.0,7.78,7.11,1.78,0.0,0.0,0.0,0,1,desk_research,450.0,45.0,35.0,32.0,10.0,7.78,7.11,650.0,144.44,8.0,1.78
+"Macaroni and Cheese (Baked)","macaroni and cheese (baked)",208.0,6.4,22.0,11.2,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,16.0,55.0,28.0,6.4,22.0,11.2,520.0,208.0,3.0,1.2
+"Onion Rings (Crumb Fried - 8 pcs)","onion rings (crumb fried - 8 pcs)",253.33,2.67,30.0,13.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,45.0,20.0,2.67,30.0,13.33,380.0,253.33,3.0,2.0
+"BBQ Pork Ribs (Glazed)","bbq pork ribs (glazed)",260.0,11.67,8.33,19.33,0.33,0.0,0.0,0.0,0,1,desk_research,300.0,35.0,25.0,58.0,11.67,8.33,19.33,780.0,260.0,1.0,0.33
+"Chicken Stroganoff (With Herb Rice)","chicken stroganoff (with herb rice)",194.29,9.14,15.71,10.0,1.14,0.0,0.0,0.0,0,1,desk_research,350.0,32.0,55.0,35.0,9.14,15.71,10.0,680.0,194.29,4.0,1.14
+"Tomato Basil Bruschetta (4 pcs)","tomato basil bruschetta (4 pcs)",160.0,4.0,21.33,6.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,32.0,10.0,4.0,21.33,6.67,240.0,160.0,3.0,2.0
+"Beef Steak (Tenderloin - Herb Butter)","beef steak (tenderloin - herb butter)",220.0,22.0,0.0,14.4,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,55.0,0.0,36.0,22.0,0.0,14.4,550.0,220.0,0.0,0.0
+"Mashed Potatoes (Restaurant - Butter & Cream)","mashed potatoes (restaurant - butter & cream)",146.67,2.67,16.0,8.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,24.0,12.0,2.67,16.0,8.0,220.0,146.67,3.0,2.0
+"Chicken Ghee Roast (Mangalorean)","chicken ghee roast (mangalorean)",232.0,14.0,4.8,18.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,35.0,12.0,45.0,14.0,4.8,18.0,580.0,232.0,2.0,0.8
+"Mutton Sukka (Dry Roasted)","mutton sukka (dry roasted)",260.0,16.0,5.0,19.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,32.0,10.0,38.0,16.0,5.0,19.0,520.0,260.0,3.0,1.5
+"Squid Butter Garlic (Calamari)","squid butter garlic (calamari)",190.0,13.0,4.0,14.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,26.0,8.0,28.0,13.0,4.0,14.0,380.0,190.0,1.0,0.5
+"Prawns Gassi (Coconut Gravy)","prawns gassi (coconut gravy)",168.0,9.6,6.0,12.0,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,24.0,15.0,30.0,9.6,6.0,12.0,420.0,168.0,3.0,1.2
+"Meen Pollichathu (Fish in Banana Leaf)","meen pollichathu (fish in banana leaf)",175.0,14.0,5.0,11.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,10.0,22.0,14.0,5.0,11.0,350.0,175.0,2.0,1.0
+"Karimeen Fry (Pearl Spot Deep Fried)","karimeen fry (pearl spot deep fried)",253.33,16.0,3.33,20.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,5.0,30.0,16.0,3.33,20.0,380.0,253.33,1.0,0.67
+"Crab Masala (Restaurant Style)","crab masala (restaurant style)",164.0,8.8,4.8,12.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,12.0,30.0,8.8,4.8,12.0,410.0,164.0,2.0,0.8
+"Malabar Parotta (Kerala Parotta - 1 pc)","malabar parotta (kerala parotta - 1 pc)",320.0,6.0,42.0,14.0,2.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,42.0,14.0,6.0,42.0,14.0,320.0,320.0,2.0,2.0
+"Kothu Parotta (Chicken/Egg Mince)","kothu parotta (chicken/egg mince)",226.67,7.33,21.67,12.0,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,22.0,65.0,36.0,7.33,21.67,12.0,680.0,226.67,5.0,1.67
+"Egg Roast (Kerala Style)","egg roast (kerala style)",140.0,7.0,7.5,9.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,14.0,15.0,18.0,7.0,7.5,9.0,280.0,140.0,2.0,1.0
+"Veg Stew (Coconut Milk Base)","veg stew (coconut milk base)",120.0,2.0,9.0,8.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,18.0,16.0,2.0,9.0,8.0,240.0,120.0,3.0,1.5
+"Apollo Fish (Hyderabadi Starter)","apollo fish (hyderabadi starter)",210.0,13.0,7.5,14.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,26.0,15.0,28.0,13.0,7.5,14.0,420.0,210.0,1.0,0.5
+"Chicken Majestic (Fried & Tossed)","chicken majestic (fried & tossed)",225.0,14.0,9.0,15.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,18.0,30.0,14.0,9.0,15.0,450.0,225.0,2.0,1.0
+"Paneer Ghee Roast","paneer ghee roast",248.0,7.2,6.0,22.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,18.0,15.0,55.0,7.2,6.0,22.0,620.0,248.0,2.0,0.8
+"Kori Roti (Crispy Rice Wafers)","kori roti (crispy rice wafers)",350.0,6.0,75.0,2.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,6.0,75.0,2.0,6.0,75.0,2.0,350.0,350.0,1.0,1.0
+"Veg Extravaganza Pizza (Regular - 4 Slices)","veg extravaganza pizza (regular - 4 slices)",216.67,7.33,25.0,9.33,2.0,0.0,0.0,0.0,0,1,desk_research,300.0,22.0,75.0,28.0,7.33,25.0,9.33,650.0,216.67,6.0,2.0
+"Pepperoni Pizza (Regular - 4 Slices)","pepperoni pizza (regular - 4 slices)",260.0,9.33,23.33,14.0,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,28.0,70.0,42.0,9.33,23.33,14.0,780.0,260.0,4.0,1.33
+"Stuffed Garlic Bread (With Cheese & Corn)","stuffed garlic bread (with cheese & corn)",300.0,8.0,32.0,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,48.0,22.0,8.0,32.0,14.67,450.0,300.0,3.0,2.0
+"Classic Waffle (With Butter & Maple Syrup)","classic waffle (with butter & maple syrup)",300.0,4.0,43.33,12.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,65.0,18.0,4.0,43.33,12.0,450.0,300.0,2.0,1.33
+"Belgian Chocolate Waffle","belgian chocolate waffle",322.22,4.44,41.67,15.56,1.67,0.0,0.0,0.0,0,1,desk_research,180.0,8.0,75.0,28.0,4.44,41.67,15.56,580.0,322.22,3.0,1.67
+"Buttermilk Pancakes (3 pcs + Syrup)","buttermilk pancakes (3 pcs + syrup)",260.0,5.0,40.0,8.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,80.0,16.0,5.0,40.0,8.0,520.0,260.0,3.0,1.5
+"French Toast (2 slices + Powdered Sugar)","french toast (2 slices + powdered sugar)",253.33,6.67,30.0,10.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,45.0,16.0,6.67,30.0,10.67,380.0,253.33,2.0,1.33
+"Smashed Avocado on Sourdough (2 Slices)","smashed avocado on sourdough (2 slices)",190.0,4.0,17.5,11.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,35.0,22.0,4.0,17.5,11.0,380.0,190.0,7.0,3.5
+"Acai Bowl (Commercial - With Granola & Honey)","acai bowl (commercial - with granola & honey)",150.0,2.0,28.33,3.33,2.67,0.0,0.0,0.0,0,1,desk_research,300.0,6.0,85.0,10.0,2.0,28.33,3.33,450.0,150.0,8.0,2.67
+"Smoothie Bowl (Peanut Butter & Cocoa)","smoothie bowl (peanut butter & cocoa)",173.33,4.0,21.67,8.0,3.0,0.0,0.0,0.0,0,1,desk_research,300.0,12.0,65.0,24.0,4.0,21.67,8.0,520.0,173.33,9.0,3.0
+"Croissant (Classic Butter - 1 pc)","croissant (classic butter - 1 pc)",400.0,6.25,43.75,22.5,2.5,0.0,0.0,0.0,0,1,desk_research,80.0,5.0,35.0,18.0,6.25,43.75,22.5,320.0,400.0,2.0,2.5
+"Almond Croissant (Stuffed)","almond croissant (stuffed)",420.0,8.0,42.0,24.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,42.0,24.0,8.0,42.0,24.0,420.0,420.0,3.0,3.0
+"Pain au Chocolat","pain au chocolat",437.5,6.25,47.5,25.0,2.5,0.0,0.0,0.0,0,1,desk_research,80.0,5.0,38.0,20.0,6.25,47.5,25.0,350.0,437.5,2.0,2.5
+"Blueberry Muffin (Commercial/Jumbo)","blueberry muffin (commercial/jumbo)",375.0,4.17,50.0,18.33,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,5.0,60.0,22.0,4.17,50.0,18.33,450.0,375.0,2.0,1.67
+"Banana Bread (Cafe Slice)","banana bread (cafe slice)",350.0,4.0,50.0,15.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,50.0,15.0,4.0,50.0,15.0,350.0,350.0,3.0,3.0
+"Pork Tonkotsu Ramen (With Egg & Pork Belly)","pork tonkotsu ramen (with egg & pork belly)",150.0,7.0,13.0,7.6,0.8,0.0,0.0,0.0,0,1,desk_research,500.0,35.0,65.0,38.0,7.0,13.0,7.6,750.0,150.0,4.0,0.8
+"Miso Ramen (Veg/Tofu)","miso ramen (veg/tofu)",96.0,3.6,12.0,3.6,1.2,0.0,0.0,0.0,0,1,desk_research,500.0,18.0,60.0,18.0,3.6,12.0,3.6,480.0,96.0,6.0,1.2
+"Chicken Pho (Vietnamese Noodle Soup)","chicken pho (vietnamese noodle soup)",84.0,5.6,11.0,1.6,0.8,0.0,0.0,0.0,0,1,desk_research,500.0,28.0,55.0,8.0,5.6,11.0,1.6,420.0,84.0,4.0,0.8
+"Salmon Poke Bowl (Sushi Rice Base)","salmon poke bowl (sushi rice base)",148.57,7.14,17.14,5.14,1.43,0.0,0.0,0.0,0,1,desk_research,350.0,25.0,60.0,18.0,7.14,17.14,5.14,520.0,148.57,5.0,1.43
+"Tofu Teriyaki Bowl (Jasmine Rice)","tofu teriyaki bowl (jasmine rice)",137.14,4.57,21.43,3.43,1.14,0.0,0.0,0.0,0,1,desk_research,350.0,16.0,75.0,12.0,4.57,21.43,3.43,480.0,137.14,4.0,1.14
+"Chicken Katsu Curry (Fried Cutlet + Rice)","chicken katsu curry (fried cutlet + rice)",195.0,7.0,21.25,8.75,1.25,0.0,0.0,0.0,0,1,desk_research,400.0,28.0,85.0,35.0,7.0,21.25,8.75,780.0,195.0,5.0,1.25
+"Edamame (Steamed & Salted)","edamame (steamed & salted)",120.0,11.0,10.0,5.0,5.0,0.0,0.0,0.0,0,1,desk_research,100.0,11.0,10.0,5.0,11.0,10.0,5.0,120.0,120.0,5.0,5.0
+"Matcha Latte (Whole Milk + Sugar Syrup)","matcha latte (whole milk + sugar syrup)",88.0,3.2,10.0,3.2,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,25.0,8.0,3.2,10.0,3.2,220.0,88.0,1.0,0.4
+"Iced Vanilla Latte (Commercial)","iced vanilla latte (commercial)",80.0,2.0,11.67,2.67,0.0,0.0,0.0,0.0,0,1,desk_research,300.0,6.0,35.0,8.0,2.0,11.67,2.67,240.0,80.0,0.0,0.0
+"Frappuccino (Mocha/Caramel - Blended)","frappuccino (mocha/caramel - blended)",120.0,1.71,18.57,4.29,0.29,0.0,0.0,0.0,0,1,desk_research,350.0,6.0,65.0,15.0,1.71,18.57,4.29,420.0,120.0,1.0,0.29
+"Macaron (1 pc)","macaron (1 pc)",44.0,0.8,6.4,2.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,2.0,16.0,5.0,0.8,6.4,2.0,110.0,44.0,0.0,0.0
+"Tiramisu (Classic Slice)","tiramisu (classic slice)",320.0,4.0,30.0,20.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,45.0,30.0,4.0,30.0,20.0,480.0,320.0,1.0,0.67
+"Churros (With Chocolate Dip - 4 pcs)","churros (with chocolate dip - 4 pcs)",366.67,2.67,43.33,21.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,65.0,32.0,2.67,43.33,21.33,550.0,366.67,3.0,2.0
+"Red Velvet Cupcake (With Cream Cheese Frosting)","red velvet cupcake (with cream cheese frosting)",380.0,3.0,52.0,18.0,1.0,0.0,0.0,0.0,0,1,desk_research,100.0,3.0,52.0,18.0,3.0,52.0,18.0,380.0,380.0,1.0,1.0
+"Chocolate Brownie (Fudge Style)","chocolate brownie (fudge style)",420.0,4.0,55.0,22.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,55.0,22.0,4.0,55.0,22.0,420.0,420.0,3.0,3.0
+"Biscoff Cheesecake (Slice)","biscoff cheesecake (slice)",386.67,4.0,36.67,25.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,55.0,38.0,4.0,36.67,25.33,580.0,386.67,1.0,0.67
+"Panna Cotta (With Berry Coulis)","panna cotta (with berry coulis)",213.33,2.67,20.0,13.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,30.0,20.0,2.67,20.0,13.33,320.0,213.33,0.0,0.0
+"Banoffee Pie (Slice)","banoffee pie (slice)",346.67,3.33,40.0,20.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,60.0,30.0,3.33,40.0,20.0,520.0,346.67,2.0,1.33
+"Biscotti (Almond - 2 pcs)","biscotti (almond - 2 pcs)",450.0,10.0,60.0,20.0,5.0,0.0,0.0,0.0,0,1,desk_research,40.0,4.0,24.0,8.0,10.0,60.0,20.0,180.0,450.0,2.0,5.0
+"Granola Bar (Commercial / Oats & Honey)","granola bar (commercial / oats & honey)",400.0,7.5,70.0,10.0,5.0,0.0,0.0,0.0,0,1,desk_research,40.0,3.0,28.0,4.0,7.5,70.0,10.0,160.0,400.0,2.0,5.0
+"Protein Bar (Commercial/Whey Based)","protein bar (commercial/whey based)",366.67,33.33,36.67,10.0,6.67,0.0,0.0,0.0,0,1,desk_research,60.0,20.0,22.0,6.0,33.33,36.67,10.0,220.0,366.67,4.0,6.67
+"Dahi Puri (6 pieces)","dahi puri (6 pieces)",166.67,4.0,23.33,6.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,35.0,10.0,4.0,23.33,6.67,250.0,166.67,3.0,2.0
+"Ragda Pattice (2 Pattice + Ragda)","ragda pattice (2 pattice + ragda)",152.0,4.0,22.0,5.6,3.2,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,55.0,14.0,4.0,22.0,5.6,380.0,152.0,8.0,3.2
+"Papdi Chaat (1 Plate)","papdi chaat (1 plate)",160.0,4.0,21.0,7.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,42.0,14.0,4.0,21.0,7.0,320.0,160.0,5.0,2.5
+"Dahi Bhalla / Dahi Vada (2 pieces)","dahi bhalla / dahi vada (2 pieces)",140.0,5.0,17.5,6.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,35.0,12.0,5.0,17.5,6.0,280.0,140.0,4.0,2.0
+"Raj Kachori (Stuffed & Loaded)","raj kachori (stuffed & loaded)",220.0,4.8,26.0,11.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,65.0,28.0,4.8,26.0,11.2,550.0,220.0,6.0,2.4
+"Samosa Chaat (1 Samosa + Chole)","samosa chaat (1 samosa + chole)",168.0,4.0,20.8,8.0,2.8,0.0,0.0,0.0,0,1,desk_research,250.0,10.0,52.0,20.0,4.0,20.8,8.0,420.0,168.0,7.0,2.8
+"Chole Tikki Chaat (2 Tikki + Chole)","chole tikki chaat (2 tikki + chole)",180.0,4.4,23.2,8.8,3.2,0.0,0.0,0.0,0,1,desk_research,250.0,11.0,58.0,22.0,4.4,23.2,8.8,450.0,180.0,8.0,3.2
+"Matar Kulcha (Delhi Style - 2 Kulcha)","matar kulcha (delhi style - 2 kulcha)",192.0,5.6,26.0,7.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,65.0,18.0,5.6,26.0,7.2,480.0,192.0,6.0,2.4
+"Shakarkandi Chaat (Sweet Potato)","shakarkandi chaat (sweet potato)",120.0,1.33,26.67,0.67,4.0,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,40.0,1.0,1.33,26.67,0.67,180.0,120.0,6.0,4.0
+"Palak Patta Chaat (Fried Spinach)","palak patta chaat (fried spinach)",170.0,3.0,19.0,9.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,38.0,18.0,3.0,19.0,9.0,340.0,170.0,4.0,2.0
+"Kanda Bhaji / Onion Pakoda (1 Plate)","kanda bhaji / onion pakoda (1 plate)",280.0,4.0,23.33,20.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,35.0,30.0,4.0,23.33,20.0,420.0,280.0,4.0,2.67
+"Bread Pakora (Stuffed with Aloo - 1 pc)","bread pakora (stuffed with aloo - 1 pc)",258.33,4.17,26.67,15.0,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,5.0,32.0,18.0,4.17,26.67,15.0,310.0,258.33,2.0,1.67
+"Mirchi Vada (Stuffed Chilli - 1 pc)","mirchi vada (stuffed chilli - 1 pc)",240.0,4.0,22.0,15.0,3.0,0.0,0.0,0.0,0,1,desk_research,100.0,4.0,22.0,15.0,4.0,22.0,15.0,240.0,240.0,3.0,3.0
+"Veg Frankie / Street Roll (Maida Base)","veg frankie / street roll (maida base)",210.0,4.0,27.5,9.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,55.0,18.0,4.0,27.5,9.0,420.0,210.0,4.0,2.0
+"Chicken Frankie (Mumbai Style)","chicken frankie (mumbai style)",236.36,10.0,22.73,11.36,1.36,0.0,0.0,0.0,0,1,desk_research,220.0,22.0,50.0,25.0,10.0,22.73,11.36,520.0,236.36,3.0,1.36
+"Baida Roti (Mincemeat Stuffed Egg Roti)","baida roti (mincemeat stuffed egg roti)",275.0,12.0,21.0,16.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,24.0,42.0,32.0,12.0,21.0,16.0,550.0,275.0,3.0,1.5
+"Tawa Pulao (Mumbai Street Style)","tawa pulao (mumbai street style)",164.0,3.2,22.0,7.2,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,55.0,18.0,3.2,22.0,7.2,410.0,164.0,5.0,2.0
+"Chinese Bhel (Fried Noodles Tossed)","chinese bhel (fried noodles tossed)",320.0,3.33,38.67,17.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,58.0,26.0,3.33,38.67,17.33,480.0,320.0,4.0,2.67
+"Kheema Ghotala (With 2 Pav)","kheema ghotala (with 2 pav)",216.67,9.33,18.33,11.67,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,28.0,55.0,35.0,9.33,18.33,11.67,650.0,216.67,5.0,1.67
+"Jhal Muri (Kolkata Style Puffed Rice)","jhal muri (kolkata style puffed rice)",146.67,4.0,28.0,2.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,42.0,4.0,4.0,28.0,2.67,220.0,146.67,4.0,2.67
+"Puchka (Kolkata Style - Aloo Matar Base)","puchka (kolkata style - aloo matar base)",158.33,3.33,29.17,3.33,3.33,0.0,0.0,0.0,0,1,desk_research,120.0,4.0,35.0,4.0,3.33,29.17,3.33,190.0,158.33,4.0,3.33
+"Punugulu (Andhra Fried Batter - 1 Plate)","punugulu (andhra fried batter - 1 plate)",273.33,4.0,32.0,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,48.0,22.0,4.0,32.0,14.67,410.0,273.33,3.0,2.0
+"Paddu / Kuzhi Paniyaram (1 Plate - 6 pcs)","paddu / kuzhi paniyaram (1 plate - 6 pcs)",186.67,4.0,30.0,5.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,45.0,8.0,4.0,30.0,5.33,280.0,186.67,4.0,2.67
+"Thattu Dosa (Kerala Street - 3 small)","thattu dosa (kerala street - 3 small)",160.0,4.0,26.67,4.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,40.0,6.0,4.0,26.67,4.0,240.0,160.0,3.0,2.0
+"Chicken Salna (Street Style Gravy)","chicken salna (street style gravy)",160.0,9.0,7.5,11.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,18.0,15.0,22.0,9.0,7.5,11.0,320.0,160.0,2.0,1.0
+"Chili Parotta (Shredded & Tossed)","chili parotta (shredded & tossed)",232.0,4.8,26.0,12.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,65.0,32.0,4.8,26.0,12.8,580.0,232.0,4.0,1.6
+"Mutta Bonda / Egg Pakora (2 pcs)","mutta bonda / egg pakora (2 pcs)",216.67,11.67,12.5,13.33,0.83,0.0,0.0,0.0,0,1,desk_research,120.0,14.0,15.0,16.0,11.67,12.5,13.33,260.0,216.67,1.0,0.83
+"Gobi 65 (Street Cart Style)","gobi 65 (street cart style)",225.0,3.0,24.0,14.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,48.0,28.0,3.0,24.0,14.0,450.0,225.0,5.0,2.5
+"Kachori (Khasta / Dal Stuffed - 1 pc)","kachori (khasta / dal stuffed - 1 pc)",400.0,6.25,40.0,25.0,3.75,0.0,0.0,0.0,0,1,desk_research,80.0,5.0,32.0,20.0,6.25,40.0,25.0,320.0,400.0,3.0,3.75
+"Aloo Chaat (Fried Potatoes Tossed)","aloo chaat (fried potatoes tossed)",206.67,2.0,30.0,9.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,45.0,14.0,2.0,30.0,9.33,310.0,206.67,4.0,2.67
+"Salmon Sashimi (5 Slices)","salmon sashimi (5 slices)",140.0,20.0,0.0,6.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,20.0,0.0,6.0,20.0,0.0,6.0,140.0,140.0,0.0,0.0
+"Tuna Sashimi (Yellowfin - 5 Slices)","tuna sashimi (yellowfin - 5 slices)",110.0,24.0,0.0,1.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,24.0,0.0,1.0,24.0,0.0,1.0,110.0,110.0,0.0,0.0
+"Miso Black Cod (Glazed)","miso black cod (glazed)",170.0,15.0,7.5,9.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,30.0,15.0,18.0,15.0,7.5,9.0,340.0,170.0,1.0,0.5
+"Prawn Tempura (4 pcs)","prawn tempura (4 pcs)",213.33,9.33,20.0,10.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,30.0,16.0,9.33,20.0,10.67,320.0,213.33,1.0,0.67
+"Raw Oysters (6 pcs)","raw oysters (6 pcs)",80.0,10.0,4.0,3.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,10.0,4.0,3.0,10.0,4.0,3.0,80.0,80.0,0.0,0.0
+"Tuna Tartare (With Avocado Base)","tuna tartare (with avocado base)",186.67,13.33,5.33,12.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,20.0,8.0,18.0,13.33,5.33,12.0,280.0,186.67,4.0,2.67
+"Edamame Truffle Dumplings (4 pcs)","edamame truffle dumplings (4 pcs)",160.0,5.33,23.33,5.33,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,35.0,8.0,5.33,23.33,5.33,240.0,160.0,3.0,2.0
+"Lobster Thermidor (Cream & Cheese)","lobster thermidor (cream & cheese)",216.67,15.0,5.0,15.0,0.33,0.0,0.0,0.0,0,1,desk_research,300.0,45.0,15.0,45.0,15.0,5.0,15.0,650.0,216.67,1.0,0.33
+"Grilled Chilean Sea Bass","grilled chilean sea bass",140.0,17.5,0.0,7.5,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,35.0,0.0,15.0,17.5,0.0,7.5,280.0,140.0,0.0,0.0
+"Seared Scallops (With Butter/Puree - 4 pcs)","seared scallops (with butter/puree - 4 pcs)",146.67,13.33,3.33,8.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,20.0,5.0,12.0,13.33,3.33,8.0,220.0,146.67,0.0,0.0
+"Filet Mignon (Tenderloin Steak)","filet mignon (tenderloin steak)",200.0,22.22,0.0,12.44,0.0,0.0,0.0,0.0,0,1,desk_research,225.0,50.0,0.0,28.0,22.22,0.0,12.44,450.0,200.0,0.0,0.0
+"Wagyu Beef Striploin (Premium Grade)","wagyu beef striploin (premium grade)",310.0,17.5,0.0,26.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,35.0,0.0,52.0,17.5,0.0,26.0,620.0,310.0,0.0,0.0
+"Rack of Lamb (3 Chops with Jus)","rack of lamb (3 chops with jus)",220.0,18.0,0.0,16.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,45.0,0.0,40.0,18.0,0.0,16.0,550.0,220.0,0.0,0.0
+"Pork Belly (Braised / Kakuni)","pork belly (braised / kakuni)",340.0,12.5,5.0,30.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,25.0,10.0,60.0,12.5,5.0,30.0,680.0,340.0,0.0,0.0
+"Duck Confit (Slow Cooked in Fat)","duck confit (slow cooked in fat)",232.0,14.0,0.0,19.2,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,35.0,0.0,48.0,14.0,0.0,19.2,580.0,232.0,0.0,0.0
+"Sous-Vide Chicken Breast (With Jus)","sous-vide chicken breast (with jus)",140.0,22.5,1.0,5.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,45.0,2.0,10.0,22.5,1.0,5.0,280.0,140.0,0.0,0.0
+"Burrata Salad (With Olive Oil & Tomato)","burrata salad (with olive oil & tomato)",240.0,8.0,5.0,21.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,10.0,42.0,8.0,5.0,21.0,480.0,240.0,2.0,1.0
+"Beetroot Carpaccio (Goat Cheese & Walnuts)","beetroot carpaccio (goat cheese & walnuts)",140.0,4.0,7.5,11.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,15.0,22.0,4.0,7.5,11.0,280.0,140.0,4.0,2.0
+"Asparagus with Hollandaise Sauce","asparagus with hollandaise sauce",160.0,2.67,4.0,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,6.0,22.0,2.67,4.0,14.67,240.0,160.0,3.0,2.0
+"Truffle Parmesan Fries","truffle parmesan fries",275.0,3.0,30.0,16.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,60.0,32.0,3.0,30.0,16.0,550.0,275.0,5.0,2.5
+"Modern 24-Hour Dal Makhani (Heavy Ghee)","modern 24-hour dal makhani (heavy ghee)",225.0,6.0,14.0,17.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,28.0,34.0,6.0,14.0,17.0,450.0,225.0,6.0,3.0
+"Truffle Cheese Naan","truffle cheese naan",346.67,8.0,33.33,20.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,12.0,50.0,30.0,8.0,33.33,20.0,520.0,346.67,2.0,1.33
+"Gucchi Pulao (Morel Mushroom Rice)","gucchi pulao (morel mushroom rice)",152.0,3.2,22.0,5.6,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,55.0,14.0,3.2,22.0,5.6,380.0,152.0,4.0,1.6
+"Mushroom Duxelles with Crostini","mushroom duxelles with crostini",226.67,4.0,20.0,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,30.0,22.0,4.0,20.0,14.67,340.0,226.67,3.0,2.0
+"Balsamic Glazed Brussels Sprouts (With Bacon)","balsamic glazed brussels sprouts (with bacon)",146.67,4.0,12.0,9.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,18.0,14.0,4.0,12.0,9.33,220.0,146.67,5.0,3.33
+"Foie Gras (Seared Portion)","foie gras (seared portion)",460.0,11.0,3.0,44.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,11.0,3.0,44.0,11.0,3.0,44.0,460.0,460.0,0.0,0.0
+"Beef Carpaccio (With Parmesan & Rocket)","beef carpaccio (with parmesan & rocket)",206.67,16.67,1.33,14.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,25.0,2.0,22.0,16.67,1.33,14.67,310.0,206.67,1.0,0.67
+"Squid Ink Pasta (With Seafood)","squid ink pasta (with seafood)",192.0,8.8,22.0,7.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,55.0,18.0,8.8,22.0,7.2,480.0,192.0,4.0,1.6
+"Matcha Tiramisu (Premium)","matcha tiramisu (premium)",300.0,4.0,30.0,18.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,45.0,28.0,4.0,30.0,18.67,450.0,300.0,1.0,0.67
+"Tteokbokki (Spicy Rice Cakes)","tteokbokki (spicy rice cakes)",168.0,3.2,34.0,1.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,85.0,4.0,3.2,34.0,1.6,420.0,168.0,3.0,1.2
+"Bibimbap (Mixed Rice + Egg/Beef)","bibimbap (mixed rice + egg/beef)",157.14,6.29,18.57,5.14,1.71,0.0,0.0,0.0,0,1,desk_research,350.0,22.0,65.0,18.0,6.29,18.57,5.14,550.0,157.14,6.0,1.71
+"Kimchi (Fermented Cabbage)","kimchi (fermented cabbage)",40.0,2.0,8.0,0.0,4.0,0.0,0.0,0.0,0,1,desk_research,50.0,1.0,4.0,0.0,2.0,8.0,0.0,20.0,40.0,2.0,4.0
+"Korean Fried Chicken (Gochujang Glaze - 4 pcs)","korean fried chicken (gochujang glaze - 4 pcs)",290.0,14.0,22.5,15.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,45.0,30.0,14.0,22.5,15.0,580.0,290.0,2.0,1.0
+"Beef Bulgogi (Marinated BBQ)","beef bulgogi (marinated bbq)",205.0,16.0,7.5,11.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,32.0,15.0,22.0,16.0,7.5,11.0,410.0,205.0,1.0,0.5
+"Japchae (Sweet Potato Glass Noodles)","japchae (sweet potato glass noodles)",160.0,2.5,27.5,5.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,55.0,10.0,2.5,27.5,5.0,320.0,160.0,4.0,2.0
+"Gimbap (Korean Seaweed Rice Roll)","gimbap (korean seaweed rice roll)",140.0,4.0,24.0,3.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,48.0,6.0,4.0,24.0,3.0,280.0,140.0,3.0,1.5
+"Tom Yum Soup (Clear Shrimp Soup)","tom yum soup (clear shrimp soup)",44.0,4.8,2.4,1.6,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,6.0,4.0,4.8,2.4,1.6,110.0,44.0,2.0,0.8
+"Tom Kha Gai (Coconut Chicken Soup)","tom kha gai (coconut chicken soup)",112.0,5.6,4.0,8.8,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,10.0,22.0,5.6,4.0,8.8,280.0,112.0,2.0,0.8
+"Som Tum (Green Papaya Salad - Sweet Dressing)","som tum (green papaya salad - sweet dressing)",80.0,2.0,15.0,1.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,30.0,2.0,2.0,15.0,1.0,160.0,80.0,4.0,2.0
+"Thai Red Curry (Chicken/Veg + Coconut Milk)","thai red curry (chicken/veg + coconut milk)",168.0,7.2,6.0,12.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,18.0,15.0,32.0,7.2,6.0,12.8,420.0,168.0,4.0,1.6
+"Thai Massaman Curry (Beef/Chicken + Peanuts)","thai massaman curry (beef/chicken + peanuts)",208.0,8.8,10.0,15.2,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,25.0,38.0,8.8,10.0,15.2,520.0,208.0,5.0,2.0
+"Mango Sticky Rice (With Coconut Cream)","mango sticky rice (with coconut cream)",240.0,2.0,42.5,7.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,85.0,14.0,2.0,42.5,7.0,480.0,240.0,3.0,1.5
+"Goi Cuon (Vietnamese Fresh Summer Rolls - 2 pcs)","goi cuon (vietnamese fresh summer rolls - 2 pcs)",93.33,5.33,16.0,1.33,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,24.0,2.0,5.33,16.0,1.33,140.0,93.33,2.0,1.33
+"Banh Mi (Pork/Chicken Baguette)","banh mi (pork/chicken baguette)",192.0,8.0,22.0,7.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,20.0,55.0,18.0,8.0,22.0,7.2,480.0,192.0,4.0,1.6
+"Vietnamese Iced Coffee (With Condensed Milk)","vietnamese iced coffee (with condensed milk)",110.0,1.5,20.0,3.0,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,40.0,6.0,1.5,20.0,3.0,220.0,110.0,0.0,0.0
+"Nasi Goreng (Indonesian Fried Rice + Egg)","nasi goreng (indonesian fried rice + egg)",183.33,6.0,21.67,7.33,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,18.0,65.0,22.0,6.0,21.67,7.33,550.0,183.33,4.0,1.33
+"Chicken Satay (4 Skewers)","chicken satay (4 skewers)",173.33,16.0,5.33,9.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,8.0,14.0,16.0,5.33,9.33,260.0,173.33,1.0,0.67
+"Peanut Sauce (Satay Dip - Standard Portion)","peanut sauce (satay dip - standard portion)",360.0,8.0,24.0,28.0,4.0,0.0,0.0,0.0,0,1,desk_research,50.0,4.0,12.0,14.0,8.0,24.0,28.0,180.0,360.0,2.0,4.0
+"Beef Rendang (Slow Cooked Coconut Beef)","beef rendang (slow cooked coconut beef)",290.0,17.5,6.0,21.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,35.0,12.0,42.0,17.5,6.0,21.0,580.0,290.0,4.0,2.0
+"Gado-Gado (Indonesian Salad + Peanut Sauce)","gado-gado (indonesian salad + peanut sauce)",140.0,5.0,11.67,9.33,2.67,0.0,0.0,0.0,0,1,desk_research,300.0,15.0,35.0,28.0,5.0,11.67,9.33,420.0,140.0,8.0,2.67
+"Lasagna Bolognese (Meat & Cheese Bake)","lasagna bolognese (meat & cheese bake)",206.67,10.67,15.0,11.33,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,32.0,45.0,34.0,10.67,15.0,11.33,620.0,206.67,4.0,1.33
+"Vegetarian Lasagna (Spinach & Ricotta)","vegetarian lasagna (spinach & ricotta)",173.33,8.0,16.0,8.67,2.0,0.0,0.0,0.0,0,1,desk_research,300.0,24.0,48.0,26.0,8.0,16.0,8.67,520.0,173.33,6.0,2.0
+"Potato Gnocchi (With Gorgonzola/Cheese Sauce)","potato gnocchi (with gorgonzola/cheese sauce)",232.0,5.6,26.0,12.0,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,65.0,30.0,5.6,26.0,12.0,580.0,232.0,4.0,1.6
+"Ravioli (Spinach & Ricotta in Butter Sage)","ravioli (spinach & ricotta in butter sage)",210.0,8.0,19.0,12.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,38.0,24.0,8.0,19.0,12.0,420.0,210.0,3.0,1.5
+"Pesto Penne Pasta","pesto penne pasta",192.0,4.8,20.0,10.4,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,50.0,26.0,4.8,20.0,10.4,480.0,192.0,4.0,1.6
+"Eggplant Parmigiana (Baked Melanzane)","eggplant parmigiana (baked melanzane)",140.0,5.6,8.8,9.6,2.8,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,22.0,24.0,5.6,8.8,9.6,350.0,140.0,7.0,2.8
+"Croque Monsieur (Ham/Cheese Sandwich + Bechamel)","croque monsieur (ham/cheese sandwich + bechamel)",275.0,11.0,21.0,16.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,22.0,42.0,32.0,11.0,21.0,16.0,550.0,275.0,2.0,1.0
+"Croque Madame (With Fried Egg)","croque madame (with fried egg)",252.0,11.2,16.8,15.2,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,42.0,38.0,11.2,16.8,15.2,630.0,252.0,2.0,0.8
+"Quiche Lorraine (Bacon/Cheese Savory Tart)","quiche lorraine (bacon/cheese savory tart)",320.0,10.0,16.67,23.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,15.0,25.0,35.0,10.0,16.67,23.33,480.0,320.0,1.0,0.67
+"Ratatouille (Traditional French Stewed Veg)","ratatouille (traditional french stewed veg)",80.0,1.5,7.5,5.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,15.0,10.0,1.5,7.5,5.0,160.0,80.0,6.0,3.0
+"Beef Bourguignon (French Beef Stew)","beef bourguignon (french beef stew)",150.0,14.0,4.0,8.0,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,42.0,12.0,24.0,14.0,4.0,8.0,450.0,150.0,3.0,1.0
+"French Onion Soup (With Cheese Crouton)","french onion soup (with cheese crouton)",112.0,4.8,9.6,5.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,12.0,24.0,14.0,4.8,9.6,5.6,280.0,112.0,3.0,1.2
+"Sweet Crepe (Nutella & Banana)","sweet crepe (nutella & banana)",253.33,4.0,34.67,12.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,52.0,18.0,4.0,34.67,12.0,380.0,253.33,3.0,2.0
+"Savory Galette (Buckwheat Crepe - Ham & Cheese)","savory galette (buckwheat crepe - ham & cheese)",186.67,9.33,14.67,9.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,22.0,14.0,9.33,14.67,9.33,280.0,186.67,4.0,2.67
+"Shepherds Pie (Minced Meat + Potato Mash Crust)","shepherds pie (minced meat + potato mash crust)",160.0,8.67,11.67,8.0,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,26.0,35.0,24.0,8.67,11.67,8.0,480.0,160.0,5.0,1.67
+"Bangers and Mash (Pork Sausages + Mash + Gravy)","bangers and mash (pork sausages + mash + gravy)",194.29,8.0,12.86,12.0,1.14,0.0,0.0,0.0,0,1,desk_research,350.0,28.0,45.0,42.0,8.0,12.86,12.0,680.0,194.29,4.0,1.14
+"Scotch Egg (Deep Fried Sausage & Egg)","scotch egg (deep fried sausage & egg)",253.33,13.33,10.0,17.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,20.0,15.0,26.0,13.33,10.0,17.33,380.0,253.33,1.0,0.67
+"Fish Pie (Seafood in Cream Sauce + Mash)","fish pie (seafood in cream sauce + mash)",173.33,9.33,10.67,10.0,1.0,0.0,0.0,0.0,0,1,desk_research,300.0,28.0,32.0,30.0,9.33,10.67,10.0,520.0,173.33,3.0,1.0
+"Macaroni Cheese (British Pub Style Baked)","macaroni cheese (british pub style baked)",220.0,7.2,20.8,12.0,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,18.0,52.0,30.0,7.2,20.8,12.0,550.0,220.0,3.0,1.2
+"Moussaka (Greek Eggplant & Meat Bake)","moussaka (greek eggplant & meat bake)",170.0,8.0,9.33,11.33,2.0,0.0,0.0,0.0,0,1,desk_research,300.0,24.0,28.0,34.0,8.0,9.33,11.33,510.0,170.0,6.0,2.0
+"Spanakopita (Greek Spinach Pie)","spanakopita (greek spinach pie)",226.67,6.0,20.0,14.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,9.0,30.0,22.0,6.0,20.0,14.67,340.0,226.67,3.0,2.0
+"Greek Salad (With Feta & Olive Oil)","greek salad (with feta & olive oil)",128.0,3.2,4.8,11.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,12.0,28.0,3.2,4.8,11.2,320.0,128.0,4.0,1.6
+"Chimichanga (Deep Fried Beef/Chicken Burrito)","chimichanga (deep fried beef/chicken burrito)",237.5,8.75,20.0,13.75,2.0,0.0,0.0,0.0,0,1,desk_research,400.0,35.0,80.0,55.0,8.75,20.0,13.75,950.0,237.5,8.0,2.0
+"Chicken Fajita Platter (Meat & Veggies ONLY)","chicken fajita platter (meat & veggies only)",116.67,12.67,5.0,5.33,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,38.0,15.0,16.0,12.67,5.0,5.33,350.0,116.67,4.0,1.33
+"Flour Tortillas (Side for Fajitas - 3 pcs)","flour tortillas (side for fajitas - 3 pcs)",291.67,6.67,45.83,8.33,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,8.0,55.0,10.0,6.67,45.83,8.33,350.0,291.67,2.0,1.67
+"Cheese Enchiladas (3 pcs in Red Sauce)","cheese enchiladas (3 pcs in red sauce)",206.67,7.33,15.0,12.67,1.67,0.0,0.0,0.0,0,1,desk_research,300.0,22.0,45.0,38.0,7.33,15.0,12.67,620.0,206.67,5.0,1.67
+"Authentic Guacamole (Side Portion)","authentic guacamole (side portion)",160.0,2.0,8.0,14.0,6.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,8.0,14.0,2.0,8.0,14.0,160.0,160.0,6.0,6.0
+"Restaurant Tortilla Chips (Standard Basket)","restaurant tortilla chips (standard basket)",500.0,6.67,63.33,23.33,5.33,0.0,0.0,0.0,0,1,desk_research,150.0,10.0,95.0,35.0,6.67,63.33,23.33,750.0,500.0,8.0,5.33
+"Chile con Queso (Melted Cheese Dip)","chile con queso (melted cheese dip)",280.0,10.0,8.0,22.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,10.0,8.0,22.0,10.0,8.0,22.0,280.0,280.0,0.0,0.0
+"Taco Salad (Loaded WITH Fried Tortilla Bowl)","taco salad (loaded with fried tortilla bowl)",212.5,7.5,16.25,13.0,2.0,0.0,0.0,0.0,0,1,desk_research,400.0,30.0,65.0,52.0,7.5,16.25,13.0,850.0,212.5,8.0,2.0
+"Carne Asada Tacos (Soft Corn Tortilla - 3 pcs)","carne asada tacos (soft corn tortilla - 3 pcs)",210.0,14.0,22.5,7.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,28.0,45.0,14.0,14.0,22.5,7.0,420.0,210.0,6.0,3.0
+"Beef Empanada (Deep Fried - 1 pc)","beef empanada (deep fried - 1 pc)",266.67,10.0,25.0,13.33,1.67,0.0,0.0,0.0,0,1,desk_research,120.0,12.0,30.0,16.0,10.0,25.0,13.33,320.0,266.67,2.0,1.67
+"Arepa (Stuffed with Chicken & Avocado/Reina Pepiada)","arepa (stuffed with chicken & avocado/reina pepiada)",208.0,8.8,18.0,11.2,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,22.0,45.0,28.0,8.8,18.0,11.2,520.0,208.0,6.0,2.4
+"Ceviche (Peruvian Raw Fish in Citrus)","ceviche (peruvian raw fish in citrus)",90.0,15.0,4.0,1.5,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,30.0,8.0,3.0,15.0,4.0,1.5,180.0,90.0,1.0,0.5
+"Churrasco / Picanha (Brazilian Grilled Steak)","churrasco / picanha (brazilian grilled steak)",232.0,22.0,0.0,16.0,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,55.0,0.0,40.0,22.0,0.0,16.0,580.0,232.0,0.0,0.0
+"Pão de Queijo (Brazilian Cheese Bread - 3 pcs)","pão de queijo (brazilian cheese bread - 3 pcs)",280.0,8.0,32.0,14.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,8.0,32.0,14.0,8.0,32.0,14.0,280.0,280.0,0.0,0.0
+"Huevos Rancheros (Fried Eggs on Tortilla + Salsa)","huevos rancheros (fried eggs on tortilla + salsa)",168.0,6.4,14.0,9.6,2.4,0.0,0.0,0.0,0,1,desk_research,250.0,16.0,35.0,24.0,6.4,14.0,9.6,420.0,168.0,6.0,2.4
+"Tres Leches Cake (Slice)","tres leches cake (slice)",320.0,4.0,36.67,17.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,55.0,26.0,4.0,36.67,17.33,480.0,320.0,0.0,0.0
+"Kachumber (Cucumber/Tomato/Onion - No Oil)","kachumber (cucumber/tomato/onion - no oil)",23.33,1.33,4.67,0.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,7.0,0.0,1.33,4.67,0.0,35.0,23.33,2.0,1.33
+"Kosambari (Moong Dal/Carrot/Coconut)","kosambari (moong dal/carrot/coconut)",80.0,4.0,10.0,3.33,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,15.0,5.0,4.0,10.0,3.33,120.0,80.0,4.0,2.67
+"Khamang Kakdi (Cucumber with Peanut Tempering)","khamang kakdi (cucumber with peanut tempering)",73.33,2.67,5.33,4.67,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,8.0,7.0,2.67,5.33,4.67,110.0,73.33,2.0,1.33
+"Mixed Sprout Salad (Lemon/Salt - No Oil)","mixed sprout salad (lemon/salt - no oil)",80.0,6.0,14.0,0.5,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,28.0,1.0,6.0,14.0,0.5,160.0,80.0,8.0,4.0
+"Mixed Sprout Salad (Tadka/Tempering)","mixed sprout salad (tadka/tempering)",120.0,5.5,14.0,5.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,11.0,28.0,10.0,5.5,14.0,5.0,240.0,120.0,7.0,3.5
+"Russian Salad (Potato/Peas/Mayo/Pineapple)","russian salad (potato/peas/mayo/pineapple)",225.0,2.0,19.0,16.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,38.0,32.0,2.0,19.0,16.0,450.0,225.0,3.0,1.5
+"Macaroni Salad (Mayo Base)","macaroni salad (mayo base)",240.0,3.0,22.5,15.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,45.0,30.0,3.0,22.5,15.0,480.0,240.0,2.0,1.0
+"Chicken Caesar Salad (Heavy Mayo/Cheese/Croutons)","chicken caesar salad (heavy mayo/cheese/croutons)",206.67,10.0,7.33,15.33,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,30.0,22.0,46.0,10.0,7.33,15.33,620.0,206.67,4.0,1.33
+"Chicken Caesar Salad (Light Vinaigrette/No Croutons)","chicken caesar salad (light vinaigrette/no croutons)",113.33,10.67,3.33,6.0,1.33,0.0,0.0,0.0,0,1,desk_research,300.0,32.0,10.0,18.0,10.67,3.33,6.0,340.0,113.33,4.0,1.33
+"Cobb Salad (Bacon/Egg/Avocado/Blue Cheese)","cobb salad (bacon/egg/avocado/blue cheese)",194.29,10.86,4.29,14.86,1.71,0.0,0.0,0.0,0,1,desk_research,350.0,38.0,15.0,52.0,10.86,4.29,14.86,680.0,194.29,6.0,1.71
+"Waldorf Salad (Apples/Grapes/Walnuts/Mayo)","waldorf salad (apples/grapes/walnuts/mayo)",190.0,2.0,15.0,14.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,30.0,28.0,2.0,15.0,14.0,380.0,190.0,4.0,2.0
+"Watermelon Feta Salad (Balsamic Glaze)","watermelon feta salad (balsamic glaze)",88.0,2.4,9.6,4.8,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,24.0,12.0,2.4,9.6,4.8,220.0,88.0,2.0,0.8
+"Roasted Beetroot & Goat Cheese Salad","roasted beetroot & goat cheese salad",140.0,4.0,11.0,9.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,22.0,18.0,4.0,11.0,9.0,280.0,140.0,5.0,2.5
+"Quinoa & Grilled Veggie Bowl (Olive Oil Lemon)","quinoa & grilled veggie bowl (olive oil lemon)",106.67,3.33,14.0,4.67,2.67,0.0,0.0,0.0,0,1,desk_research,300.0,10.0,42.0,14.0,3.33,14.0,4.67,320.0,106.67,8.0,2.67
+"Egg Salad (Traditional Mayo Base)","egg salad (traditional mayo base)",253.33,9.33,3.33,22.67,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,5.0,34.0,9.33,3.33,22.67,380.0,253.33,0.0,0.0
+"Egg Salad (Greek Yogurt Base)","egg salad (greek yogurt base)",140.0,12.0,4.0,8.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,18.0,6.0,12.0,12.0,4.0,8.0,210.0,140.0,0.0,0.0
+"Tuna Salad (Mayo Base)","tuna salad (mayo base)",233.33,14.67,2.67,18.67,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,22.0,4.0,28.0,14.67,2.67,18.67,350.0,233.33,0.0,0.0
+"Tuna Salad (Olive Oil/Lemon/Celery)","tuna salad (olive oil/lemon/celery)",146.67,16.0,1.33,8.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,2.0,12.0,16.0,1.33,8.0,220.0,146.67,1.0,0.67
+"Kala Chana Chaat Salad (Street Style)","kala chana chaat salad (street style)",140.0,6.0,20.0,4.0,5.0,0.0,0.0,0.0,0,1,desk_research,200.0,12.0,40.0,8.0,6.0,20.0,4.0,280.0,140.0,10.0,5.0
+"Raw Papaya Salad (Som Tum - Low Sugar)","raw papaya salad (som tum - low sugar)",60.0,2.0,11.0,1.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,22.0,2.0,2.0,11.0,1.0,120.0,60.0,4.0,2.0
+"Raw Papaya Salad (Commercial - Sticky Syrup)","raw papaya salad (commercial - sticky syrup)",105.0,1.5,19.0,2.5,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,3.0,38.0,5.0,1.5,19.0,2.5,210.0,105.0,3.0,1.5
+"Garden Salad (Vinaigrette Dressing)","garden salad (vinaigrette dressing)",70.0,1.0,5.0,5.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,2.0,10.0,10.0,1.0,5.0,5.0,140.0,70.0,3.0,1.5
+"Caprese Salad (Mozzarella/Tomato/Basil/Olive Oil)","caprese salad (mozzarella/tomato/basil/olive oil)",190.0,8.0,3.0,16.0,1.0,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,6.0,32.0,8.0,3.0,16.0,380.0,190.0,2.0,1.0
+"Broccoli & Almond Salad (Yogurt Dressing)","broccoli & almond salad (yogurt dressing)",105.0,4.0,7.5,7.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,15.0,14.0,4.0,7.5,7.0,210.0,105.0,6.0,3.0
+"Pasta Salad (Cold Fusilli/Veggies/Italian Dressing)","pasta salad (cold fusilli/veggies/italian dressing)",168.0,3.2,22.0,7.2,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,55.0,18.0,3.2,22.0,7.2,420.0,168.0,4.0,1.6
+"Paneer Tikka (Dry/Air Fried)","paneer tikka (dry/air fried)",173.33,14.67,4.0,10.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,22.0,6.0,16.0,14.67,4.0,10.67,260.0,173.33,1.0,0.67
+"Low-Fat Curd (Dahi)","low-fat curd (dahi)",40.0,4.0,5.0,0.5,0.0,0.0,0.0,0.0,0,1,desk_research,200.0,8.0,10.0,1.0,4.0,5.0,0.5,80.0,40.0,0.0,0.0
+"Greek Yogurt (Plain/Unsweetened)","greek yogurt (plain/unsweetened)",86.67,10.0,4.0,3.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,15.0,6.0,5.0,10.0,4.0,3.33,130.0,86.67,0.0,0.0
+"Paneer Bhurji (Minimal Oil)","paneer bhurji (minimal oil)",140.0,12.0,3.33,8.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,18.0,5.0,13.0,12.0,3.33,8.67,210.0,140.0,1.0,0.67
+"Besan Chilla (With Spinach/Methi)","besan chilla (with spinach/methi)",150.0,7.5,18.33,5.0,4.17,0.0,0.0,0.0,0,1,desk_research,120.0,9.0,22.0,6.0,7.5,18.33,5.0,180.0,150.0,5.0,4.17
+"Moong Dal Chilla","moong dal chilla",137.5,8.33,20.0,2.5,5.0,0.0,0.0,0.0,0,1,desk_research,120.0,10.0,24.0,3.0,8.33,20.0,2.5,165.0,137.5,6.0,5.0
+"Ragi Roti (Millet flatbread)","ragi roti (millet flatbread)",266.67,6.67,56.67,1.67,8.33,0.0,0.0,0.0,0,1,desk_research,60.0,4.0,34.0,1.0,6.67,56.67,1.67,160.0,266.67,5.0,8.33
+"Jowar Roti (Sorghum flatbread)","jowar roti (sorghum flatbread)",283.33,8.33,60.0,1.67,10.0,0.0,0.0,0.0,0,1,desk_research,60.0,5.0,36.0,1.0,8.33,60.0,1.67,170.0,283.33,6.0,10.0
+"Palak Paneer (Home Style/No Cream)","palak paneer (home style/no cream)",105.0,7.0,4.0,7.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,14.0,8.0,14.0,7.0,4.0,7.0,210.0,105.0,4.0,2.0
+"Muttar Paneer (Lean Style)","muttar paneer (lean style)",120.0,7.5,7.0,7.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,15.0,14.0,14.0,7.5,7.0,7.0,240.0,120.0,5.0,2.5
+"Toor Dal Tadka (Minimal Ghee)","toor dal tadka (minimal ghee)",75.0,4.5,12.0,1.5,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,9.0,24.0,3.0,4.5,12.0,1.5,150.0,75.0,7.0,3.5
+"Sprouts Raita","sprouts raita",73.33,4.67,8.0,2.0,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,7.0,12.0,3.0,4.67,8.0,2.0,110.0,73.33,4.0,2.67
+"Vegetable Oats Upma","vegetable oats upma",126.67,4.0,18.67,2.67,4.0,0.0,0.0,0.0,0,1,desk_research,150.0,6.0,28.0,4.0,4.0,18.67,2.67,190.0,126.67,6.0,4.0
+"Dalia (Broken Wheat Upma)","dalia (broken wheat upma)",120.0,3.33,21.33,1.33,4.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,32.0,2.0,3.33,21.33,1.33,180.0,120.0,7.0,4.67
+"Paneer Salad (With Olive Oil Lemon Dressing)","paneer salad (with olive oil lemon dressing)",145.0,8.0,5.0,10.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,10.0,20.0,8.0,5.0,10.0,290.0,145.0,4.0,2.0
+"Broccoli Almond Stir-Fry","broccoli almond stir-fry",93.33,3.33,5.33,6.67,2.67,0.0,0.0,0.0,0,1,desk_research,150.0,5.0,8.0,10.0,3.33,5.33,6.67,140.0,93.33,4.0,2.67
+"Stir-Fried Paneer & Bell Peppers","stir-fried paneer & bell peppers",146.67,9.33,4.0,10.0,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,6.0,15.0,9.33,4.0,10.0,220.0,146.67,3.0,2.0
+"Soy Milk Paneer (Tofu) Bhurji","soy milk paneer (tofu) bhurji",106.67,10.0,2.67,6.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,15.0,4.0,9.0,10.0,2.67,6.0,160.0,106.67,2.0,1.33
+"Oats & Ragi Porridge (Unsweetened)","oats & ragi porridge (unsweetened)",80.0,2.5,14.0,1.5,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,28.0,3.0,2.5,14.0,1.5,160.0,80.0,5.0,2.5
+"Barley (Jau) Khichdi","barley (jau) khichdi",97.5,3.0,19.0,1.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,38.0,2.0,3.0,19.0,1.0,195.0,97.5,8.0,4.0
+"Sattu Drink (Savory/Namkeen)","sattu drink (savory/namkeen)",48.0,2.4,8.0,0.8,1.6,0.0,0.0,0.0,0,1,desk_research,250.0,6.0,20.0,2.0,2.4,8.0,0.8,120.0,48.0,4.0,1.6
+"Buttermilk (Chaas with Jeera & Mint)","buttermilk (chaas with jeera & mint)",20.0,1.2,1.6,0.8,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,3.0,4.0,2.0,1.2,1.6,0.8,50.0,20.0,0.0,0.0
+"Almond Flour Mug Cake (Unsweetened)","almond flour mug cake (unsweetened)",350.0,13.33,10.0,30.0,5.0,0.0,0.0,0.0,0,1,desk_research,60.0,8.0,6.0,18.0,13.33,10.0,30.0,210.0,350.0,3.0,5.0
+"Boiled Chana Chaat (Chickpea Salad)","boiled chana chaat (chickpea salad)",120.0,5.33,17.33,2.67,4.67,0.0,0.0,0.0,0,1,desk_research,150.0,8.0,26.0,4.0,5.33,17.33,2.67,180.0,120.0,7.0,4.67
+"Paneer Wrap (Whole Wheat/Lean)","paneer wrap (whole wheat/lean)",160.0,8.0,15.0,7.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,30.0,14.0,8.0,15.0,7.0,320.0,160.0,5.0,2.5
+"Boiled Egg Whites (4 Large)","boiled egg whites (4 large)",54.17,11.67,0.83,0.0,0.0,0.0,0.0,0.0,0,1,desk_research,120.0,14.0,1.0,0.0,11.67,0.83,0.0,65.0,54.17,0.0,0.0
+"Whole Boiled Eggs (2 Large)","whole boiled eggs (2 large)",140.0,12.0,1.0,10.0,0.0,0.0,0.0,0.0,0,1,desk_research,100.0,12.0,1.0,10.0,12.0,1.0,10.0,140.0,140.0,0.0,0.0
+"Tandoori Chicken Breast (Skinless)","tandoori chicken breast (skinless)",146.67,23.33,1.33,5.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,35.0,2.0,8.0,23.33,1.33,5.33,220.0,146.67,1.0,0.67
+"Chicken Tikka (Dry Shish Kebab)","chicken tikka (dry shish kebab)",126.67,21.33,2.0,4.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,32.0,3.0,6.0,21.33,2.0,4.0,190.0,126.67,1.0,0.67
+"Chicken Bhurji (Minced Chicken Breast)","chicken bhurji (minced chicken breast)",140.0,18.67,2.67,6.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,28.0,4.0,9.0,18.67,2.67,6.0,210.0,140.0,1.0,0.67
+"Home-Style Chicken Curry (Lean Breast Meat)","home-style chicken curry (lean breast meat)",112.0,12.8,3.2,4.8,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,32.0,8.0,12.0,12.8,3.2,4.8,280.0,112.0,2.0,0.8
+"Grilled Salmon Fillet (Omega-3 Heavy)","grilled salmon fillet (omega-3 heavy)",186.67,20.0,0.0,10.67,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,30.0,0.0,16.0,20.0,0.0,10.67,280.0,186.67,0.0,0.0
+"Macher Jhol (Lean Bengali Fish Curry)","macher jhol (lean bengali fish curry)",105.0,12.0,3.0,5.0,0.5,0.0,0.0,0.0,0,1,desk_research,200.0,24.0,6.0,10.0,12.0,3.0,5.0,210.0,105.0,1.0,0.5
+"Grilled Mackerel (Bangda Fish)","grilled mackerel (bangda fish)",173.33,18.67,0.0,10.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,28.0,0.0,15.0,18.67,0.0,10.0,260.0,173.33,0.0,0.0
+"Sardines Tawa Fry (Minimal Oil)","sardines tawa fry (minimal oil)",175.0,18.33,0.83,10.0,0.0,0.0,0.0,0.0,0,1,desk_research,120.0,22.0,1.0,12.0,18.33,0.83,10.0,210.0,175.0,0.0,0.0
+"Prawns Masala (Lean Stir-Fry)","prawns masala (lean stir-fry)",120.0,16.0,3.33,4.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,5.0,6.0,16.0,3.33,4.0,180.0,120.0,1.0,0.67
+"Steamed Chicken Momos (Whole Wheat Base - 6 pcs)","steamed chicken momos (whole wheat base - 6 pcs)",140.0,10.67,17.33,2.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,16.0,26.0,4.0,10.67,17.33,2.67,210.0,140.0,3.0,2.0
+"Chicken Clear Soup (With Ginseng/Ginger)","chicken clear soup (with ginseng/ginger)",36.0,5.6,1.2,0.8,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,14.0,3.0,2.0,5.6,1.2,0.8,90.0,36.0,1.0,0.4
+"Mutton Paya Bone Broth (Collagen Heavy)","mutton paya bone broth (collagen heavy)",64.0,7.2,0.4,3.6,0.0,0.0,0.0,0.0,0,1,desk_research,250.0,18.0,1.0,9.0,7.2,0.4,3.6,160.0,64.0,0.0,0.0
+"Keema Matar (Lean Minced Chicken)","keema matar (lean minced chicken)",130.0,13.0,5.0,6.0,1.5,0.0,0.0,0.0,0,1,desk_research,200.0,26.0,10.0,12.0,13.0,5.0,6.0,260.0,130.0,3.0,1.5
+"Egg Curry (2 Boiled Eggs in Tomato Gravy)","egg curry (2 boiled eggs in tomato gravy)",96.0,6.0,4.0,6.0,0.8,0.0,0.0,0.0,0,1,desk_research,250.0,15.0,10.0,15.0,6.0,4.0,6.0,240.0,96.0,2.0,0.8
+"Baked Chicken Meatballs","baked chicken meatballs",146.67,16.67,4.0,6.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,25.0,6.0,10.0,16.67,4.0,6.67,220.0,146.67,1.0,0.67
+"Grilled Tuna Steak","grilled tuna steak",133.33,22.67,0.0,4.0,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,34.0,0.0,6.0,22.67,0.0,4.0,200.0,133.33,0.0,0.0
+"Chicken Shawarma Salad (No Bread/No Mayo)","chicken shawarma salad (no bread/no mayo)",112.0,12.0,3.2,5.6,1.2,0.0,0.0,0.0,0,1,desk_research,250.0,30.0,8.0,14.0,12.0,3.2,5.6,280.0,112.0,3.0,1.2
+"Mutton Seekh Kebab (Air Fried/Lean)","mutton seekh kebab (air fried/lean)",193.33,14.67,3.33,13.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,22.0,5.0,20.0,14.67,3.33,13.33,290.0,193.33,1.0,0.67
+"Steamed Fish with Ginger & Soy","steamed fish with ginger & soy",106.67,17.33,2.0,2.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,26.0,3.0,4.0,17.33,2.0,2.67,160.0,106.67,1.0,0.67
+"Chicken & Sprouts Salad Bowl","chicken & sprouts salad bowl",96.0,11.2,6.0,2.4,2.0,0.0,0.0,0.0,0,1,desk_research,250.0,28.0,15.0,6.0,11.2,6.0,2.4,240.0,96.0,5.0,2.0
+"Tawa Chicken Fry (Skinless/Lean)","tawa chicken fry (skinless/lean)",153.33,20.0,2.67,6.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,30.0,4.0,10.0,20.0,2.67,6.67,230.0,153.33,1.0,0.67
+"Egg White Scramble with Spinach","egg white scramble with spinach",73.33,9.33,2.0,2.67,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,14.0,3.0,4.0,9.33,2.0,2.67,110.0,73.33,1.0,0.67
+"Stir-Fried Squid (Calamari) & Leeks","stir-fried squid (calamari) & leeks",106.67,14.67,3.33,3.33,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,22.0,5.0,5.0,14.67,3.33,3.33,160.0,106.67,1.0,0.67
+"Crab Meat Salad (Clear Citrus Dressing)","crab meat salad (clear citrus dressing)",86.67,13.33,2.67,2.0,0.67,0.0,0.0,0.0,0,1,desk_research,150.0,20.0,4.0,3.0,13.33,2.67,2.0,130.0,86.67,1.0,0.67
+"Grilled Turkey Breast","grilled turkey breast",130.0,24.0,0.0,3.33,0.0,0.0,0.0,0.0,0,1,desk_research,150.0,36.0,0.0,5.0,24.0,0.0,3.33,195.0,130.0,0.0,0.0
+"Roast Chicken (Skinless Leg Portion)","roast chicken (skinless leg portion)",144.44,16.67,0.0,7.78,0.0,0.0,0.0,0.0,0,1,desk_research,180.0,30.0,0.0,14.0,16.67,0.0,7.78,260.0,144.44,0.0,0.0
+"Tofu Stir-Fry (With Broccoli & Mushrooms)","tofu stir-fry (with broccoli & mushrooms)",90.0,8.0,4.0,5.0,2.0,0.0,0.0,0.0,0,1,desk_research,200.0,16.0,8.0,10.0,8.0,4.0,5.0,180.0,90.0,4.0,2.0
+"Kala Chana Masala (Black Chickpea Curry)","kala chana masala (black chickpea curry)",110.0,5.5,16.0,2.5,4.5,0.0,0.0,0.0,0,1,desk_research,200.0,11.0,32.0,5.0,5.5,16.0,2.5,220.0,110.0,9.0,4.5
+"Rajma Masala (Red Kidney Bean Curry)","rajma masala (red kidney bean curry)",105.0,5.0,17.0,2.0,4.0,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,34.0,4.0,5.0,17.0,2.0,210.0,105.0,8.0,4.0
+"White Chana Masala (Chole - Lean Home Style)","white chana masala (chole - lean home style)",115.0,5.0,18.0,2.5,4.5,0.0,0.0,0.0,0,1,desk_research,200.0,10.0,36.0,5.0,5.0,18.0,2.5,230.0,115.0,9.0,4.5
+"Roasted Pumpkin Seeds","roasted pumpkin seeds",566.67,30.0,13.33,46.67,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,9.0,4.0,14.0,30.0,13.33,46.67,170.0,566.67,2.0,6.67
+"Almond Milk (Unsweetened)","almond milk (unsweetened)",14.0,0.4,0.4,1.2,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,1.0,1.0,3.0,0.4,0.4,1.2,35.0,14.0,1.0,0.4
+"Soy Milk (Unsweetened/High Protein)","soy milk (unsweetened/high protein)",36.0,3.2,1.6,1.6,0.4,0.0,0.0,0.0,0,1,desk_research,250.0,8.0,4.0,4.0,3.2,1.6,1.6,90.0,36.0,1.0,0.4
+"Tempeh Stir-Fry (Indonesian Soy Cake)","tempeh stir-fry (indonesian soy cake)",173.33,16.0,6.67,9.33,4.67,0.0,0.0,0.0,0,1,desk_research,150.0,24.0,10.0,14.0,16.0,6.67,9.33,260.0,173.33,7.0,4.67
+"Edamame Bowls (Steamed & Salted)","edamame bowls (steamed & salted)",120.0,11.33,10.0,4.67,4.67,0.0,0.0,0.0,0,1,desk_research,150.0,17.0,15.0,7.0,11.33,10.0,4.67,180.0,120.0,7.0,4.67
+"Kachumber Salad (Lemon/Mint - No Oil)","kachumber salad (lemon/mint - no oil)",23.33,1.33,4.67,0.0,1.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,7.0,0.0,1.33,4.67,0.0,35.0,23.33,2.0,1.33
+"Lauki Ki Sabzi (Bottle Gourd - Lean)","lauki ki sabzi (bottle gourd - lean)",46.67,0.67,4.0,2.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,1.0,6.0,4.0,0.67,4.0,2.67,70.0,46.67,3.0,2.0
+"Torai Sabzi (Ridge Gourd)","torai sabzi (ridge gourd)",50.0,1.33,4.67,2.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,7.0,4.0,1.33,4.67,2.67,75.0,50.0,3.0,2.0
+"Bhindi Masala (Lean Home Cooked)","bhindi masala (lean home cooked)",80.0,2.0,8.0,4.0,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,3.0,12.0,6.0,2.0,8.0,4.0,120.0,80.0,5.0,3.33
+"Baingan Bharta (Mashed Smoked Eggplant)","baingan bharta (mashed smoked eggplant)",73.33,1.33,7.33,4.0,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,11.0,6.0,1.33,7.33,4.0,110.0,73.33,5.0,3.33
+"Methi Matar Sabzi (Fenugreek Leaves/Peas)","methi matar sabzi (fenugreek leaves/peas)",86.67,2.67,10.0,3.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,15.0,5.0,2.67,10.0,3.33,130.0,86.67,5.0,3.33
+"Palak Ka Saag (Pureed Spinach Stem)","palak ka saag (pureed spinach stem)",45.0,2.0,4.0,2.0,3.0,0.0,0.0,0.0,0,1,desk_research,200.0,4.0,8.0,4.0,2.0,4.0,2.0,90.0,45.0,6.0,3.0
+"Bitter Gourd (Karela Pyaz Sabzi)","bitter gourd (karela pyaz sabzi)",100.0,2.0,9.0,6.0,4.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,9.0,6.0,2.0,9.0,6.0,100.0,100.0,4.0,4.0
+"French Beans Stir-Fry","french beans stir-fry",63.33,1.33,6.67,3.33,3.33,0.0,0.0,0.0,0,1,desk_research,150.0,2.0,10.0,5.0,1.33,6.67,3.33,95.0,63.33,5.0,3.33
+"Amaranth (Rajgira) Porridge (Water-based)","amaranth (rajgira) porridge (water-based)",75.0,2.5,14.0,1.0,2.5,0.0,0.0,0.0,0,1,desk_research,200.0,5.0,28.0,2.0,2.5,14.0,1.0,150.0,75.0,5.0,2.5
+"Buckwheat (Kuttu) Khichdi","buckwheat (kuttu) khichdi",90.0,3.0,17.0,1.0,3.5,0.0,0.0,0.0,0,1,desk_research,200.0,6.0,34.0,2.0,3.0,17.0,1.0,180.0,90.0,7.0,3.5
+"Wild Rice & Mushroom Blend","wild rice & mushroom blend",106.67,2.67,21.33,0.67,2.0,0.0,0.0,0.0,0,1,desk_research,150.0,4.0,32.0,1.0,2.67,21.33,0.67,160.0,106.67,3.0,2.0
+"Walnut Kernels (Akhrot)","walnut kernels (akhrot)",650.0,16.67,13.33,66.67,6.67,0.0,0.0,0.0,0,1,desk_research,30.0,5.0,4.0,20.0,16.67,13.33,66.67,195.0,650.0,2.0,6.67
+"Avocado Mash (With Lime & Coriander)","avocado mash (with lime & coriander)",160.0,2.0,8.0,15.0,7.0,0.0,0.0,0.0,0,1,desk_research,100.0,2.0,8.0,15.0,2.0,8.0,15.0,160.0,160.0,7.0,7.0
+"Baba Ganoush (Eggplant Tahini Dip)","baba ganoush (eggplant tahini dip)",180.0,4.0,10.0,14.0,6.0,0.0,0.0,0.0,0,1,desk_research,50.0,2.0,5.0,7.0,4.0,10.0,14.0,90.0,180.0,3.0,6.0
+"Vegan Protein Shake (Pea/Hemp Isolate)","vegan protein shake (pea/hemp isolate)",43.33,7.33,0.67,0.67,0.67,0.0,0.0,0.0,0,1,desk_research,300.0,22.0,2.0,2.0,7.33,0.67,0.67,130.0,43.33,2.0,0.67

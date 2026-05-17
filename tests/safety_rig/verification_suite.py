@@ -3,7 +3,6 @@ import httpx
 import time
 import json
 import os
-from typing import List, Dict
 
 API_URL = "http://localhost:8000"
 LOG_FILE = "tests/safety_rig/verification_results.jsonl"

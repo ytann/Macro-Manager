@@ -4,7 +4,6 @@ import time
 import random
 import json
 import os
-from typing import List
 
 API_URL = "http://localhost:8000"
 LOG_FILE = "tests/safety_rig/stress_results.jsonl"

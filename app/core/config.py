@@ -10,7 +10,7 @@ class Config:
     # API Config
     LITELLM_API_BASE = "http://localhost:11434"
     LLM_MODEL = 'ollama/gemma4:e2b'
-    LLM_TIMEOUT = 30
+    LLM_TIMEOUT = 60
     TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
     
     # Database Config
@@ -43,4 +43,19 @@ class ClinicalConstants:
     # Safety guards for daily caloric intake (Adult females)
     MIN_DAILY_CALORIES = 1200
     MAX_DAILY_CALORIES = 4000
+
+    # Standard Utensil Fallbacks (Volumes in ml / cm^3)
+    STANDARD_UTENSILS = {
+        "small_bowl": 250,
+        "medium_bowl": 500,
+        "large_bowl": 750,
+        "small_plate": 400,
+        "medium_plate": 600,
+        "large_plate": 1000,
+        "teacup": 150,
+        "mug": 350,
+        "glass": 300,
+        "default": 500
+    }
+
 

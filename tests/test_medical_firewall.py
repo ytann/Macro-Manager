@@ -1,7 +1,5 @@
 import pytest
-import asyncio
 from app.services.planner import PlannerService
-from app.core.config import Config
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("query", [

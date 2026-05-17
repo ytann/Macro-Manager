@@ -12,7 +12,7 @@ from app.api import app
 from app.services.extraction import ExtractionService
 from app.services.foodbank import FoodbankService
 from app.services.database import DatabaseManager
-from app.schemas.food_schemas import FoodItem, FoodLog, Macros, SubMacros
+from app.schemas.food_schemas import FoodItem, FoodLog, Macros
 
 client = TestClient(app)
 

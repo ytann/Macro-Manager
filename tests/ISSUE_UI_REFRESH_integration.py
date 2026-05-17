@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-import asyncio
 
 # Mocking streamlit before importing frontend
 import sys

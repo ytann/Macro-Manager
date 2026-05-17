@@ -1,0 +1,309 @@
+diff --git a/app/services/extraction.py b/app/services/extraction.py
+index 36de2e6..e30756f 100644
+--- a/app/services/extraction.py
++++ b/app/services/extraction.py
+@@ -6,6 +6,7 @@ import uuid
+ import os
+ from typing import List, Optional, Dict, Tuple
+ from app.services.foodbank import FoodbankService
++from app.services.barcode_decoder import decode_barcode_async
+ from app.schemas.food_schemas import FoodItem, FoodLog, Macros, SubMacros
+ from app.services.database import DatabaseManager
+ from app.core.config import Config
+@@ -43,7 +44,74 @@ class ExtractionService:
+                 return f.read()
+         return ""
+ 
+-    async def extract_from_image(self, base64_image: str, environment: str, hint: str = "") -> FoodLog:
++    def _get_utensil_volume(self, utensil_name: str) -> float:
++        """Retrieves utensil volume in ml. Checks memory first, then fallbacks."""
++        memory = self._get_user_memory().lower()
++        # Simple regex-like search in memory for "utensil_name: 500ml" or "utensil_name is 500ml"
++        if utensil_name and utensil_name.lower() in memory:
++            import re
++            pattern = rf"{re.escape(utensil_name.lower())}.*?(\d+)\s*ml"
++            match = re.search(pattern, memory)
++            if match:
++                return float(match.group(1))
++        
++        # Fallback to config
++        from app.core.config import ClinicalConstants
++        return float(ClinicalConstants.STANDARD_UTENSILS.get(utensil_name.lower(), ClinicalConstants.STANDARD_UTENSILS["default"]))
++
++    STACKED_ITEMS_BASE_WEIGHTS = {
++        "roti": 50.0, "chapati": 50.0, "phulka": 50.0,
++        "naan": 90.0, "puri": 40.0, "paratha": 80.0,
++        "dosa": 150.0, "idli": 45.0, "slice": 50.0, "tortilla": 40.0
++    }
++
++    def _calculate_mass(self, item_name: str, fill_percentage: float, utensil_vol: float, unit_count: Optional[int] = None) -> float:
++        """Calculates mass. Prioritizes unit_count for stacked items, else uses Vol * Density."""
++        name_lower = item_name.lower()
++        
++        # 1. Unit-Based Estimation (Guardrail for stacked items)
++        if unit_count is not None and unit_count > 0:
++            for keyword, weight in self.STACKED_ITEMS_BASE_WEIGHTS.items():
++                if keyword in name_lower:
++                    return float(unit_count * weight)
++
++        # 2. Volumetric Estimation
++        try:
++            with open("app/core/densities.json", 'r') as f:
++                densities = json.load(f)
++        except Exception:
++            return (utensil_vol * (fill_percentage / 100.0)) * 0.8 # Ultimate fallback
++
++        normalized_name = name_lower.replace(" ", "_")
++        
++        # Check specific densities (both normalized and original)
++        density = densities["specific"].get(normalized_name) or densities["specific"].get(name_lower)
++        
++        # Fallback to category density
++        if density is None:
++            cat_map = {
++                "rice": "grains_cooked", "quinoa": "grains_cooked", "pasta": "grains_cooked",
++                "dal": "legumes_cooked", "lentil": "legumes_cooked", "bean": "legumes_cooked",
++                "chicken": "lean_proteins", "fish": "lean_proteins", "tofu": "lean_proteins",
++                "spinach": "leafy_greens", "kale": "leafy_greens",
++                "broccoli": "cruciferous_vegetables", "cauliflower": "cruciferous_vegetables",
++                "carrot": "dense_vegetables", "potato": "dense_vegetables",
++                "oil": "fats_oils", "butter": "fats_oils", "ghee": "fats_oils",
++                "apple": "fruits_dense", "banana": "fruits_dense",
++                "cucumber": "fruits_watery", "watermelon": "fruits_watery",
++                "yogurt": "dairy_thick", "cheese": "dairy_thick"
++            }
++            for kw, cat in cat_map.items():
++                if kw in name_lower:
++                    density = densities["categories"].get(cat)
++                    break
++        
++        if density is None:
++            density = densities["fallbacks"]["default_density"]
++            
++        return (utensil_vol * (fill_percentage / 100.0)) * density
++
++    async def extract_from_image(self, base64_image: str, environment: str, hint: str = "", meal_type: str = "General") -> FoodLog:
+         # Limit image size to ~10MB binary (approx 13.3MB base64)
+         if len(base64_image) > 13_300_000:
+             raise ValueError("Image too large. Please upload an image smaller than 10MB.")
+@@ -74,24 +142,207 @@ class ExtractionService:
+             logger.error(f"JSON decode error in extract_from_image: {e}")
+             data = {}
+ 
+-        items_list = []
+-        if isinstance(data, dict):
+-            for k in ['items', 'ingredients', 'data', 'response']:
+-                if k in data and isinstance(data[k], list):
+-                    items_list = data[k]
+-                    break
+-            if not items_list:
+-                for v in data.values():
+-                    if isinstance(v, list):
+-                        items_list = v
+-                        break
+-        elif isinstance(data, list):
+-            items_list = data
++        # Volumetric processing
++        utensil = data.get("utensil", "default")
++        utensil_vol = self._get_utensil_volume(utensil)
++        
++        raw_items = data.get("items", [])
++        if not isinstance(raw_items, list):
++            raw_items = []
++
++        # Parallel Pipeline: 
++        # 1. Fetch/Update nutrition from Tavily (via Foodbank)
++        # 2. Calculate volumetric mass
++        
++        async def process_item(item_data):
++            name = item_data.get("name", "unknown item")
++            fill_pct = float(item_data.get("fill_percentage", 0.0))
++            unit_count = item_data.get("unit_count")
++            if unit_count is not None:
++                try:
++                    unit_count = int(unit_count)
++                except (ValueError, TypeError):
++                    unit_count = None
++            
++            # Path A: Trigger nutrition update (Upsert into DB using Tavily search)
++            # This ensures that when _resolve_and_build_log is called, the data is fresh
++            await self.foodbank.find_source_of_truth(name, upsert=True)
++            
++            # Path B: Calculate mass (Unit-based or Volumetric)
++            grams = self._calculate_mass(name, fill_pct, utensil_vol, unit_count)
++            
++            return {"name": name, "grams": grams}
++
++        items_list = await asyncio.gather(*[process_item(item) for item in raw_items])
+ 
+         unique_items = self._deduplicate_items(items_list)
+         meal_id = f"vision_{uuid.uuid4().hex[:8]}"
+         return await self._resolve_and_build_log(unique_items, meal_id)
+ 
++    async def extract_from_label(self, base64_image: str, hint: str = "", meal_type: str = "General", quantity: Optional[float] = None) -> FoodLog:
++        """Extracts nutrition data directly from a nutrition label image."""
++        if len(base64_image) > 13_300_000:
++            raise ValueError("Image too large. Please upload an image smaller than 10MB.")
++
++        prompt = self.prompts['extraction']['label_extraction']
++        
++        # We append the hint if available
++        if hint:
++            prompt += f"\n\nUSER HINT: {hint}"
++
++        resp = await safe_acompletion(
++            model=self.model,
++            messages=[{
++                "role": "user",
++                "content": [
++                    {"type": "text", "text": prompt},
++                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
++                ]
++            }],
++            api_base=Config.LITELLM_API_BASE,
++            temperature=0.0,
++            response_format={"type": "json_object"}
++        )
++
++        try:
++            data = json.loads(resp.choices[0].message.content)
++        except json.JSONDecodeError as e:
++            logger.error(f"JSON decode error in extract_from_label: {e}")
++            raise ValueError("Failed to read nutrition label.")
++
++        if data.get("error"):
++            raise ValueError(f"Label extraction failed: {data.get('message', 'Unknown error')}")
++
++        product_name = data.get("product_name") or hint or "Unknown Packaged Food"
++        reported_qty = float(data.get("reported_qty") or 100.0)
++        protein = float(data.get("protein") or 0.0)
++        carbs = float(data.get("carbs") or 0.0)
++        fat = float(data.get("fat") or 0.0)
++        calories = float(data.get("calories") or ((protein * 4) + (carbs * 4) + (fat * 9)))
++        fiber = float(data.get("fiber") or 0.0)
++        
++        # 1. Normalize and Upsert to DB (verified=1)
++        await self.foodbank.normalize_and_upsert(
++            name=product_name,
++            reported_qty=reported_qty,
++            protein=protein,
++            carbs=carbs,
++            fat=fat,
++            calories=calories,
++            fiber=fiber,
++            source="label_scan",
++            verified=1
++        )
++        
++        # 2. Add to log (assume they are logging 1 serving/reported_qty if not specified)
++        # For a label scan, we log the reported quantity as the consumed amount, unless explicitly provided.
++        consumed_qty = quantity if quantity is not None and quantity > 0 else reported_qty
++        items_list = [{"name": product_name, "grams": consumed_qty}]
++        
++        meal_id = f"label_{uuid.uuid4().hex[:8]}"
++        return await self._resolve_and_build_log(items_list, meal_id)
++
++    async def extract_from_qr(self, base64_image: str, hint: str = "", meal_type: str = "General", quantity: Optional[float] = None) -> FoodLog:
++        """Decodes QR/Barcode and fetches macros."""
++        # 1. Decode Barcode
++        barcode_result = await decode_barcode_async(base64_image)
++        
++        barcode_data = None
++        if barcode_result:
++            barcode_data = barcode_result['data']
++        else:
++            # Fallback: Use LLM to read the numbers off the barcode
++            logger.info("pyzbar failed. Falling back to Vision LLM to read barcode numbers.")
++            prompt = "Extract ONLY the numbers below the barcode in this image. Return a JSON object with 'barcode': 'number' or 'error' if none found. No markdown."
++            try:
++                resp = await safe_acompletion(
++                    model=self.model,
++                    messages=[{
++                        "role": "user",
++                        "content": [
++                            {"type": "text", "text": prompt},
++                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
++                        ]
++                    }],
++                    api_base=Config.LITELLM_API_BASE,
++                    temperature=0.0,
++                    response_format={"type": "json_object"}
++                )
++                data = json.loads(resp.choices[0].message.content)
++                barcode_data = data.get('barcode')
++                if barcode_data:
++                    # Clean up any spaces
++                    barcode_data = barcode_data.replace(" ", "")
++            except Exception as e:
++                logger.error(f"Vision fallback for barcode failed: {e}")
++                
++        if not barcode_data:
++            raise ValueError("No QR or Barcode detected in the image.")
++            
++        product_name = hint or f"Product {barcode_data}"
++        
++        # 2. Try OpenFoodFacts API first
++        import httpx
++        off_url = f"https://world.openfoodfacts.org/api/v0/product/{barcode_data}.json"
++        
++        try:
++            async with httpx.AsyncClient() as client:
++                response = await client.get(off_url, timeout=5.0)
++                if response.status_code == 200:
++                    off_data = response.json()
++                    if off_data.get('status') == 1:
++                        product = off_data.get('product', {})
++                        nutriments = product.get('nutriments', {})
++                        
++                        # Extract data from OFF
++                        off_name = product.get('product_name', '')
++                        if off_name:
++                            product_name = off_name
++                            
++                        # OFF usually provides per 100g, but we can check
++                        cal_100 = float(nutriments.get('energy-kcal_100g') or nutriments.get('energy-kcal_value') or 0.0)
++                        p_100 = float(nutriments.get('proteins_100g') or nutriments.get('proteins_value') or 0.0)
++                        c_100 = float(nutriments.get('carbohydrates_100g') or nutriments.get('carbohydrates_value') or 0.0)
++                        f_100 = float(nutriments.get('fat_100g') or nutriments.get('fat_value') or 0.0)
++                        fiber_100 = float(nutriments.get('fiber_100g') or nutriments.get('fiber_value') or 0.0)
++                        
++                        if p_100 > 0 or c_100 > 0 or f_100 > 0:
++                            logger.info(f"Found {product_name} on OpenFoodFacts!")
++                            await self.foodbank.upsert_food(
++                                name=product_name,
++                                calories=cal_100,
++                                protein=p_100,
++                                carbs=c_100,
++                                fat=f_100,
++                                fiber=fiber_100,
++                                verified=1,
++                                source="openfoodfacts"
++                            )
++                            
++                            consumed_qty = quantity if quantity is not None and quantity > 0 else 100.0
++                            items_list = [{"name": product_name, "grams": consumed_qty}]
++                            meal_id = f"qr_{uuid.uuid4().hex[:8]}"
++                            return await self._resolve_and_build_log(items_list, meal_id)
++        except Exception as e:
++            logger.warning(f"OpenFoodFacts lookup failed for {barcode_data}: {e}")
++            
++        # 3. Fallback to Tavily
++        logger.info(f"Falling back to Tavily for barcode {barcode_data}")
++        search_term = hint if hint else barcode_data
++        
++        # Trigger Tavily search and DB upsert
++        truth = await self.foodbank.find_source_of_truth(search_term, upsert=True)
++        
++        if not truth or truth.get('error'):
++            raise ValueError(f"Could not find nutrition data for barcode {barcode_data}. Try taking a photo of the Nutrition Label instead.")
++            
++        # 4. Add to log (default to 100g if we don't know the package size)
++        consumed_qty = quantity if quantity is not None and quantity > 0 else 100.0
++        items_list = [{"name": search_term, "grams": consumed_qty}]
++        
++        meal_id = f"qr_{uuid.uuid4().hex[:8]}"
++        return await self._resolve_and_build_log(items_list, meal_id)
++
+     async def _verify_extracted_items(self, text: str, items: List[dict]) -> List[dict]:
+         found_details = [f"{i.get('name')} ({i.get('grams')}g)" for i in items]
+         prompt = self.prompts['extraction']['verification'].format(text=text, found_details=found_details)

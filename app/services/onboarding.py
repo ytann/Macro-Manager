@@ -1,5 +1,4 @@
 from app.core.llm import safe_acompletion
-import json
 import yaml
 from pydantic import ValidationError
 from app.core.config import Config, ClinicalConstants
