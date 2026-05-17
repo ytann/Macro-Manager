@@ -13,7 +13,7 @@ Cortisol peaks late afternoon/early evening → HGP ↑ → Fasting glucose ↑
 Biological night (melatonin peak) → Pancreatic β-cell responsiveness ↓↓
 ```
 
-**PCOS-specific**: Nighttime HGP elevation + melatonin-induced insulin inhibition = EXTREME evening IR.
+**PMOS-specific**: Nighttime HGP elevation + melatonin-induced insulin inhibition = EXTREME evening IR.
 
 ---
 
@@ -33,7 +33,7 @@ Melatonin → MT2 (MTNR1B) binding → cAMP ↓ → PKA ↓ → Glucose-Stimulat
 - Insulin response normalized
 - Disposition index (β-cell function) restored
 
-**PCOS Implication**: Evening meal timing CRITICAL for genotype-dependent individuals.
+**PMOS Implication**: Evening meal timing CRITICAL for genotype-dependent individuals.
 
 ---
 
@@ -135,7 +135,7 @@ mTRE+EX (85%) > eTRE (70%) > eTRE+EX (52%) > CR (48%) > lTRE (41%) > mTRE (36%)
 
 ---
 
-## Synthesis: Chrononutrition Architecture for PCOS
+## Synthesis: Chrononutrition Architecture for PMOS
 
 ### Rule 1: Carbohydrate Front-Loading (Active Hours)
 - Consume 50-60% daily CHO before 2 PM
@@ -190,7 +190,7 @@ mTRE+EX (85%) > eTRE (70%) > eTRE+EX (52%) > CR (48%) > lTRE (41%) > mTRE (36%)
 
 ## Summary for Gemma Intuition
 
-**PCOS evening IR**: Melatonin MT2 suppresses insulin secretion. Cortisol nadir reduces glucose disposal. **Evening carbs = metabolic danger zone.**
+**PMOS evening IR**: Melatonin MT2 suppresses insulin secretion. Cortisol nadir reduces glucose disposal. **Evening carbs = metabolic danger zone.**
 
 **Morning IR optimal**: Cortisol peak + GLP-1 responsiveness maximal. **Breakfast carbs = safest deployment.**
 

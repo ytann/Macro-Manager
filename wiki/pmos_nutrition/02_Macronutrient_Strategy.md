@@ -1,6 +1,6 @@
 # Macronutrient Distribution & Meal Sequencing
 
-## Optimal PCOS Macro Split: 40/35/25
+## Optimal PMOS Macro Split: 40/35/25
 
 **Clinical Evidence**: Wycherley RCT (n=43) + meta-analysis (24 RCTs, n=1063):
 
@@ -70,7 +70,7 @@ Why: Protein delays gastric emptying → triggers GLP-1/GIP incretin release
 | Viscosity | Hydrates → gel matrix | Delays gastric emptying, slows glucose absorption |
 | SCFA Production | Gut microbes ferment → butyrate/propionate | ↑ GLP-1 secretion, repairs intestinal barrier |
 
-**Clinical Thresholds for PCOS:**
+**Clinical Thresholds for PMOS:**
 - **<25 g/day**: Pathological (FBS ↑, Fasting insulin ↑, abnormal LH:FSH)
 - **25-30 g/day**: Baseline minimum (regulate digestion, prevent spikes)
 - **28-36 g/day**: Optimal (demonstrated IR + insulin ↓ in RCTs)

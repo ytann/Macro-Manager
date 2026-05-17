@@ -1,10 +1,10 @@
-# PCOS Onboarding Logic
+# PMOS Onboarding Logic
 Resolved by `app/services/onboarding.py` and `app/api.py`.
 
 ## 1. Flow
 `POST /onboard` { "bio_text": "..." }
-$\rightarrow$ `OnboardingService.calculate_pcos_baseline(text)`
-$\rightarrow$ LLM Extraction $\rightarrow$ BMR Math $\rightarrow$ TDEE Math $\rightarrow$ Goal Modifier $\rightarrow$ PCOS Penalty $\rightarrow$ Macro Split
+$\rightarrow$ `OnboardingService.calculate_pmos_baseline(text)`
+$\rightarrow$ LLM Extraction $\rightarrow$ BMR Math $\rightarrow$ TDEE Math $\rightarrow$ Goal Modifier $\rightarrow$ PMOS Penalty $\rightarrow$ Macro Split
 $\rightarrow$ `db_manager.set_daily_goals()`
 $\rightarrow$ Return Computed Macros
 
@@ -17,7 +17,7 @@ Extracts a JSON object:
 - `goal` (string: 'lose', 'maintain', 'gain')
 
 ## 3. Baseline Math
-PCOS-calibrated baseline calculated using Mifflin-St Jeor (Assume female, age 25):
+PMOS-calibrated baseline calculated using Mifflin-St Jeor (Assume female, age 25):
 
 1. **Base BMR**: $(10 \times \text{weight\_kg}) + (6.25 \times \text{height\_cm}) - (5 \times 25) - 161$
 2. **TDEE**: $\text{BMR} \times \text{activity\_level}$
@@ -26,7 +26,7 @@ PCOS-calibrated baseline calculated using Mifflin-St Jeor (Assume female, age 25
    - `gain`: +500 kcal
    - `maintain`: 0 kcal
    $\text{adjusted\_tdee} = \text{TDEE} + \text{modifier}$
-4. **PCOS Penalty**: $\text{target\_calories} = \text{adjusted\_tdee} \times 0.85$ (15% reduction to account for insulin resistance/metabolic slowdown)
+4. **PMOS Penalty**: $\text{target\_calories} = \text{adjusted\_tdee} \times 0.85$ (15% reduction to account for insulin resistance/metabolic slowdown)
 
 ## 4. Macro Split (40/35/25)
 Targets are split to prioritize protein and limit carbs for insulin management:

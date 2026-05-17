@@ -1,4 +1,4 @@
-# 📚 PCOS Nutrition Knowledge Base for Gemma4:e2b
+# 📚 PMOS Nutrition Knowledge Base for Gemma4:e2b
 ## Complete Implementation Summary
 
 ---
@@ -62,8 +62,8 @@
 ```
 MacroManager/
 └── wiki/
-    ├── index.md (UPDATED with PCOS nutrition routing)
-    └── pcos_nutrition/
+    ├── index.md (UPDATED with PMOS nutrition routing)
+    └── pmos_nutrition/
         ├── 01_IR_Pathophysiology.md
         ├── 02_Macronutrient_Strategy.md          ← PRIMARY
         ├── 03_Chrononutrition.md
@@ -169,7 +169,7 @@ Gemma routes: Age-dependent (>40yo only if dyslipidemia) + fiber-first (28-36g/d
 ## 🔄 Next Steps
 
 ### Immediate
-1. Test Gemma file loading from `wiki/pcos_nutrition/` directory
+1. Test Gemma file loading from `wiki/pmos_nutrition/` directory
 2. Verify trigger-phrase recognition against 5-10 live user queries
 3. Monitor reasoning chains for consistency
 
@@ -186,7 +186,7 @@ Gemma routes: Age-dependent (>40yo only if dyslipidemia) + fiber-first (28-36g/d
 ### Long-term
 1. Migrate to vector DB embedding (chunks + semantic indexing)
 2. Replace static file loading with dynamic chunk retrieval
-3. Scale knowledge base as new PCOS research emerges
+3. Scale knowledge base as new PMOS research emerges
 
 ---
 
@@ -227,7 +227,7 @@ Every recommendation traces back to this principle. Gemma should internalize thi
 
 ## 🎁 What This Enables
 
-**Before**: Gemma could parse food items but lacked PCOS-specific reasoning for nutrition.
+**Before**: Gemma could parse food items but lacked PMOS-specific reasoning for nutrition.
 
 **After**: Gemma can:
 - Recommend meals dynamically (factoring in macro budget + time + circadian physiology)
@@ -236,7 +236,7 @@ Every recommendation traces back to this principle. Gemma should internalize thi
 - Route supplement questions (omega-3 vs MUFA tier-1 prioritization)
 - Integrate holistic metabolic support (fiber, inflammation, circadian timing)
 
-**Impact**: MacroManager transforms from "food logger" → "intelligent PCOS nutrition advisor."
+**Impact**: MacroManager transforms from "food logger" → "intelligent PMOS nutrition advisor."
 
 ---
 
@@ -262,7 +262,7 @@ Every recommendation traces back to this principle. Gemma should internalize thi
 ✓ **READY FOR PRODUCTION**
 
 All files created, validated, and indexed.  
-Gemma4:e2b can now load + reason across compressed PCOS nutrition knowledge.  
+Gemma4:e2b can now load + reason across compressed PMOS nutrition knowledge.  
 Expect improved food recommendations + macro adjustments + circadian-aware meal planning.
 
 ---

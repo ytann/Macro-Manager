@@ -20,7 +20,7 @@ async def test_onboarding_validation_fail():
         # This should currently pass because of .get() defaults,
         # but it should FAIL with OnboardingValidationError after the fix.
         with pytest.raises(OnboardingValidationError):
-            await service.calculate_pcos_baseline("Some bio text")
+            await service.calculate_pmos_baseline("Some bio text")
 
 
 @pytest.mark.asyncio
@@ -40,6 +40,6 @@ async def test_onboarding_validation_success():
     ]
     
     with patch('litellm.acompletion', return_value=valid_response):
-        result = await service.calculate_pcos_baseline("Some bio text")
+        result = await service.calculate_pmos_baseline("Some bio text")
         assert "calories" in result
         assert "protein" in result

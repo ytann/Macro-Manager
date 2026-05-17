@@ -1,4 +1,4 @@
-# QA Validation: PCOS Nutrition Knowledge Base for Gemma4:e2b
+# QA Validation: PMOS Nutrition Knowledge Base for Gemma4:e2b
 
 **Date**: May 15, 2026  
 **Purpose**: Lint check + logic validation before handoff to Gemma reasoning engine  
@@ -32,7 +32,7 @@
 ### Cross-Reference Check (Reference Docs vs Created Markdowns)
 
 #### File 01_IR_Pathophysiology.md
-**Source**: PCOS_Pathophysiology_Dense_Explanation.txt (lines 24-90)
+**Source**: PMOS_Pathophysiology_Dense_Explanation.txt (lines 24-90)
 
 | Claim | Reference | Status |
 |---|---|---|
@@ -50,11 +50,11 @@
 ---
 
 #### File 02_Macronutrient_Strategy.md
-**Source**: PCOS_Metabolic Syndrome Diet Evaluation.txt (lines 8-103)
+**Source**: PMOS_Metabolic Syndrome Diet Evaluation.txt (lines 8-103)
 
 | Claim | Reference | Status |
 |---|---|---|
-| 40/35/25 macro split optimal for PCOS | ✓ Line 10: "40% CHO, 35% PRO, 25% FAT" | ✓ Accurate |
+| 40/35/25 macro split optimal for PMOS | ✓ Line 10: "40% CHO, 35% PRO, 25% FAT" | ✓ Accurate |
 | Wycherley RCT (n=43): TEE ↑ 81 kcal/d | ✓ Line 13: "Total Energy Expenditure (EE) ↑ (+81 ± 82 kcal/d, P < 0.001)" | ✓ Exact match |
 | Fat mass loss -0.87 kg | ✓ Line 22: "Fat mass (FM) ↓ (-0.87 kg; 95% CI: -1.26 to -0.48 kg)" | ✓ Exact match |
 | FFM retention +0.43 kg | ✓ Line 24: "Fat-free mass (FFM) reduction mitigated (+0.43 kg; 95% CI: 0.09 to 0.78 kg)" | ✓ Exact match |
@@ -63,7 +63,7 @@
 | VPF sequencing trial (glucose iAUC ↓ 40.9%) | ✓ Line 97: "Glucose iAUC0-120 ↓ 40.9%" | ✓ Exact match |
 | VPF sequencing (insulin iAUC ↓ 31.7%) | ✓ Line 98: "Insulin iAUC0-120 ↓ 31.7%" | ✓ Exact match |
 | Bdiet (breakfast-heavy) → daily glucose AUC ↓ 20% | ✓ Line 47: "Overall Daily Glucose AUC ↓ 20%" | ✓ Exact match |
-| Soluble fiber +5-10g → 5-6% LDL reduction | ✓ PCOS Inflammation... line 137 | ✓ Accurate |
+| Soluble fiber +5-10g → 5-6% LDL reduction | ✓ PMOS Inflammation... line 137 | ✓ Accurate |
 
 **Verdict**: ✓ PASSED — All clinical data verified against source documents.
 
@@ -87,14 +87,14 @@
 ---
 
 #### File 04_Inflammation_Fiber_Lipids.md
-**Source**: PCOS Inflammation, Microbiome, Diet Guidelines.txt (lines 1-263)
+**Source**: PMOS Inflammation, Microbiome, Diet Guidelines.txt (lines 1-263)
 
 | Claim | Reference | Status |
 |---|---|---|
 | DOGMA hypothesis driving mechanism | ✓ Line 7: "Dysbiosis of Gut Microbiota (DOGMA) hypothesis" | ✓ Accurate |
 | Ruminococcus↑, Faecalibacterium↓ dysbiosis pattern | ✓ Line 51-68: Taxonomic alterations table | ✓ Accurate |
-| hs-CRP elevated in PCOS (SMD 1.26) | ✓ Line 4: "SMD 1.26; 95% CI: 0.99, 1.53" | ✓ Exact match |
-| Lean PCOS hs-CRP elevation (SMD 1.80) | ✓ Line 4: "SMD 1.80; 95% CI: 1.36, 2.25" | ✓ Exact match |
+| hs-CRP elevated in PMOS (SMD 1.26) | ✓ Line 4: "SMD 1.26; 95% CI: 0.99, 1.53" | ✓ Exact match |
+| Lean PMOS hs-CRP elevation (SMD 1.80) | ✓ Line 4: "SMD 1.80; 95% CI: 1.36, 2.25" | ✓ Exact match |
 | Fiber threshold <25 g/day pathological | ✓ Line 115-120: Pathological threshold section | ✓ Accurate |
 | Optimal fiber 28-36 g/day | ✓ Line 127-130: Optimal endocrine target | ✓ Accurate |
 | Omega-3: ↓ hs-CRP (SMD -0.29) | ✓ Line 153: "hs-CRP: Significant reduction (SMD -0.29)" | ✓ Exact match |
@@ -144,7 +144,7 @@
 
 ---
 
-## 4. Completeness Check: Core PCOS Concepts Covered
+## 4. Completeness Check: Core PMOS Concepts Covered
 
 | Concept | File | Status |
 |---|---|---|
@@ -262,7 +262,7 @@
 - [x] QA validation document created (this file)
 
 ### Deployment Steps
-1. Verify Gemma4:e2b can load markdown files from `wiki/pcos_nutrition/` directory
+1. Verify Gemma4:e2b can load markdown files from `wiki/pmos_nutrition/` directory
 2. Test trigger-phrase recognition against live queries
 3. Monitor reasoning chains for consistency across multi-file loads
 4. Log any edge cases (e.g., keto question) for future expansion
@@ -299,7 +299,7 @@
 - Gemma usability: 95/100 (minor: keto protocol not covered)
 - Completeness: 90/100 (edge cases noted)
 
-**Handoff Status**: Ready. Gemma4:e2b can ingest, route, and reason across all 4 files for PCOS nutrition recommendations with high confidence.
+**Handoff Status**: Ready. Gemma4:e2b can ingest, route, and reason across all 4 files for PMOS nutrition recommendations with high confidence.
 
 ---
 

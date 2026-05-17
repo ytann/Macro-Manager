@@ -1,11 +1,11 @@
 # MacroManager
  
-AI-powered nutrition tracking for PCOS/PCOD management. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)** + **one-shot onboarding with PCOS-calibrated macro targets**.
+AI-powered nutrition tracking for PMOS (prev. PCOS)/PCOD management. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)** + **one-shot onboarding with PMOS-calibrated macro targets**.
  
 ## Flow
 
 `User Input` -> `Item Extraction` -> `Background Resolution` -> `Status Polling` -> `Persistence` -> `Dashboard`
-`Onboarding Bio Text` -> `LLM Attribute Extraction` -> `PCOS Baseline Math (BMR/TDEE/Penalty/Macros)` -> `Goal Persistence`
+`Onboarding Bio Text` -> `LLM Attribute Extraction` -> `PMOS Baseline Math (BMR/TDEE/Penalty/Macros)` -> `Goal Persistence`
  
 ## Quick Start
  
@@ -40,7 +40,7 @@ MacroManager/
       database.py             # DatabaseManager: SQLite FTS5 + meals
       foodbank.py             # FoodbankService: lookups, web search, offline sync
       extraction.py           # ExtractionService: optimized single-pass LLM parsing
-      onboarding.py           # OnboardingService: PCOS baseline macros from bio text
+      onboarding.py           # OnboardingService: PMOS baseline macros from bio text
   prompts/
     prompts.yaml              # Externalized LLM prompts
   scripts/
@@ -82,7 +82,7 @@ MacroManager/
 | **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
 | **Canonicalization Layer** | Fuzzy matching (Levenshtein) to map typos/variations to existing DB entries, minimizing slow web searches |
 | **Advanced Macros** | Tracks Sugar, Saturated Fat, and Unsaturated Fat alongside primary macros |
-| **PCOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PCOS penalty -> 40/35/25 macro split |
+| **PMOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PMOS penalty -> 40/35/25 macro split |
 | **Global LLM Throttle** | Semaphore-based concurrency control to prevent local LLM (Ollama) saturation |
 | **Telemetry** | Standardized logging across all services for traceability |
 | **Granular Journal CRUD** | Inline quantity editing with ratio-based macro scaling and server-side validation |
@@ -95,7 +95,7 @@ MacroManager/
 - `GET /log/status/{meal_id}` — Poll status of background nutrition resolution
 - `POST /log` — Backward compatibility: synchronous parse and save
 - `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting and optional `hint` for better item identification.
-- `POST /onboard` — One-shot PCOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PCOS penalty (0.85x), sets daily macro goals
+- `POST /onboard` — One-shot PMOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PMOS penalty (0.85x), sets daily macro goals
 - `GET /summary` — Daily aggregated totals + goals AND static calendar week summary (Supports `date` param)
 - `POST /goals` — Update user macro targets
 - `GET /meals` — Chronological list of food items for a specific date

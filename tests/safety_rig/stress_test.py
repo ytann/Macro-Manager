@@ -30,7 +30,7 @@ async def run_stress_test():
     endpoints = [
         ("/log", {"text": "Apple 100g", "meal_type": "General"}),
         ("/planner", {"user_query": "What should I eat?", "remaining_macros": {"p": 10, "c": 20, "f": 10, "cal": 200}}),
-        ("/onboard", {"bio_text": "30yo female, 160cm, 70kg, active, PCOS"}),
+        ("/onboard", {"bio_text": "30yo female, 160cm, 70kg, active, PMOS"}),
         ("/memory", {"text": "I love blueberries"})
     ]
     

@@ -14,7 +14,7 @@ async def test_onboarding_math_maintain():
     with patch('litellm.acompletion', return_value=mock_response):
         service = OnboardingService()
         # We don't care about the text since we mock the response
-        result = await service.calculate_pcos_baseline("some bio text")
+        result = await service.calculate_pmos_baseline("some bio text")
 
     # Correct Math:
     # BMR = (10*60) + (6.25*160) - (5*30) - 161 = 600 + 1000 - 150 - 161 = 1289
@@ -39,7 +39,7 @@ async def test_onboarding_math_lose():
 
     with patch('litellm.acompletion', return_value=mock_response):
         service = OnboardingService()
-        result = await service.calculate_pcos_baseline("some bio text")
+        result = await service.calculate_pmos_baseline("some bio text")
     
     # BMR = 1289
     # TDEE = 1546.8

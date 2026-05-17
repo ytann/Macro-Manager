@@ -1,9 +1,9 @@
 # 📖 Project Details: MacroManager
 
 ## 1. Introduction
-MacroManager is an intelligent nutrition tracking system designed specifically for PCOS/PCOD dietary management. It bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately. 
+MacroManager is an intelligent nutrition tracking system designed specifically for PMOS (prev. PCOS)/PCOD dietary management. It bridges the gap between natural language food logging and precise nutritional analysis. The system is designed to handle the ambiguity of human speech and the complexity of regional cuisines, ensuring that every calorie is accounted for accurately. 
 
-A one-shot onboarding flow extracts user biometrics from free-text bios and calculates PCOS-calibrated macro targets to help users manage insulin resistance and metabolic health.
+A one-shot onboarding flow extracts user biometrics from free-text bios and calculates PMOS-calibrated macro targets to help users manage insulin resistance and metabolic health.
 
 ---
 
@@ -14,14 +14,14 @@ The system employs a decoupled **Client-Server Architecture**:
  
 *   **Frontend (Streamlit)**: A high-fidelity dashboard for logging food and visualizing progress. It utilizes a **"Plain Notebook" aesthetic** (Courier Prime typography, grid-paper background) to minimize cognitive load and create an emotionally intimate user experience. It features an interactive macro HUD, Integrated Voice-to-Log, and a granular, record-based Food Journal with inline editing.
 *   **Backend (FastAPI)**: An asynchronous orchestrator managing data flow between the LLM, nutrition database, user logs, and the vision pipeline. It implements **timezone-aware query logic** using SQLite's `localtime` to ensure data consistency across server/client boundaries.
-*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) and a **Clinical Copilot**. The system includes a **Medical Firewall** to ensure safety boundaries are maintained, prioritizing professional medical referral over AI diagnosis. Backend prompts are specifically **primed with PCOS metabolic context** to provide specialized, context-aware dietary guidance.
+*   **Nutritional Intelligence**: A hybrid system combining a local FTS5-powered database with a Gemma 4-driven web-search agent (Tavily API) and a **Clinical Copilot**. The system includes a **Medical Firewall** to ensure safety boundaries are maintained, prioritizing professional medical referral over AI diagnosis. Backend prompts are specifically **primed with PMOS metabolic context** to provide specialized, context-aware dietary guidance.
 *   **Persistence Layer (SQLite)**: Two specialized databases:
     *   `foodbank.db`: Static and learned food nutrition data.
     *   `macros.db`: User meal logs and goal settings.
 *   **Vision Pipeline**: A multimodal module that extracts food items from images with environment-aware portion size estimation.
 *   **Sovereign Memory**: A personalized dietary glossary (`personal_glossary.md`) and an inline dashboard input that stores user-specific facts (e.g., utensil sizes, dietary preferences) to enhance extraction accuracy.
 *   **Offline Sync Queue**: A robust background mechanism that captures unverified data while offline and automatically synchronizes with authoritative sources via a heartbeat lifecycle.
-*   **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PCOS-calibrated macro calculation.
+*   **Onboarding Engine**: LLM-driven attribute extraction from free-text bios, followed by deterministic PMOS-calibrated macro calculation.
 
 
 ### 2.2 Data Flow: The Async Pipeline
@@ -65,13 +65,13 @@ The Frontend polls `GET /log/status/{meal_id}` $\rightarrow$ Updates item spinne
 #### E. `PlannerService` (Clinical Copilot)
 Implements a three-stage routing pipeline to provide empathetic and safe dietary guidance:
 1. **Router**: Analyzes the user query to determine the intent (e.g., general advice, specific meal plan, or acute medical concern).
-2. **Knowledge Loader**: Fetches relevant PCOS nutrition constraints from the wiki/knowledge base.
+2. **Knowledge Loader**: Fetches relevant PMOS nutrition constraints from the wiki/knowledge base.
 3. **Clinical Copilot**: Synthesizes a tailored plan using the `meal_copilot` prompt, strictly adhering to a **Medical Firewall** that refers acute symptoms or prescription requests to a physician.
 1.  **BMR (Mifflin-St Jeor)**: `(10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161` (Age default: 25).
 2.  **TDEE**: `BMR * activity_level`
     *   *Sedentary*: 1.2 | *Light*: 1.375 | *Moderate*: 1.55 | *Active*: 1.725
 3.  **Goal Modifier**: Applied to TDEE: `Lose: -500` | `Maintain: 0` | `Gain: +500`.
-4.  **PCOS Penalty**: `target_calories = adjusted_tdee * 0.85` (15% metabolic reduction).
+4.  **PMOS Penalty**: `target_calories = adjusted_tdee * 0.85` (15% metabolic reduction).
 5.  **Macro Split (40/35/25)**:
     *   **Protein**: `(target_calories * 0.4) / 4`
     *   **Fat**: `(target_calories * 0.35) / 9`
@@ -108,7 +108,7 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 | **Clinical Copilot** | AI-driven meal planning with integrated Medical Firewall | PlannerService $\rightarrow$ Router $\rightarrow$ Copilot |
 | **Medical Firewall** | Safety guardrail to prevent AI medical diagnosis | System Role Boundaries |
 | **Regional Support** | Complex dish decomposition using Expert Estimator + Category Fallback | Recipe Expansion $\rightarrow$ Ingredient-Based Inference |
-| **PCOS Calibration** | Bio-text $\rightarrow$ Calibrated macro targets | Onboarding Engine + metabolic penalty |
+| **PMOS Calibration** | Bio-text $\rightarrow$ Calibrated macro targets | Onboarding Engine + metabolic penalty |
 | **Atwater Guardrail** | Corrects LLM calorie deviations > 20% | `Cals = P*4 + C*4 + F*9` |
 | **Interactive HUD** | 3D Glass flip-cards for macros and sub-macros | Custom CSS/HTML + Streamlit |
 
@@ -119,7 +119,7 @@ The system leverages **Gemma 4 (`gemma4:e2b`)** as its cognitive core for multip
 | `/log/start` | `POST` | Extract items from text; start background resolution. Returns `meal_id`. |
 | `/log/status/{id}` | `GET` | Poll resolution status (`processing` $\rightarrow$ `completed`). |
 | `/vision-log` | `POST` | Multimodal extraction from image $\rightarrow$ Resolve $\rightarrow$ Save. |
-| `/onboard` | `POST` | Bio-text $\rightarrow$ Calculate PCOS targets $\rightarrow$ Save goals. |
+| `/onboard` | `POST` | Bio-text $\rightarrow$ Calculate PMOS targets $\rightarrow$ Save goals. |
 | `/summary` | `GET` | Daily aggregated totals + goals + weekly buffer. |
 | `/meals` | `GET` | Chronological list of today's food items. |
 | `/goals` | `POST` | Manual update of macro targets. |

@@ -21,7 +21,7 @@ class OnboardingService:
         with open(Config.PROMPTS_PATH, 'r') as f:
             return yaml.safe_load(f)
 
-    async def calculate_pcos_baseline(self, text: str) -> dict:
+    async def calculate_pmos_baseline(self, text: str) -> dict:
         prompt = self.prompts['extraction']['onboarding_parse'].format(text=text)
         resp = await safe_acompletion(
             model=self.model,
@@ -57,15 +57,15 @@ class OnboardingService:
         adjusted_tdee = tdee + modifier
 
         # Apply clinical metabolic penalty and ensure safety bounds
-        target_calories = round(adjusted_tdee * ClinicalConstants.PCOS_METABOLIC_PENALTY)
+        target_calories = round(adjusted_tdee * ClinicalConstants.PMOS_METABOLIC_PENALTY)
         target_calories = max(ClinicalConstants.MIN_DAILY_CALORIES, min(target_calories, ClinicalConstants.MAX_DAILY_CALORIES))
 
         # Macro Split: 40% Carbs, 35% Protein, 25% Fat (Wycherley RCT)
-        carbs = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["CHO"]) / 4)
-        protein = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["PRO"]) / 4)
-        fat = round((target_calories * ClinicalConstants.PCOS_MACRO_SPLIT["FAT"]) / 9)
+        carbs = round((target_calories * ClinicalConstants.PMOS_MACRO_SPLIT["CHO"]) / 4)
+        protein = round((target_calories * ClinicalConstants.PMOS_MACRO_SPLIT["PRO"]) / 4)
+        fat = round((target_calories * ClinicalConstants.PMOS_MACRO_SPLIT["FAT"]) / 9)
 
-        logger.info(f"PCOS baseline calculated: cal={target_calories}, p={protein}, c={carbs}, f={fat}")
+        logger.info(f"PMOS baseline calculated: cal={target_calories}, p={protein}, c={carbs}, f={fat}")
 
         return {
             "protein": float(protein),

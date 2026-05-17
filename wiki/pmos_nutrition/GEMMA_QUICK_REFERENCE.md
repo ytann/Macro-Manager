@@ -1,4 +1,4 @@
-# Gemma Quick-Reference: PCOS Nutrition Decision Tree
+# Gemma Quick-Reference: PMOS Nutrition Decision Tree
 
 **For ultra-fast query routing + reasoning without full file load.**
 

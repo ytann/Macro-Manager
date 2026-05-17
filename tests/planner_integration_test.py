@@ -8,7 +8,7 @@ async def test_planner_basic_flow():
     planner = PlannerService()
     
     # Mock data
-    user_query = "What should I eat for dinner to manage my PCOS?"
+    user_query = "What should I eat for dinner to manage my PMOS?"
     remaining_macros = {"calories": 500, "protein": 30, "carbs": 40, "fat": 15}
     
     try:

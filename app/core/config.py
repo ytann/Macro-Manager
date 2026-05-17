@@ -26,15 +26,15 @@ class Config:
 
 class ClinicalConstants:
     """
-    Clinically validated constants for PCOS nutritional management.
+    Clinically validated constants for PMOS nutritional management.
     """
     # 15% metabolic reduction to account for insulin resistance / mitochondrial dysfunction
-    # Citation: general PCOS metabolic adaptation baseline
-    PCOS_METABOLIC_PENALTY = 0.85
+    # Citation: general PMOS metabolic adaptation baseline
+    PMOS_METABOLIC_PENALTY = 0.85
 
     # Macro split: 40% Carbs, 35% Protein, 25% Fat
-    # Citation: Wycherley RCT (n=43) & meta-analysis on high-protein/low-GI for PCOS
-    PCOS_MACRO_SPLIT = {
+    # Citation: Wycherley RCT (n=43) & meta-analysis on high-protein/low-GI for PMOS
+    PMOS_MACRO_SPLIT = {
         "CHO": 0.40,
         "PRO": 0.35,
         "FAT": 0.25

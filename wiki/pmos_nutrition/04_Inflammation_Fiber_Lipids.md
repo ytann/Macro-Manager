@@ -1,6 +1,6 @@
 # Inflammation, Dysbiosis & Dietary Fiber
 
-## PCOS Pathology Loop: DOGMA Hypothesis
+## PMOS Pathology Loop: DOGMA Hypothesis
 
 **Dysbiosis of Gut Microbiota (DOGMA)** = root mechanism driving systemic inflammation.
 
@@ -32,11 +32,11 @@ High-Sugar/High-Fat Diet + Hyperandrogenism
 
 ## Dysbiosis Fingerprint: Taxonomic Alterations
 
-| Bacteria | Direction | Effect | PCOS Consequence |
+| Bacteria | Direction | Effect | PMOS Consequence |
 |---|---|---|---|
 | **Ruminococcus gnavus** | ↑ | Mucus layer degradation | Barrier compromise |
 | **Bacteroides fragilis** | ↑ | Alters bile acid synthesis, ↓ IL-22 | IR progression |
-| **Dialister succinatiphilus** | ↑ | Associated with metabolic dysregulation | Non-obese PCOS phenotypes |
+| **Dialister succinatiphilus** | ↑ | Associated with metabolic dysregulation | Non-obese PMOS phenotypes |
 | **Prevotella / Paraprevotella** | ↓ | Impairs complex CHO fermentation | ↓ SCFA output |
 | **Faecalibacterium** | ↓ | Key butyrate producer loss | IEC starvation + inflammation |
 | **Christensenellaceae** | ↓ | Loss correlates directly with adiposity | MetS fingerprint |
@@ -49,13 +49,13 @@ High-Sugar/High-Fat Diet + Hyperandrogenism
 
 ---
 
-## Systemic Inflammation Biomarkers (PCOS vs Controls)
+## Systemic Inflammation Biomarkers (PMOS vs Controls)
 
 **Meta-analysis (85 eligible studies, 63 pooled, n=7206)**:
 
-| Biomarker | Direction | PCOS vs Controls | Independence from Obesity |
+| Biomarker | Direction | PMOS vs Controls | Independence from Obesity |
 |---|---|---|---|
-| **hs-CRP** | ↑ | SMD 1.26 (95% CI: 0.99-1.53) | Elevated even in lean PCOS (SMD 1.80) |
+| **hs-CRP** | ↑ | SMD 1.26 (95% CI: 0.99-1.53) | Elevated even in lean PMOS (SMD 1.80) |
 | **TNF-α, IL-6, IL-8** | ↑ | — | Pro-inflammatory cytokine trio |
 | **VCAM-1, ADMA** | ↑ | — | Endothelial dysfunction |
 | **Homocysteine** | ↑ | — | Oxidative stress marker |
@@ -92,7 +92,7 @@ Soluble Fiber (Inulin, Oligofructose, Pectin)
     4. Suppress inflammation via HDAC inhibition → acetylation of histones
 ```
 
-**PCOS-specific**: SCFA absorption reduced, fecal SCFA elevated. Enhancing SCFA absorption directly inhibits intestinal + systemic inflammation (fecal SCFA ↑ correlates with TNF-α, IL-6).
+**PMOS-specific**: SCFA absorption reduced, fecal SCFA elevated. Enhancing SCFA absorption directly inhibits intestinal + systemic inflammation (fecal SCFA ↑ correlates with TNF-α, IL-6).
 
 ---
 
@@ -109,7 +109,7 @@ Soluble Fiber (Inulin, Oligofructose, Pectin)
 
 ---
 
-## Clinical Fiber Thresholds for PCOS
+## Clinical Fiber Thresholds for PMOS
 
 ### Pathological Zone: <25 g/day
 **Observational data defines failure points:**
@@ -130,11 +130,11 @@ Soluble Fiber (Inulin, Oligofructose, Pectin)
 
 ### Aggressive Protocol: 40 g/day
 - PCRM plant-powered prescription (fruit, vegetable, whole grain, legume focus; replace meat/dairy with beans/tofu)
-- Strongest predictor of weight loss in overweight/obese PCOS women
+- Strongest predictor of weight loss in overweight/obese PMOS women
 
 ### Soluble-Specific Target: +5-10 g/day
 - Meta-analysis: Increasing soluble fiber by 5-10 g/day yields 5-6% LDL-C reduction alone
-- Critical for PCOS cardiovascular risk mitigation
+- Critical for PMOS cardiovascular risk mitigation
 
 ---
 
@@ -175,7 +175,7 @@ Soluble Fiber (Inulin, Oligofructose, Pectin)
 | **Oxidative Stress (MDA/GSH)** | No effect | Null — does NOT exert antioxidative action |
 
 **Clinical Restraint**: High cost + mixed metabolic efficacy requires precision targeting.
-- **Reserve use strictly for**: PCOS >40 years exhibiting dyslipidemia + high cardiovascular risk + severe inflammatory symptoms
+- **Reserve use strictly for**: PMOS >40 years exhibiting dyslipidemia + high cardiovascular risk + severe inflammatory symptoms
 - **Pregnancy caution**: Avoid EPA during pregnancy (growth factor suppression risk). DHA preferred for fertility-seeking women.
 
 #### Dosage
@@ -185,7 +185,7 @@ Soluble Fiber (Inulin, Oligofructose, Pectin)
 
 ---
 
-## Anti-Inflammatory Lipids: MUFAs (Superior for PCOS)
+## Anti-Inflammatory Lipids: MUFAs (Superior for PMOS)
 
 ### Biochemical Mechanism
 - One double bond (oleic acid)

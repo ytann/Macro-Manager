@@ -1,4 +1,4 @@
-# PCOS Insulin Resistance Pathophysiology
+# PMOS Insulin Resistance Pathophysiology
 
 ## Root Mechanism: IRS-1 Serine Phosphorylation Block
 
@@ -6,7 +6,7 @@
 
 ```
 Normal: Insulin → INSR → IRS-1 Tyrosine Phosph → PI3K/Akt → GLUT4 uptake → glucose disposal ✓
-PCOS:   Insulin → INSR → IRS-1 SERINE Phosph (Ser307/312) → PI3K/Akt BLOCKED → NO glucose uptake ✗
+PMOS:   Insulin → INSR → IRS-1 SERINE Phosph (Ser307/312) → PI3K/Akt BLOCKED → NO glucose uptake ✗
 ```
 
 **Effect**: Peripheral glucose intolerance → pancreas hyper-secretes insulin → compensatory hyperinsulinemia.
@@ -23,7 +23,7 @@ PCOS:   Insulin → INSR → IRS-1 SERINE Phosph (Ser307/312) → PI3K/Akt BLOCK
 
 ### Liver (Hepatic IR)
 - Unrestrained gluconeogenesis (FoxO1 remains unphosphorylated, stays in nucleus)
-- Massive de novo lipogenesis (SREBP-1c overactive) → NAFLD risk (37.5% in PCOS adolescents)
+- Massive de novo lipogenesis (SREBP-1c overactive) → NAFLD risk (37.5% in PMOS adolescents)
 - SHBG suppression via 3 converging pathways:
   - Insulin directly downregulates HNF-4α (SHBG activator)
   - Lipid intermediates from DNL block HNF-4α
@@ -72,7 +72,7 @@ Pancreas detects IR-induced hyperglycemia → hypersecrets insulin → continuou
 
 ## Summary for Gemma Reasoning
 
-**PCOS Root**: IRS-1 serine phosphorylation blocks muscle/liver/adipose glucose disposal.
+**PMOS Root**: IRS-1 serine phosphorylation blocks muscle/liver/adipose glucose disposal.
 
 **Compensatory Response**: Pancreas hypersecrets insulin → hyperinsulinemia.
 

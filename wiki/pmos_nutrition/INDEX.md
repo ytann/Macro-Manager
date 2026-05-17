@@ -1,7 +1,7 @@
-# PCOS Nutrition Knowledge Index
+# PMOS Nutrition Knowledge Index
 ## For Gemma4:e2b Reasoning Engine
 
-**Purpose**: Dense, trigger-based routing table for small LLM food recommendations + macro adjustments in PCOS/PCOD context.
+**Purpose**: Dense, trigger-based routing table for small LLM food recommendations + macro adjustments in PMOS/PCOD context.
 
 **Context Window Optimization**: Each file 500-1000 tokens. Gemma loads specific file based on trigger.
 
@@ -14,7 +14,7 @@
   - → Load: **01_IR_Pathophysiology.md**
   - **Contains**: IRS-1 serine phosphorylation block, tissue-specific IR profiles, selective ovarian paradox, macro intervention leverage
 
-- **Trigger**: "How does PCOS develop?" / "What's the cascade?" / "Explain the vicious cycle"
+- **Trigger**: "How does PMOS develop?" / "What's the cascade?" / "Explain the vicious cycle"
   - → Load: **01_IR_Pathophysiology.md** + **04_Inflammation_Fiber_Lipids.md**
   - **Contains**: Root mechanism + DOGMA dysbiosis loop
 
@@ -69,7 +69,7 @@
 User: "I'm confused. The dietitian said high protein is good, but won't that spike insulin?"
 
 Gemma (internally loads 02_Macronutrient_Strategy.md but reason using 01):
-"You're right that protein ↑ insulin AUC. BUT in PCOS, the mechanism is different.
+"You're right that protein ↑ insulin AUC. BUT in PMOS, the mechanism is different.
 Your ovarian cells are insulin-SENSITIVE despite systemic resistance. The problem isn't
 protein spiking insulin — it's NAKED CARBS causing chaotic, extreme insulin peaks that
 overstimulate your ovaries. Protein buffering flattens the curve. Combined with timing
@@ -231,7 +231,7 @@ Why: Protein/fat/fiber preload → GLP-1 pre-priming → delays CHO entry into d
 
 **Example chunk tags** (for 02_Macronutrient_Strategy.md):
 ```
-chunk_1: "Optimal PCOS Macro Split"
+chunk_1: "Optimal PMOS Macro Split"
   triggers: ["what macros", "40/35/25", "macro split", "protein/fat/carb ratio"]
   
 chunk_7: "Gemma Recommendation Algorithm"
@@ -279,7 +279,7 @@ chunk_11: "VPF Sequencing"
 
 ## Validation Checklist (Before Handoff to Gemma)
 
-- [ ] All 4 files created and saved in `wiki/pcos_nutrition/` directory
+- [ ] All 4 files created and saved in `wiki/pmos_nutrition/` directory
 - [ ] Each file 500-1000 tokens (confirm via word count)
 - [ ] Trigger phrases in index match actual content in files
 - [ ] No contradictions between files

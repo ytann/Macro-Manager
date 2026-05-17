@@ -9,7 +9,7 @@ LLM_MODEL = "ollama/gemma4:e2b"
 
 class PlannerService:
     def __init__(self):
-        self.knowledge_dir = "wiki/pcos_nutrition"
+        self.knowledge_dir = "wiki/pmos_nutrition"
         self.file_map = {
             "01": "01_IR_Pathophysiology.md",
             "02": "02_Macronutrient_Strategy.md",
@@ -81,20 +81,20 @@ class PlannerService:
             return await self._handle_fast_path(user_query, personal_glossary)
 
         # STEP 2: LOAD KNOWLEDGE (The Hands)
-        pcos_context = ""
+        pmos_context = ""
         for fid in file_ids:
             filename = self.file_map.get(str(fid).zfill(2))
             if filename:
                 filepath = os.path.join(self.knowledge_dir, filename)
                 if os.path.exists(filepath):
                     with open(filepath, "r", encoding="utf-8") as f:
-                        pcos_context += f"--- {filename} ---\n{f.read()}\n\n"
+                        pmos_context += f"--- {filename} ---\n{f.read()}\n\n"
 
         # STEP 3: THE CLINICAL COPILOT (Heavy Call)
         copilot_text = self.prompts["meal_copilot"].format(
             user_query=user_query,
             remaining_macros=json.dumps(remaining_macros),
-            pcos_context=pcos_context,
+            pmos_context=pmos_context,
             personal_glossary=personal_glossary
         )
 
@@ -125,7 +125,7 @@ class PlannerService:
             # Only force fast if it's NOT also clinical
             # (e.g., "Hello, why is my insulin high?" should be clinical)
             clinical_check = [
-                "pcos", "pcod", "insulin", "hormone", "ovary", "androgen", 
+                "pmos", "pcod", "insulin", "hormone", "ovary", "androgen", 
                 "eat", "food", "meal", "rice", "sugar", "carb", "protein", "fat", 
                 "macro", "split", "fiber", "pain", "abdominal", "symptom", 
                 "diagnosis", "diagnose", "treatment", "weight", "glucose"
@@ -135,7 +135,7 @@ class PlannerService:
 
         # 2. Clinical-Path Guard: Force 'clinical' for safety-critical terms
         clinical_keywords = [
-            "pcos", "pcod", "insulin", "hormone", "ovary", "androgen", 
+            "pmos", "pcod", "insulin", "hormone", "ovary", "androgen", 
             "eat", "food", "meal", "rice", "sugar", "carb", "protein", "fat", 
             "macro", "split", "fiber", "pain", "abdominal", "symptom", 
             "diagnosis", "diagnose", "treatment", "weight", "glucose", 

@@ -299,7 +299,7 @@ async def update_goals(request: GoalRequest):
 @app.post("/onboard")
 async def onboard(request: OnboardRequest):
     try:
-        macros = await onboarding_service.calculate_pcos_baseline(request.bio_text)
+        macros = await onboarding_service.calculate_pmos_baseline(request.bio_text)
         db_manager.set_daily_goals(
             protein=macros["protein"],
             carbs=macros["carbs"],

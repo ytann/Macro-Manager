@@ -21,7 +21,7 @@ app/
                         Provides `run_foodbank()` and `run_macros()` helpers for efficient thread-safe execution.
       foodbank.py       FoodbankService: Consolidated nutrition resolution logic. Implements Canonicalization Layer (fuzzy matching) and L1 in-memory caching to bypass DB/Web latency. Handles DB lookups, web search, offline estimates, and verification queue. Provides close() for resource cleanup.
        extraction.py     ExtractionService: Decoupled async pipeline (Item Extraction -> Background Resolution). Unified Resolution Engine (_resolve_and_build_log) for both text and vision paths. Vision pipeline handles multimodal payload (text + image + optional hint) for Home/Wild estimation.
-       onboarding.py     OnboardingService: PCOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
+       onboarding.py     OnboardingService: PMOS baseline macro calibration from user bio text using Pydantic validation for extracted attributes.
        planner.py         PlannerService: Clinical Copilot orchestration. Implements Router -> Knowledge -> Copilot flow with a Medical Firewall to prevent AI medical diagnosis.
 
 
@@ -38,9 +38,9 @@ wiki/                 QA rules, logic docs, agent index
 
 ```
 Onboarding Flow:
-User Bio Text -> OnboardingService.calculate_pcos_baseline()
+User Bio Text -> OnboardingService.calculate_pmos_baseline()
   -> LLM Extraction (onboarding_parse prompt) -> {height, weight, activity, goal}
-  -> Math: BMR (Mifflin-St Jeor) -> TDEE -> Goal Modifier -> PCOS Penalty (0.85x) -> Macro Split (40/35/25)
+  -> Math: BMR (Mifflin-St Jeor) -> TDEE -> Goal Modifier -> PMOS Penalty (0.85x) -> Macro Split (40/35/25)
   -> Persist to macros.db (goals table)
 
 Food Logging Flow:
@@ -64,7 +64,7 @@ User Text -> ExtractionService.extract_items()
 Clinical Copilot Flow:
 User Query -> PlannerService.plan()
   1. Router analyzes intent (General vs. Specific vs. Medical)
-  2. Knowledge Loader fetches relevant PCOS guidelines from wiki
+  2. Knowledge Loader fetches relevant PMOS guidelines from wiki
   3. Clinical Copilot generates empathetic plan (meal_copilot prompt)
   4. Medical Firewall validates output (Halt and refer if acute symptoms/prescriptions detected)
   5. Returns tailored plan + legal disclaimer to UI
@@ -105,4 +105,4 @@ Heartbeat (asyncio task, lifespan-managed):
 - **Offline-first**: DB cached data returned immediately when offline; unverified items queued for later sync
 - **Atwater guardrail**: LLM calorie estimates validated against macro-derived calories
 - **L1 Cache**: In-memory lookup for frequent food items to eliminate redundant DB/network roundtrips
-- **PCOS Calibration**: Deterministic BMR/TDEE calculation with a 15% metabolic penalty to provide clinically relevant targets for insulin-resistant profiles
+- **PMOS Calibration**: Deterministic BMR/TDEE calculation with a 15% metabolic penalty to provide clinically relevant targets for insulin-resistant profiles

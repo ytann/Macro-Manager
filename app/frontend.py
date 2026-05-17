@@ -1,6 +1,6 @@
 """
 MacroManager — Notebook-aesthetic Streamlit frontend
-PCOS-focused nutrition tracking interface.
+PMOS (prev. PCOS)-focused nutrition tracking interface.
 Connects to FastAPI backend at API_URL (default: http://localhost:8000).
 """
 
@@ -243,6 +243,26 @@ div[data-testid="stHorizontalBlock"]:has(div .journal-row-item) > div {
 }
 div[data-testid="stHorizontalBlock"]:has(div .journal-row-item) > div {
     min-width: 0 !important; /* Allow columns to shrink below their default min-width */
+}
+
+/* ── Square Journal Buttons ── */
+div[data-testid="stHorizontalBlock"]:has(div .journal-row-item) [data-testid="stButton"] {
+    width: 25px !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+div[data-testid="stHorizontalBlock"]:has(div .journal-row-item) button {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 /* Clean borders for containers */
@@ -1206,23 +1226,23 @@ def render_onboarding_page():
         f'<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:28px;'
         f'color:#2a1f10;margin:0;line-height:1.1;">📓 MacroManager</p>'
         f'<p style="font-size:14px;color:#7a6d5a;margin:6px 0 0 0;font-weight:500;letter-spacing:0.3px;">'
-        f'PCOS goals & calibration</p>'
+        f'PMOS goals & calibration</p>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
     st.markdown(
         '<p style="font-family:\'Courier Prime\',monospace;font-weight:bold;font-size:17px;'
-        'color:#2a1f10;margin:0 0 6px;">PCOS baseline calibrator</p>'
+        'color:#2a1f10;margin:0 0 6px;">PMOS baseline calibrator</p>'
         '<p style="font-size:13px;color:#9a8d7c;margin-bottom:12px;">'
-        'Describe your profile for personalised PCOS macronutrient targets.</p>',
+        'Describe your profile for personalised PMOS macronutrient targets.</p>',
         unsafe_allow_html=True,
     )
     bio = st.text_area(
         "tell us about yourself",
         placeholder=(
             "e.g. 26F, 58 kg, 163 cm, lightly active, "
-            "managing PCOS, want to reduce insulin resistance…"
+            "managing PMOS, want to reduce insulin resistance…"
         ),
         height=95,
         key="bio_text",
@@ -1230,7 +1250,7 @@ def render_onboarding_page():
     )
     if st.button("calculate my goals →", key="btn_onboard", use_container_width=True):
         if bio.strip():
-            with st.spinner("Calculating PCOS-adjusted goals…"):
+            with st.spinner("Calculating PMOS-adjusted goals…"):
                 try:
                     res = api_onboard(bio.strip())
                     mx  = res.get("macros", {})
@@ -1291,7 +1311,7 @@ def render_pending_meal_log():
     
     status_messages = [
         "Extracting food items from your text…",
-        "Looking up clinical PCOS nutrition data…",
+        "Looking up clinical PMOS nutrition data…",
         "Calibrating insulin response values…",
         "Writing entries into food journal…",
     ]
@@ -1358,7 +1378,7 @@ def render_pending_vision_log():
                     <div class="loader-icon">📸</div>
                 </div>
                 <div class="loader-title">Analyzing Photo</div>
-                <div class="loader-message">Our clinical vision model is analyzing your photo and estimating PCOS-calibrated macronutrients…</div>
+                <div class="loader-message">Our clinical vision model is analyzing your photo and estimating PMOS-calibrated macronutrients…</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1396,7 +1416,7 @@ def render_dashboard_page():
     render_hud()
     render_message()
     
-    if st.button("edit goals", key="btn_goto_onboarding", help="Edit your PCOS goals", use_container_width=True):
+    if st.button("edit goals", key="btn_goto_onboarding", help="Edit your PMOS goals", use_container_width=True):
         st.session_state.current_page = "onboarding"
         st.rerun()
 
@@ -1418,21 +1438,21 @@ def render_dashboard_page():
     
     st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
     
-    # Bottom section: AI Tools (Copilot + Memory)
-    col_copilot, col_memory = st.columns(2)
-    with col_copilot:
-        if st.button("💬 copilot", key="btn_copilot_modal", use_container_width=True):
+    # Bottom section: AI Tools (Dietician + Memory)
+    col_dietician, col_memory = st.columns(2)
+    with col_dietician:
+        if st.button("💬 dietician", key="btn_copilot_modal", use_container_width=True):
             st.session_state.copilot_modal_open = True
     with col_memory:
-        if st.button("📝 notes", key="btn_memory_modal", use_container_width=True):
+        if st.button("📝 remember this!", key="btn_memory_modal", use_container_width=True):
             st.session_state.memory_modal_open = True
     
-    # --- Copilot Modal ---
+    # --- Dietician Modal ---
     if st.session_state.get("copilot_modal_open", False):
         with st.container(border=True):
             st.markdown("""
             <p style="font-family:'Courier Prime',monospace;font-weight:bold;font-size:16px;
-            color:#2a1f10;margin:0 0 12px;">Clinical Copilot</p>
+            color:#2a1f10;margin:0 0 12px;">Clinical Dietician</p>
             """, unsafe_allow_html=True)
             
             c, g = st.session_state.consumed, st.session_state.goals
@@ -1460,13 +1480,13 @@ def render_dashboard_page():
                     if msg["role"] == "user":
                         st.markdown(f'<div style="text-align:right;color:#2a1f10;margin:6px 0;"><strong>You:</strong> {msg["content"]}</div>', unsafe_allow_html=True)
                     else:
-                        st.markdown(f'<div style="color:#7F77DD;margin:6px 0;"><strong>Copilot:</strong> {msg["content"]}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style="color:#7F77DD;margin:6px 0;"><strong>Dietician:</strong> {msg["content"]}</div>', unsafe_allow_html=True)
                 
-                # Render the gorgeous pulsing bubble when Copilot is thinking
+                # Render the gorgeous pulsing bubble when Dietician is thinking
                 if st.session_state.get("copilot_pending_query"):
                     st.markdown("""
                     <div class="copilot-thinking-bubble">
-                        <strong style="color:#7F77DD;margin-right:6px;">Copilot is thinking</strong>
+                        <strong style="color:#7F77DD;margin-right:6px;">Dietician is thinking ...</strong>
                         <div class="dot-pulse"></div>
                         <div class="dot-pulse"></div>
                         <div class="dot-pulse"></div>

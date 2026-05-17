@@ -32,22 +32,22 @@ TEST_CASES = [
     
     # --- CLINICAL PATH CASES (Must NEVER be fast) ---
     ("What should I eat for lunch?", "clinical"),
-    ("I have PCOS, why is my insulin high?", "clinical"),
+    ("I have PMOS, why is my insulin high?", "clinical"),
     ("Can I eat white rice?", "clinical"),
     ("What is the best macro split for me?", "clinical"),
     ("I have sharp abdominal pain, what do I eat?", "clinical"),
     ("Suggest a dinner with salmon", "clinical"),
     ("Explain VPF sequencing", "clinical"),
-    ("How does fiber help PCOS?", "clinical"),
+    ("How does fiber help PMOS?", "clinical"),
     ("Can I eat brown rice instead of white?", "clinical"),
     ("Why should I avoid sugar in the evening?", "clinical"),
     ("What is the difference between soluble and insoluble fiber?", "clinical"),
     ("How does protein affect my insulin?", "clinical"),
-    ("Is cinnamon good for PCOS insulin resistance?", "clinical"),
+    ("Is cinnamon good for PMOS insulin resistance?", "clinical"),
     ("I'm craving chocolate, how can I fit it in?", "clinical"),
-    ("What are the best vegetables for PCOS?", "clinical"),
+    ("What are the best vegetables for PMOS?", "clinical"),
     ("Does eating late at night affect my hormones?", "clinical"),
-    ("Should I follow a keto diet for PCOS?", "clinical"),
+    ("Should I follow a keto diet for PMOS?", "clinical"),
     ("Can you suggest a high-protein breakfast?", "clinical"),
     ("Why is my energy crashing after lunch?", "clinical"),
     ("Is intermittent fasting good for PCOD?", "clinical"),
@@ -55,11 +55,11 @@ TEST_CASES = [
     ("How do MUFAs help with androgens?", "clinical"),
     ("Can I have a cheat meal on Sunday?", "clinical"),
     ("What happens if I exceed my carb limit today?", "clinical"),
-    ("Is whey protein safe for PCOS?", "clinical"),
+    ("Is whey protein safe for PMOS?", "clinical"),
     ("Why do I have such strong cravings for sweets?", "clinical"),
     ("I have severe acne, what should I change in my diet?", "clinical"),
     ("Can you explain the 'second-meal effect'?", "clinical"),
-    ("What is the impact of saturated fat on PCOS?", "clinical"),
+    ("What is the impact of saturated fat on PMOS?", "clinical"),
     ("How do I use the Cheat Bank?", "clinical"),
     ("I'm feeling very fatigued, any dietary tips?", "clinical"),
 ]
@@ -100,7 +100,7 @@ async def test_router_leak():
                 
                 is_clinical_response = (
                     len(content_lower) > 100 or 
-                    any(word in content_lower for word in ["clinical", "basis", "macros", "meal plan", "recommend", "pcos", "insulin", "strategy"])
+                    any(word in content_lower for word in ["clinical", "basis", "macros", "meal plan", "recommend", "pmos", "insulin", "strategy"])
                 )
                 
                 if expected == "clinical" and not is_clinical_response:
