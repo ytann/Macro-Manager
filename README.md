@@ -1,113 +1,93 @@
-# MacroManager
- 
-AI-powered nutrition tracking for PMOS (prev. PCOS)/PCOD management. Natural language food logs -> precise macro-nutrient data. Multi-pass extraction pipeline + authoritative "Source of Truth" learning system + offline-capable sync queue + **vision-based food extraction (Home vs. Wild)** + **one-shot onboarding with PMOS-calibrated macro targets**.
- 
-## Flow
+# 📓 MacroManager
 
-`User Input` -> `Item Extraction` -> `Background Resolution` -> `Status Polling` -> `Persistence` -> `Dashboard`
-`Onboarding Bio Text` -> `LLM Attribute Extraction` -> `PMOS Baseline Math (BMR/TDEE/Penalty/Macros)` -> `Goal Persistence`
- 
-## Quick Start
- 
+AI-powered nutrition tracking specialized for **PMOS (prev. PCOS)/PCOD** management. It transforms natural language food logs into precise macro-nutrient data using a multi-pass extraction pipeline and a clinical knowledge base.
+
+## ✨ Key Features
+
+- **📓 Plain Notebook UI**: High-fidelity, emotionally intimate aesthetic (Courier Prime typography, grid-paper background) designed to reduce cognitive load.
+- **🎯 PMOS Calibration**: One-shot onboarding that extracts biometrics from free-text bios and calculates PMOS-calibrated macro targets (including a 15% metabolic penalty).
+- **📝 Intelligent Food Journal**: 
+  - **Inline Editing**: Update quantities directly in the journal; macros scale proportionally in real-time.
+  - **Timezone Alignment**: Server-side `localtime` synchronization to prevent "ghost entries" and date mismatches.
+- **📷 Vision Extraction**: Multimodal food analysis with environment-aware portion estimation (`Home` vs `Wild`).
+- **🩺 Clinical Copilot**: AI-driven dietary guidance primed with PMOS metabolic context, protected by a **Medical Firewall** to ensure safety.
+- **🔄 Sovereign Memory**: A personalized dietary glossary that remembers your specific utensil sizes and food preferences.
+- **📡 Offline-Ready**: Async sync queue with heartbeat lifecycle for seamless logging in low-connectivity areas.
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- **Ollama** installed and running.
+- Model pulled: `ollama pull gemma4:e2b`
+
+### 2. Installation
 ```bash
-# Prerequisites: Ollama running, gemma4:e2b pulled
 pip install -r requirements.txt
- 
-# Terminal 1: Backend API
+```
+
+### 3. Running the App
+Open two terminal windows:
+
+**Terminal 1: Backend API**
+```bash
 export PYTHONPATH=$PYTHONPATH:.
 python -m app.api
- 
-# Terminal 2: Frontend Dashboard
+```
+
+**Terminal 2: Frontend Dashboard**
+```bash
 export PYTHONPATH=$PYTHONPATH:.
 streamlit run app/frontend.py
 ```
- 
-## Project Structure
- 
+
+## 📱 Mobile Access via Tailscale (Recommended)
+
+Since MacroManager is designed for mobile use, use **Tailscale** to access your local server securely from your phone without port forwarding.
+
+1. **Install Tailscale** on your host machine and your mobile device.
+2. **Login** to the same Tailscale account on both.
+3. **Find your Host IP**: Get the Tailscale IP of your computer (e.g., `100.x.y.z`).
+4. **Access on Mobile**: 
+   - Open your mobile browser.
+   - Navigate to `http://100.x.y.z:8501` (Streamlit default port).
+5. **Backend Sync**: Ensure the `API_URL` in `app/frontend.py` is set to your Tailscale IP if the frontend and backend are on different machines, or leave as `localhost` if accessed via a tunnel.
+
+## 📂 Project Structure
+
 ```
 MacroManager/
   app/
-    __init__.py
     api.py                    # FastAPI endpoints + heartbeat lifecycle
-    frontend.py               # Streamlit dashboard
+    frontend.py               # Streamlit dashboard (Notebook UI)
     core/
-      config.py               # Centralized configuration
-      logger.py               # Standardized logging utility
-      llm.py                  # Global LLM concurrency control (Semaphore)
-    schemas/
-      food_schemas.py         # Pydantic: Macros, SubMacros, FoodItem, FoodLog
+      config.py               # PMOS Clinical Constants
+      llm.py                  # Global LLM concurrency control
     services/
-      database.py             # DatabaseManager: SQLite FTS5 + meals
-      foodbank.py             # FoodbankService: lookups, web search, offline sync
-      extraction.py           # ExtractionService: optimized single-pass LLM parsing
-      onboarding.py           # OnboardingService: PMOS baseline macros from bio text
+      database.py             # SQLite FTS5 + meal persistence
+      foodbank.py             # Nutrition resolution & L1 caching
+      extraction.py           # Single-pass LLM parsing & Vision pipeline
+      onboarding.py           # PMOS baseline calibration
+    schemas/
+      food_schemas.py         # Pydantic models for nutrition data
   prompts/
     prompts.yaml              # Externalized LLM prompts
-  scripts/
-    ingest_csv.py             # CSV -> foodbank importer
-  tests/                      # pytest suites
-  debug/                      # non-pytest diagnostic scripts
-  wiki/                       # Agent routing index, architecture, QA rules
-    index.md                  # Agent routing table
-    QA_Failures.md            # Lint rules and failure patterns
-    logic/
-      Architecture.md         # Component map, data flow, DB schema
-      FoodLearning.md         # Identification, recipe expansion, anti-hallucination
-      FoodLogSchema.md        # Pydantic model definitions
-      OfflineSync.md          # Sync queue, heartbeat, retry limits
-      audit_logic.md          # Implementation steps for audit fixes
-  raw/                        # Cloud-generated logic specs
-  audit_logs.md             # Consolidated codebase audit and fix logs
-  ProjectDetails.md           # Detailed HLD/LLD documentation
-  requirements.txt
+  wiki/                       # Agent routing & Clinical Knowledge Base
+    index.md                  # Agent Routing Table
+    logic/                    # Architecture & Math specs
+    pmos_nutrition/           # PMOS Clinical Knowledge Base
+  ProjectDetails.md           # Full HLD/LLD documentation
+  requirements.txt            # Project dependencies
 ```
- 
-## Key Architecture
-  
-| Component | Description |
-|---|---|
-| **Plain Notebook UI** | High-fidelity, emotionally intimate aesthetic (Courier Prime, grid-paper) for reduced cognitive load |
-| **Timezone-Aware Logs** | Server-side `localtime` alignment in SQLite to prevent date-mismatch/ghost entries |
-| **Async parallel** | `asyncio.gather` resolves all food items concurrently |
-| **Self-Verifying Extraction** | Single-pass extraction with internal self-verification to maximize recall and minimize latency |
-| **Offline sync queue** | Cached data returned immediately when offline; unverified items queued for heartbeat sync |
-| **Source of Truth** | Authoritative web search (Tavily) with LLM validation, confidence tiers |
-| **Unified Resolver** | Shared resolution engine for text and vision paths ensuring consistent macro calculation and recipe expansion |
-| **Recipe expansion** | Complex dishes decomposed into base ingredients before macro calculation |
-| **Regional Support** | Complex dish decomposition using Expert Estimator + Category Fallback | Recipe Expansion $\rightarrow$ Ingredient-Based Inference |
-| **Clinical Copilot** | AI-driven meal planning and dietary advice with built-in Medical Firewall | PlannerService + Router + Copilot Prompts |
-| **Medical Firewall** | Strict boundaries to prevent medical diagnosis/prescriptions | System Role Guardrails in PlannerService |
-| **Atwater guardrail** | Calorie = P*4 + C*4 + F*9, corrects LLM deviations >20% |
-| **FTS5 food search** | Full-text search for alias-based food lookups (case-insensitive) |
-| **L1 In-Memory Cache** | High-speed lookup for frequent items to bypass DB/Web latency |
-| **Canonicalization Layer** | Fuzzy matching (Levenshtein) to map typos/variations to existing DB entries, minimizing slow web searches |
-| **Advanced Macros** | Tracks Sugar, Saturated Fat, and Unsaturated Fat alongside primary macros |
-| **PMOS Onboarding** | LLM extracts bio attributes -> Mifflin-St Jeor BMR -> TDEE -> goal modifier -> 0.85 PMOS penalty -> 40/35/25 macro split |
-| **Global LLM Throttle** | Semaphore-based concurrency control to prevent local LLM (Ollama) saturation |
-| **Telemetry** | Standardized logging across all services for traceability |
-| **Granular Journal CRUD** | Inline quantity editing with ratio-based macro scaling and server-side validation |
 
- 
-## API Endpoints
-  
-- `POST /planner` — Clinical Copilot: Route query $\rightarrow$ Knowledge $\rightarrow$ Empathetic Dietary Plan
-- `POST /log/start` — Fast item extraction, returns `meal_id` for background resolution
-- `GET /log/status/{meal_id}` — Poll status of background nutrition resolution
-- `POST /log` — Backward compatibility: synchronous parse and save
-- `POST /vision-log` — Extract food from image (base64), resolve nutrition, save meal. Supports `Home`/`Wild` environment weighting and optional `hint` for better item identification.
-- `POST /onboard` — One-shot PMOS baseline: LLM extracts height/weight/activity/goal from bio text, calculates Mifflin-St Jeor BMR, TDEE, applies PMOS penalty (0.85x), sets daily macro goals
-- `GET /summary` — Daily aggregated totals + goals AND static calendar week summary (Supports `date` param)
-- `POST /goals` — Update user macro targets
-- `GET /meals` — Chronological list of food items for a specific date
-- `PATCH /meals/{meal_id}` — Update meal items with automatic macro recalculation
-- `DELETE /meals/{meal_id}` — Remove a specific meal record
-- `DELETE /meals/clear` — Reset all meals for a specific date
-- `GET /pending-count` — Verification queue size
-- `GET /sync-status` — Last sync timestamp
-- `POST /verify-queue` — Manual sync trigger
- 
- 
-## See Also
- 
-- [ProjectDetails.md](./ProjectDetails.md) for full HLD/LLD
-- [wiki/index.md](./wiki/index.md) for agent routing table
+## 🛠 API Reference
+
+| Endpoint | Method | Purpose |
+| :--- | :--- | :--- |
+| `/planner` | `POST` | Clinical Copilot: Route query $\rightarrow$ Knowledge $\rightarrow$ Dietary Plan |
+| `/log/start` | `POST` | Fast item extraction $\rightarrow$ returns `meal_id` for async resolution |
+| `/log/status/{id}` | `GET` | Poll resolution status (`processing` $\rightarrow$ `completed`) |
+| `/vision-log` | `POST` | Multimodal extraction from image $\rightarrow$ Resolve $\rightarrow$ Save |
+| `/onboard` | `POST` | Bio-text $\rightarrow$ Calculate PMOS targets $\rightarrow$ Save goals |
+| `/summary` | `GET` | Daily aggregates + goals + weekly buffer |
+| `/meals` | `GET` | Chronological meal retrieval for a specific date |
+| `/goals` | `POST` | Manual update of macro targets |
