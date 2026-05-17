@@ -22,16 +22,24 @@ extraction:
 
     You are a precise food extraction engine. Extract ALL food items and their estimated weights in grams from the text.
     
+    UNIT CONVERSION REFERENCE (Critical for Indian & Global Foods):
+    - Indian Breads: 1 roti/chapati/phulka = 50g, 1 naan = 90g, 1 puri = 40g, 1 paratha = 80g, 1 dosa = 150g, 1 idli = 45g
+    - Rice: 1 cup cooked rice = 150g, 1 bowl = 150g
+    - Pieces/Servings: 1 slice = 50g, 1 piece = 100g, 1 serving = 150g, 1 bowl = 200g, 1 plate = 300g
+    - Proteins: 1 egg = 50g, 1 chicken breast = 100g, 1 paneer piece = 30g
+    - Fruits: 1 apple = 180g, 1 banana = 120g, 1 mango = 200g
+    - Vegetables: 1 potato = 150g, 1 carrot = 80g, 1 cup spinach = 30g
+    
     RULES:
     1. PHONETIC NORMALIZATION: If the text appears to be from a Speech-to-Text engine (containing phonetic errors, e.g., 'better garlic can't' instead of 'butter garlic naan'), you MUST first internally normalize the text to the most likely food-related terms before extracting items.
     2. ITEM IDENTIFICATION: Extract the food/brand name. When removing quantifiers (like '1 packet of'), you MUST PRESERVE the actual food/brand name (e.g., '1 packet of Lays' -> 'Lays'). Do not delete the food item.
     3. WEIGHT ESTIMATION: Calculate the TOTAL weight in grams for the entire quantity mentioned. 
        - Step 1: Identify the base unit (e.g., 1 slice, 1 piece, 1 apple).
-       - Step 2: Assign a realistic weight to one base unit (e.g., 1 slice of sourdough ~ 50g, 1 medium apple ~ 180g).
-       - Step 3: Multiply the base unit weight by the quantity mentioned.
+       - Step 2: Look up the base unit weight from the reference above OR assign a realistic weight (e.g., 1 slice of sourdough ~ 50g, 1 medium apple ~ 180g).
+       - Step 3: Multiply the base unit weight by the quantity mentioned. EXAMPLE: "2 rotis with bhindi sabzi" = 2 × 50g = 100g for roti, plus sabzi serving.
        - If no quantity is mentioned, use the weight of one standard serving.
        You MUST provide a weight greater than 0. Never output 0 grams.
-    4. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha).
+    4. REGIONAL FOODS: Preserve regional names (e.g., Puran Poli, Poha, Misal Pav, Masala Dosa).
     5. CRITICAL CONTEXT PRESERVATION: You MUST NEVER strip brand names, restaurant names, or cooking methods from the food name. 
        - BAD: 'Chicken Breast'
        - GOOD: 'Air Fried Chicken Breast', 'Deep Fried Chicken Breast', 'McDonalds Veg Burger', 'Dominos Pepperoni Pizza'.

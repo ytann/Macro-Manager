@@ -9,6 +9,7 @@ import difflib
 from tavily import AsyncTavilyClient
 from typing import Optional, List, Dict
 from app.services.database import DatabaseManager, DEFAULT_FOODS
+from app.services.food_reference import AUTHORITATIVE_SOURCES, RELIABLE_FOOD_DATA, parse_quantity_string
 from app.core.config import Config
 from app.core import queries
 from app.core.logger import logger
@@ -55,6 +56,49 @@ class FoodbankService:
 
     async def _is_network_available(self) -> bool:
         return True
+
+    async def _prioritize_tavily_search(self, query: str, food_name: str = "") -> Optional[Dict]:
+        """
+        Enhanced Tavily search that prioritizes authoritative nutrition sources.
+        Returns filtered results from trusted domains.
+        """
+        try:
+            # Build domain-restricted query for Tavily
+            domain_query = query
+            for source in AUTHORITATIVE_SOURCES[:5]:  # Top 5 sources
+                domain_query += f" OR site:{source}"
+            
+            search_result = await self.tavily_client.search(
+                query=domain_query,
+                search_depth="advanced",
+                max_results=8
+            )
+            
+            results = search_result.get('results', [])
+            
+            # Filter results to prioritize authoritative sources
+            filtered_results = []
+            for result in results:
+                url_lower = result.get('url', '').lower()
+                # Check if URL matches authoritative sources
+                for source in AUTHORITATIVE_SOURCES:
+                    if source in url_lower:
+                        filtered_results.append(result)
+                        break
+            
+            # If no authoritative sources found, use top results
+            if not filtered_results:
+                filtered_results = results[:3]
+            
+            logger.info(f"Tavily search for '{food_name}' returned {len(filtered_results)} results from authoritative sources")
+            return {
+                'query': query,
+                'results': filtered_results,
+                'count': len(filtered_results)
+            }
+        except Exception as e:
+            logger.error(f"Prioritized Tavily search failed for {food_name}: {e}")
+            return None
 
     async def queue_for_verification(self, name: str):
         await asyncio.to_thread(
@@ -266,12 +310,34 @@ class FoodbankService:
         
         # Food is missing or unverified -> Web Search
         logger.info(f"Food {name} is missing or unverified. Starting web search.")
+        
+        # Check if food is in reliable database first (faster fallback)
+        name_lower = name.lower().strip()
+        for food_key, food_data in RELIABLE_FOOD_DATA.items():
+            if food_key in name_lower or name_lower in food_key:
+                logger.info(f"Found {name} in reliable database: {food_data}")
+                await self.upsert_food(
+                    name, 
+                    food_data['calories'], 
+                    food_data['protein'], 
+                    food_data['carbs'], 
+                    food_data['fat'], 
+                    food_data['fiber'],
+                    verified=1,
+                    source=food_data.get('source', 'reliable_database')
+                )
+                return food_data
+        
         query = queries.NUTRITION_FACTS_QUERY.format(name=name)
         
         try:
-            search_result = await self.tavily_client.search(query=query, search_depth="advanced")
-            results = search_result.get('results', [])
-            html = "\n\n".join([f"Source: {r['url']}\nContent: {r['content']}" for r in results]) if results else None
+            # Use enhanced Tavily search with authoritative source prioritization
+            search_data = await self._prioritize_tavily_search(query, name)
+            if search_data and search_data['results']:
+                results = search_data['results']
+                html = "\n\n".join([f"Source: {r['url']}\nContent: {r['content']}" for r in results[:3]]) if results else None
+            else:
+                html = None
         except Exception as e:
             logger.error(f"Tavily search failed for {name}: {e}")
             html = None

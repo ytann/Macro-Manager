@@ -64,6 +64,7 @@ planner_service = PlannerService()
 class LogRequest(BaseModel):
     text: str = Field(..., max_length=5000)
     meal_type: str = "General"
+    environment: str = "restaurant"  # home, restaurant, street food, packaged
     is_voice: bool = False
 
 class VisionLogRequest(BaseModel):
@@ -98,9 +99,9 @@ async def _save_meal_to_db(meal_id: str, items: List[FoodItem], totals: Dict[str
             (meal_id, items_json, totals['p'], totals['c'], totals['f'], totals['cal'], sum_sub('fiber'), sum_sub('sugar'), sum_sub('saturated_fat'), sum_sub('unsaturated_fat'), meal_type)
         )
 
-async def _process_and_save_meal(meal_id: str, items: List[dict], meal_type: str):
+async def _process_and_save_meal(meal_id: str, items: List[dict], meal_type: str, environment: str = "restaurant"):
     try:
-        logger.info(f"Background resolution started for meal {meal_id}")
+        logger.info(f"Background resolution started for meal {meal_id} (environment: {environment})")
         meal_data = await extraction_service.resolve_nutrition(items, meal_id)
         
         totals = {
@@ -121,12 +122,13 @@ async def start_log_meal(request: LogRequest, background_tasks: BackgroundTasks)
         items, meal_id = await extraction_service.extract_items(request.text, request.is_voice)
         
         # Trigger background resolution
-        background_tasks.add_task(_process_and_save_meal, meal_id, items, request.meal_type)
+        background_tasks.add_task(_process_and_save_meal, meal_id, items, request.meal_type, request.environment)
         
         return {
             "status": "processing",
             "meal_id": meal_id,
-            "items": items
+            "items": items,
+            "environment": request.environment
         }
     except Exception as e:
         logger.error(f"Log Start Error: {e}")
